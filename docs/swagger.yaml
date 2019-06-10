@@ -1,0 +1,809 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: TopCoder Lookup API v5
+  description: >
+    ## Pagination
+
+    - Requests that return multiple items will be paginated to 20 items by default.
+
+    - You can specify further pages with the `page` parameter (1 based).
+
+    - You can also set a custom page size up to 100 with the `perPage` parameter.
+
+    - Pagination response data is included in http headers.
+
+    - By default, the response header contains links with `next`, `last`, `first`, `prev` resource links.
+
+
+    ## Access levels
+
+    - Admin can call any API, Non-admin can call only retrieval APIs
+
+    - M2M token with scope 'read:lookups' can call retrieval APIs
+
+    - M2M token with scope 'update:lookups' can call mutating APIs
+
+    - M2M token with scope 'all:lookups' can call any API
+
+host: api.topcoder.com
+basePath: /v5
+schemes:
+  - http
+  - https
+securityDefinitions:
+  bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+produces:
+  - application/json
+consumes:
+  - application/json
+security:
+  - bearer: []
+paths:
+  '/lookups/countries':
+    get:
+      tags:
+        - Country
+      description: |
+        List countries.
+      parameters:
+        - $ref: '#/parameters/page'
+        - $ref: '#/parameters/perPage'
+        - name: name
+          in: query
+          description: Filter by name, 'contains' match is used
+          required: false
+          type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Country'
+          headers:
+            X-Next-Page:
+              type: integer
+              description: The index of the next page
+            X-Page:
+              type: integer
+              description: The index of the current page (starting at 1)
+            X-Per-Page:
+              type: integer
+              description: The number of items to list per page
+            X-Prev-Page:
+              type: integer
+              description: The index of the previous page
+            X-Total:
+              type: integer
+              description: The total number of items
+            X-Total-Pages:
+              type: integer
+              description: The total number of pages
+            Link:
+              type: string
+              description: Pagination link header.
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    head:
+      tags:
+        - Country
+      description: |
+        List countries head.
+      parameters:
+        - $ref: '#/parameters/page'
+        - $ref: '#/parameters/perPage'
+        - name: name
+          in: query
+          description: Filter by name, 'contains' match is used
+          required: false
+          type: string
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Next-Page:
+              type: integer
+              description: The index of the next page
+            X-Page:
+              type: integer
+              description: The index of the current page (starting at 1)
+            X-Per-Page:
+              type: integer
+              description: The number of items to list per page
+            X-Prev-Page:
+              type: integer
+              description: The index of the previous page
+            X-Total:
+              type: integer
+              description: The total number of items
+            X-Total-Pages:
+              type: integer
+              description: The total number of pages
+            Link:
+              type: string
+              description: Pagination link header.
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    post:
+      tags:
+        - Country
+      description: |
+        Create a new country.
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/CountryData'
+      responses:
+        '201':
+          description: Created - The request was successful and the resource is returned.
+          schema:
+            $ref: '#/definitions/Country'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '409':
+          description: >
+            Conflict. The name is already defined.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+  '/lookups/countries/:id':
+    get:
+      tags:
+        - Country
+      description: Retrieve the country by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of country to retrieve
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Country'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: Country not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    head:
+      tags:
+        - Country
+      description: Retrieve the country head by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of country to retrieve
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: Country not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    put:
+      tags:
+        - Country
+      description: Update the country with the specified id.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of country to update
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/CountryData'
+      responses:
+        '200':
+          description: Updated - The request was successful and the resource is returned.
+          schema:
+            $ref: '#/definitions/Country'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: Country not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '409':
+          description: Conflict. Other country has already used the same name.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    patch:
+      tags:
+        - Country
+      description: >
+        Partially update the country with specified id.  Only the fields
+        that are provided will be updated.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of country to update
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/CountryData'
+      responses:
+        '200':
+          description: Updated - The request was successful and the resource is returned.
+          schema:
+            $ref: '#/definitions/Country'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: Country not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '409':
+          description: >
+            Conflict. Other country has already used the same name.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    delete:
+      tags:
+        - Country
+      description: Delete country.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of country to delete
+      responses:
+        '204':
+          description: Deleted successful.
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: Country not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+  '/lookups/educationalInstitutions':
+    get:
+      tags:
+        - Educational Institution
+      description: |
+        List educational institutions.
+      parameters:
+        - $ref: '#/parameters/page'
+        - $ref: '#/parameters/perPage'
+        - name: name
+          in: query
+          description: Filter by name, 'contains' match is used
+          required: false
+          type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/EducationalInstitution'
+          headers:
+            X-Next-Page:
+              type: integer
+              description: The index of the next page
+            X-Page:
+              type: integer
+              description: The index of the current page (starting at 1)
+            X-Per-Page:
+              type: integer
+              description: The number of items to list per page
+            X-Prev-Page:
+              type: integer
+              description: The index of the previous page
+            X-Total:
+              type: integer
+              description: The total number of items
+            X-Total-Pages:
+              type: integer
+              description: The total number of pages
+            Link:
+              type: string
+              description: Pagination link header.
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    head:
+      tags:
+        - Educational Institution
+      description: |
+        List educational institutions head.
+      parameters:
+        - $ref: '#/parameters/page'
+        - $ref: '#/parameters/perPage'
+        - name: name
+          in: query
+          description: Filter by name, 'contains' match is used
+          required: false
+          type: string
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Next-Page:
+              type: integer
+              description: The index of the next page
+            X-Page:
+              type: integer
+              description: The index of the current page (starting at 1)
+            X-Per-Page:
+              type: integer
+              description: The number of items to list per page
+            X-Prev-Page:
+              type: integer
+              description: The index of the previous page
+            X-Total:
+              type: integer
+              description: The total number of items
+            X-Total-Pages:
+              type: integer
+              description: The total number of pages
+            Link:
+              type: string
+              description: Pagination link header.
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    post:
+      tags:
+        - Educational Institution
+      description: |
+        Create a new educational institution.
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/EducationalInstitutionData'
+      responses:
+        '201':
+          description: Created - The request was successful and the resource is returned.
+          schema:
+            $ref: '#/definitions/EducationalInstitution'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '409':
+          description: >
+            Conflict. The name is already defined.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+  '/lookups/educationalInstitutions/:id':
+    get:
+      tags:
+        - Educational Institution
+      description: Retrieve the educational institution by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of educational institution to retrieve
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/EducationalInstitution'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: educational institution not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    head:
+      tags:
+        - Educational Institution
+      description: Retrieve the educational institution head by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of educational institution to retrieve
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: educational institution not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    put:
+      tags:
+        - Educational Institution
+      description: Update the educational institution with the specified id.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of educational institution to update
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/EducationalInstitutionData'
+      responses:
+        '200':
+          description: Updated - The request was successful and the resource is returned.
+          schema:
+            $ref: '#/definitions/EducationalInstitution'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: educational institution not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '409':
+          description: Conflict. Other educational institution has already used the same name.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    patch:
+      tags:
+        - Educational Institution
+      description: >
+        Partially update the educational institution with specified id.  Only the fields
+        that are provided will be updated.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of educational institution to update
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/EducationalInstitutionData'
+      responses:
+        '200':
+          description: Updated - The request was successful and the resource is returned.
+          schema:
+            $ref: '#/definitions/EducationalInstitution'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: educational institution not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '409':
+          description: >
+            Conflict. Other educational institution has already used the same name.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    delete:
+      tags:
+        - Educational Institution
+      description: Delete educational institution.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of educational institution to delete
+      responses:
+        '204':
+          description: Deleted successful.
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: educational institution not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+
+parameters:
+  page:
+    name: page
+    in: query
+    description: The page number.
+    required: false
+    type: integer
+    default: 1
+  perPage:
+    name: perPage
+    in: query
+    description: The number of items to list per page.
+    required: false
+    type: integer
+    default: 20
+    maximum: 100
+definitions:
+  Country:
+    type: object
+    properties:
+      id:
+        type: string
+        format: UUID
+      name:
+        type: string
+    required:
+      - id
+      - name
+  CountryData:
+    type: object
+    properties:
+      name:
+        type: string
+  EducationalInstitution:
+    type: object
+    properties:
+      id:
+        type: string
+        format: UUID
+      name:
+        type: string
+    required:
+      - id
+      - name
+  EducationalInstitutionData:
+    type: object
+    properties:
+      name:
+        type: string
+  ErrorModel:
+    type: object
+    properties:
+      message:
+        type: string
+        description: the error message

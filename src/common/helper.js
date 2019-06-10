@@ -1,0 +1,226 @@
+/**
+ * This file defines helper methods
+ */
+const _ = require('lodash')
+const config = require('config')
+const AWS = require('aws-sdk')
+const models = require('../models')
+const errors = require('./errors')
+
+// AWS DynamoDB instance
+let dbInstance
+
+AWS.config.update({
+  accessKeyId: config.AMAZON.AWS_ACCESS_KEY_ID,
+  secretAccessKey: config.AMAZON.AWS_SECRET_ACCESS_KEY,
+  region: config.AMAZON.AWS_REGION
+})
+
+/**
+ * Wrap async function to standard express function
+ * @param {Function} fn the async function
+ * @returns {Function} the wrapped function
+ */
+function wrapExpress (fn) {
+  return function (req, res, next) {
+    fn(req, res, next).catch(next)
+  }
+}
+
+/**
+ * Wrap all functions from object
+ * @param obj the object (controller exports)
+ * @returns {Object|Array} the wrapped object
+ */
+function autoWrapExpress (obj) {
+  if (_.isArray(obj)) {
+    return obj.map(autoWrapExpress)
+  }
+  if (_.isFunction(obj)) {
+    if (obj.constructor.name === 'AsyncFunction') {
+      return wrapExpress(obj)
+    }
+    return obj
+  }
+  _.each(obj, (value, key) => {
+    obj[key] = autoWrapExpress(value)
+  })
+  return obj
+}
+
+/**
+ * Get DynamoDB Connection Instance
+ * @return {Object} DynamoDB Connection Instance
+ */
+function getDb () {
+  // cache it for better performance
+  if (!dbInstance) {
+    if (config.AMAZON.IS_LOCAL_DB) {
+      dbInstance = new AWS.DynamoDB({ endpoint: config.AMAZON.DYNAMODB_URL })
+    } else {
+      dbInstance = new AWS.DynamoDB()
+    }
+  }
+  return dbInstance
+}
+
+/**
+ * Creates table in DynamoDB
+ * @param     {object} model Table structure in JSON format
+ * @return    {promise} the result
+ */
+async function createTable (model) {
+  const db = getDb()
+  return new Promise((resolve, reject) => {
+    db.createTable(model, (err, data) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(data)
+      }
+    })
+  })
+}
+
+/**
+ * Deletes table in DynamoDB
+ * @param     {String} tableName Name of the table to be deleted
+ * @return    {promise} the result
+ */
+async function deleteTable (tableName) {
+  const db = getDb()
+  const item = {
+    TableName: tableName
+  }
+  return new Promise((resolve, reject) => {
+    db.deleteTable(item, (err, data) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(data)
+      }
+    })
+  })
+}
+
+/**
+ * Get Data by model id
+ * @param {String} modelName The dynamoose model name
+ * @param {String} id The id value
+ * @returns found record
+ */
+async function getById (modelName, id) {
+  return new Promise((resolve, reject) => {
+    models[modelName].query('id').eq(id).exec((err, result) => {
+      if (err) {
+        reject(err)
+      } else if (result.length > 0) {
+        resolve(result[0])
+      } else {
+        reject(new errors.NotFoundError(`${modelName} with id: ${id} doesn't exist`))
+      }
+    })
+  })
+}
+
+/**
+ * Create item in database
+ * @param {Object} modelName The dynamoose model name
+ * @param {Object} data The create data object
+ * @returns created entity
+ */
+async function create (modelName, data) {
+  return new Promise((resolve, reject) => {
+    const dbItem = new models[modelName](data)
+    dbItem.save((err) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(dbItem)
+      }
+    })
+  })
+}
+
+/**
+ * Update item in database
+ * @param {Object} dbItem The Dynamo database item
+ * @param {Object} data The updated data object
+ * @returns updated entity
+ */
+async function update (dbItem, data) {
+  Object.keys(data).forEach((key) => {
+    dbItem[key] = data[key]
+  })
+  return new Promise((resolve, reject) => {
+    dbItem.save((err) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(dbItem)
+      }
+    })
+  })
+}
+
+/**
+ * Remove item in database
+ * @param {Object} dbItem The Dynamo database item to remove
+ */
+async function remove (dbItem) {
+  return new Promise((resolve, reject) => {
+    dbItem.delete((err) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(dbItem)
+      }
+    })
+  })
+}
+
+/**
+ * Get data collection by scan parameters
+ * @param {Object} modelName The dynamoose model name
+ * @param {Object} scanParams The scan parameters object
+ * @returns found records
+ */
+async function scan (modelName, scanParams) {
+  return new Promise((resolve, reject) => {
+    models[modelName].scan(scanParams).exec((err, result) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(result.count === 0 ? [] : result)
+      }
+    })
+  })
+}
+
+/**
+ * Validate the data to ensure no duplication
+ * @param {Object} modelName The dynamoose model name
+ * @param {String} name The attribute name of dynamoose model
+ * @param {String} value The attribute value to be validated
+ */
+async function validateDuplicate (modelName, name, value) {
+  const options = {}
+  options[name] = { eq: value }
+  const records = await scan(modelName, options)
+  if (records.length > 0) {
+    throw new errors.ConflictError(`${modelName} with ${name}: ${value} already exists`)
+  }
+}
+
+module.exports = {
+  wrapExpress,
+  autoWrapExpress,
+  createTable,
+  deleteTable,
+  getById,
+  create,
+  update,
+  remove,
+  scan,
+  validateDuplicate
+}
