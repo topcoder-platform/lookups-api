@@ -40,8 +40,6 @@ produces:
   - application/json
 consumes:
   - application/json
-security:
-  - bearer: []
 paths:
   '/lookups/countries':
     get:
@@ -49,12 +47,14 @@ paths:
         - Country
       description: |
         List countries.
+      security:
+        - bearer: []
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
         - name: name
           in: query
-          description: Filter by name, 'contains' match is used
+          description: Filter by name, case insensitive, partial match is used
           required: false
           type: string
       responses:
@@ -107,12 +107,14 @@ paths:
         - Country
       description: |
         List countries head.
+      security:
+        - bearer: []
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
         - name: name
           in: query
-          description: Filter by name, 'contains' match is used
+          description: Filter by name, case insensitive, partial match is used
           required: false
           type: string
       responses:
@@ -161,6 +163,8 @@ paths:
         - Country
       description: |
         Create a new country.
+      security:
+        - bearer: []
       parameters:
         - in: body
           name: body
@@ -199,6 +203,8 @@ paths:
       tags:
         - Country
       description: Retrieve the country by id
+      security:
+        - bearer: []
       parameters:
         - name: id
           in: path
@@ -236,6 +242,8 @@ paths:
       tags:
         - Country
       description: Retrieve the country head by id
+      security:
+        - bearer: []
       parameters:
         - name: id
           in: path
@@ -271,6 +279,8 @@ paths:
       tags:
         - Country
       description: Update the country with the specified id.
+      security:
+        - bearer: []
       parameters:
         - name: id
           in: path
@@ -319,6 +329,8 @@ paths:
       description: >
         Partially update the country with specified id.  Only the fields
         that are provided will be updated.
+      security:
+        - bearer: []
       parameters:
         - name: id
           in: path
@@ -366,6 +378,8 @@ paths:
       tags:
         - Country
       description: Delete country.
+      security:
+        - bearer: []
       parameters:
         - name: id
           in: path
@@ -403,12 +417,14 @@ paths:
         - Educational Institution
       description: |
         List educational institutions.
+      security:
+        - bearer: []
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
         - name: name
           in: query
-          description: Filter by name, 'contains' match is used
+          description: Filter by name, case insensitive, partial match is used
           required: false
           type: string
       responses:
@@ -461,12 +477,14 @@ paths:
         - Educational Institution
       description: |
         List educational institutions head.
+      security:
+        - bearer: []
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
         - name: name
           in: query
-          description: Filter by name, 'contains' match is used
+          description: Filter by name, case insensitive, partial match is used
           required: false
           type: string
       responses:
@@ -515,6 +533,8 @@ paths:
         - Educational Institution
       description: |
         Create a new educational institution.
+      security:
+        - bearer: []
       parameters:
         - in: body
           name: body
@@ -553,6 +573,8 @@ paths:
       tags:
         - Educational Institution
       description: Retrieve the educational institution by id
+      security:
+        - bearer: []
       parameters:
         - name: id
           in: path
@@ -590,6 +612,8 @@ paths:
       tags:
         - Educational Institution
       description: Retrieve the educational institution head by id
+      security:
+        - bearer: []
       parameters:
         - name: id
           in: path
@@ -625,6 +649,8 @@ paths:
       tags:
         - Educational Institution
       description: Update the educational institution with the specified id.
+      security:
+        - bearer: []
       parameters:
         - name: id
           in: path
@@ -673,6 +699,8 @@ paths:
       description: >
         Partially update the educational institution with specified id.  Only the fields
         that are provided will be updated.
+      security:
+        - bearer: []
       parameters:
         - name: id
           in: path
@@ -720,6 +748,8 @@ paths:
       tags:
         - Educational Institution
       description: Delete educational institution.
+      security:
+        - bearer: []
       parameters:
         - name: id
           in: path
@@ -749,6 +779,25 @@ paths:
             $ref: '#/definitions/ErrorModel'
         '500':
           description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+  '/health':
+    get:
+      tags:
+        - Health
+      description: Check health
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              checksRun:
+                type: integer
+            required:
+              - checksRun
+        '503':
+          description: Service unavailable
           schema:
             $ref: '#/definitions/ErrorModel'
 

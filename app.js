@@ -58,7 +58,8 @@ require('./app-routes')(app)
 app.use((err, req, res, next) => {
   logger.logFullError(err, req.signature || `${req.method} ${req.url}`)
   const errorResponse = {}
-  const status = err.isJoi ? HttpStatus.BAD_REQUEST : (err.httpStatus || HttpStatus.INTERNAL_SERVER_ERROR)
+  const status = err.isJoi ? HttpStatus.BAD_REQUEST
+    : (err.httpStatus || err.statusCode || HttpStatus.INTERNAL_SERVER_ERROR)
 
   if (_.isArray(err.details)) {
     if (err.isJoi) {

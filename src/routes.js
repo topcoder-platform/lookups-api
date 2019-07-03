@@ -127,5 +127,11 @@ module.exports = {
       access: [constants.UserRoles.Admin],
       scopes: [constants.Scopes.DeleteLookup, constants.Scopes.AllLookup]
     }
+  },
+  '/health': {
+    get: {
+      controller: 'HealthCheckController',
+      method: 'check'
+    }
   }
 }

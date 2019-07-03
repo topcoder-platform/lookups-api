@@ -3,6 +3,7 @@
  */
 const HttpStatus = require('http-status-codes')
 const service = require('../services/CountryService')
+const helper = require('../common/helper')
 
 /**
  * List countries
@@ -11,7 +12,8 @@ const service = require('../services/CountryService')
  */
 async function list (req, res) {
   const result = await service.list(req.query)
-  res.send(result)
+  helper.setResHeaders(req, res, result)
+  res.send(result.result)
 }
 
 /**
@@ -20,7 +22,8 @@ async function list (req, res) {
  * @param {Object} res the response
  */
 async function listHead (req, res) {
-  await service.list(req.query)
+  const result = await service.list(req.query)
+  helper.setResHeaders(req, res, result)
   res.end()
 }
 

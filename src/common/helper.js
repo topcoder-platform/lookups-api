@@ -2,13 +2,18 @@
  * This file defines helper methods
  */
 const _ = require('lodash')
+const querystring = require('querystring')
 const config = require('config')
 const AWS = require('aws-sdk')
+const elasticsearch = require('elasticsearch')
 const models = require('../models')
 const errors = require('./errors')
 
 // AWS DynamoDB instance
 let dbInstance
+
+// Elasticsearch client
+let esClient
 
 AWS.config.update({
   accessKeyId: config.AMAZON.AWS_ACCESS_KEY_ID,
@@ -212,6 +217,111 @@ async function validateDuplicate (modelName, name, value) {
   }
 }
 
+/**
+ * Get ES Client
+ * @return {Object} Elasticsearch Client Instance
+ */
+function getESClient () {
+  if (esClient) {
+    return esClient
+  }
+  const hosts = config.ES.HOST
+  const apiVersion = config.ES.API_VERSION
+  // AWS ES configuration is different from other providers
+  if (/.*amazonaws.*/.test(hosts)) {
+    esClient = elasticsearch.Client({
+      apiVersion,
+      hosts,
+      connectionClass: require('http-aws-es'), // eslint-disable-line global-require
+      amazonES: {
+        region: config.AMAZON.AWS_REGION,
+        credentials: new AWS.EnvironmentCredentials('AWS')
+      }
+    })
+  } else {
+    esClient = new elasticsearch.Client({
+      apiVersion,
+      hosts
+    })
+  }
+  return esClient
+}
+
+/**
+ * Create Elasticsearch index, it will be deleted and re-created if present.
+ * @param {String} indexName the ES index name
+ */
+async function createESIndex (indexName) {
+  const client = getESClient()
+  // delete index if present
+  try {
+    await client.indices.delete({ index: indexName })
+  } catch (err) {
+    // ignore
+  }
+  // create index
+  await client.indices.create({
+    index: indexName,
+    body: {
+      mappings: {
+        properties: {
+          name: {
+            type: 'text',
+            fielddata: true
+          }
+        }
+      }
+    }
+  })
+}
+
+/**
+ * Get link for a given page.
+ * @param {Object} req the HTTP request
+ * @param {Number} page the page number
+ * @returns {String} link for the page
+ */
+function getPageLink (req, page) {
+  const q = _.assignIn({}, req.query, { page })
+  return `${req.protocol}://${req.get('Host')}${req.baseUrl}${req.path}?${querystring.stringify(q)}`
+}
+
+/**
+ * Set HTTP response headers from result.
+ * @param {Object} req the HTTP request
+ * @param {Object} res the HTTP response
+ * @param {Object} result the operation result
+ */
+function setResHeaders (req, res, result) {
+  // if result is got from db, then do not set response headers
+  if (result.fromDB) {
+    return
+  }
+
+  const totalPages = Math.ceil(result.total / result.perPage)
+  if (result.page > 1) {
+    res.set('X-Prev-Page', result.page - 1)
+  }
+  if (result.page < totalPages) {
+    res.set('X-Next-Page', result.page + 1)
+  }
+  res.set('X-Page', result.page)
+  res.set('X-Per-Page', result.perPage)
+  res.set('X-Total', result.total)
+  res.set('X-Total-Pages', totalPages)
+  // set Link header
+  if (totalPages > 0) {
+    let link = `<${getPageLink(req, 1)}>; rel="first", <${getPageLink(req, totalPages)}>; rel="last"`
+    if (result.page > 1) {
+      link += `, <${getPageLink(req, result.page - 1)}>; rel="prev"`
+    }
+    if (result.page < totalPages) {
+      link += `, <${getPageLink(req, result.page + 1)}>; rel="next"`
+    }
+    res.set('Link', link)
+  }
+}
+
 module.exports = {
   wrapExpress,
   autoWrapExpress,
@@ -222,5 +332,8 @@ module.exports = {
   update,
   remove,
   scan,
-  validateDuplicate
+  validateDuplicate,
+  getESClient,
+  createESIndex,
+  setResHeaders
 }

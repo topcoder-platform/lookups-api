@@ -9,5 +9,5 @@ require('../../app-bootstrap')
 const config = require('config')
 const e2eTestHelper = require('./e2eTestHelper')
 
-e2eTestHelper.generateLookupE2ETests('/v5/lookups/educationalInstitutions',
+e2eTestHelper.generateLookupE2ETests(`${config.API_VERSION}/lookups/educationalInstitutions`,
   config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE)

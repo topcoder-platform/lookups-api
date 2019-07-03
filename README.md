@@ -6,6 +6,7 @@
 - AWS DynamoDB
 - Java 6+ (used if using runnable jar of local DynamoDB)
 - Docker, Docker Compose (used if using docker of local DynamoDB)
+- Elasticsearch 7.1.1
 
 ## Configuration
 
@@ -26,6 +27,12 @@ The following parameters can be set in config files or in env variables:
 - AMAZON.DYNAMODB_WRITE_CAPACITY_UNITS: the AWS DynamoDB write capacity units, if using local Amazon DynamoDB
 - AMAZON.DYNAMODB_COUNTRY_TABLE: DynamoDB table name for countries
 - AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE: DynamoDB table name for educational institutions
+- ES.HOST: Elasticsearch host
+- ES.API_VERSION: Elasticsearch API version
+- ES.COUNTRY_INDEX: Elasticsearch index name for countries
+- ES.COUNTRY_TYPE: Elasticsearch index type for countries
+- ES.EDUCATIONAL_INSTITUTION_INDEX: Elasticsearch index name for educational institutions
+- ES.EDUCATIONAL_INSTITUTION_TYPE: Elasticsearch index type for educational institutions
 
 Test configuration is at `config/test.js`. You don't need to change them.
 The following test parameters can be set in config file or in env variables:
@@ -63,6 +70,13 @@ If you want to use docker of local DynamoDB:
 Properly configure AMAZON.AWS_ACCESS_KEY_ID, AMAZON.AWS_SECRET_ACCESS_KEY, AMAZON.AWS_REGION, AMAZON.IS_LOCAL_DB
 in config file or via environment variables. You may create tables using below `npm run create-tables` command.
 
+## Elasticsearch setup
+
+This page `https://www.elastic.co/downloads/elasticsearch` contains various ways to setup Elasticsearch,
+choose a way suitable for you system, setup version 7.1.1, update Elasticsearch connection host if needed.
+Make sure to use correct version, different versions may behave differently, especially the index creation
+may be different for different ES versions.
+
 ## Local Deployment
 
 - Install dependencies `npm install`
@@ -70,12 +84,14 @@ in config file or via environment variables. You may create tables using below `
 - Run lint fix `npm run lint:fix`
 - To delete DynamoDB table if needed `npm run delete-tables`
 - To create DynamoDB table if needed `npm run create-tables`
+- Create configured Elasticsearch indices, they will be re-created if present: `npm run init-es`
 - Start app `npm start`
 - App is running at `http://localhost:3000`
 
 ## Running tests
 
 Tables should be created before running tests.
+Note that running tests will clear all DynamoDB data and re-create Elasticsearch indices.
 
 ### Running unit tests
 
@@ -112,5 +128,7 @@ npm run e2e:cov
 
 ## Notes
 
-- swagger is at `docs/swagger.yaml`, you may check it using `http://editor.swagger.io/`
+- swagger is updated, adding health check API and some other fixes, you may check it using `http://editor.swagger.io/`
+- Postman tests are also updated to suit latest code
 - all JWT tokens provided in Postman environment file and tests are created in `https://jwt.io` with secret `mysecret`
+
