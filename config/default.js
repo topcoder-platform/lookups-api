@@ -32,5 +32,19 @@ module.exports = {
     COUNTRY_TYPE: process.env.COUNTRY_TYPE || '_doc',
     EDUCATIONAL_INSTITUTION_INDEX: process.env.EDUCATIONAL_INSTITUTION_INDEX || 'educational_institutions',
     EDUCATIONAL_INSTITUTION_TYPE: process.env.EDUCATIONAL_INSTITUTION_TYPE || '_doc'
-  }
+  },
+
+  AUTH0_URL: process.env.AUTH0_URL,
+  AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE,
+  TOKEN_CACHE_TIME: process.env.TOKEN_CACHE_TIME,
+  AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID,
+  AUTH0_CLIENT_SECRET: process.env.AUTH0_CLIENT_SECRET,
+  AUTH0_PROXY_SERVER_URL: process.env.AUTH0_PROXY_SERVER_URL,
+
+  BUSAPI_URL: process.env.BUSAPI_URL || 'https://api.topcoder-dev.com/v5',
+  KAFKA_ERROR_TOPIC: process.env.KAFKA_ERROR_TOPIC || 'common.error.reporting',
+  KAFKA_MESSAGE_ORIGINATOR: process.env.KAFKA_MESSAGE_ORIGINATOR || 'lookups-api',
+  LOOKUP_CREATE_TOPIC: process.env.LOOKUP_CREATE_TOPIC || 'lookup.notification.create',
+  LOOKUP_UPDATE_TOPIC: process.env.LOOKUP_UPDATE_TOPIC || 'lookup.notification.update',
+  LOOKUP_DELETE_TOPIC: process.env.LOOKUP_DELETE_TOPIC || 'lookup.notification.delete'
 }

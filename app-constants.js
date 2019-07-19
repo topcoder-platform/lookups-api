@@ -13,7 +13,13 @@ const Scopes = {
   AllLookup: 'all:lookups'
 }
 
+const Resources = {
+  Country: 'country',
+  EducationalInstitution: 'educationalInstitution'
+}
+
 module.exports = {
   UserRoles,
-  Scopes
+  Scopes,
+  Resources
 }

@@ -7,7 +7,7 @@ const config = require('config')
 const uuid = require('uuid/v4')
 const helper = require('../common/helper')
 const logger = require('../common/logger')
-const HttpStatus = require('http-status-codes')
+const { Resources } = require('../../app-constants')
 
 const esClient = helper.getESClient()
 
@@ -118,14 +118,10 @@ async function create (data) {
   data.id = uuid()
   // create record in db
   const res = await helper.create(config.AMAZON.DYNAMODB_COUNTRY_TABLE, data)
-  // create record in Elasticsearch
-  await esClient.create({
-    index: config.ES.COUNTRY_INDEX,
-    type: config.ES.COUNTRY_TYPE,
-    id: data.id,
-    body: data,
-    refresh: 'true' // refresh ES so that it is visible for read operations instantly
-  })
+
+  // Send Kafka message using bus api
+  await helper.postEvent(config.LOOKUP_CREATE_TOPIC, _.assign({ resource: Resources.Country }, res))
+
   return res
 }
 
@@ -148,33 +144,13 @@ async function partiallyUpdate (id, data) {
     // ensure name is not used already
     await helper.validateDuplicate(config.AMAZON.DYNAMODB_COUNTRY_TABLE, 'name', data.name)
 
-    // update data in ES, if it is not found in ES, then create it in ES
-    try {
-      await esClient.update({
-        index: config.ES.COUNTRY_INDEX,
-        type: config.ES.COUNTRY_TYPE,
-        id,
-        body: { doc: data },
-        refresh: 'true' // refresh ES so that it is visible for read operations instantly
-      })
-    } catch (e) {
-      if (e.statusCode === HttpStatus.NOT_FOUND) {
-        // not found in ES, then create data in ES
-        await esClient.create({
-          index: config.ES.COUNTRY_INDEX,
-          type: config.ES.COUNTRY_TYPE,
-          id,
-          body: _.assignIn({ id }, data),
-          refresh: 'true' // refresh ES so that it is visible for read operations instantly
-        })
-      } else {
-        // re-throw other errors
-        throw e
-      }
-    }
-
     // then update data in DB
-    return helper.update(country, data)
+    const res = await helper.update(country, data)
+
+    // Send Kafka message using bus api
+    await helper.postEvent(config.LOOKUP_UPDATE_TOPIC, _.assign({ resource: Resources.Country, id }, data))
+
+    return res
   } else {
     // data are not changed
     return country
@@ -210,24 +186,12 @@ update.schema = {
  * @param {String} id the country id to remove
  */
 async function remove (id) {
-  // remove data in ES
-  try {
-    await esClient.delete({
-      index: config.ES.COUNTRY_INDEX,
-      type: config.ES.COUNTRY_TYPE,
-      id,
-      refresh: 'true' // refresh ES so that it is visible for read operations instantly
-    })
-  } catch (e) {
-    // if not found in ES, then continue to remove data in db, otherwise re-throw the error
-    if (e.statusCode !== HttpStatus.NOT_FOUND) {
-      throw e
-    }
-  }
-
   // remove data in DB
   const country = await helper.getById(config.AMAZON.DYNAMODB_COUNTRY_TABLE, id)
   await helper.remove(country)
+
+  // Send Kafka message using bus api
+  await helper.postEvent(config.LOOKUP_DELETE_TOPIC, { resource: Resources.Country, id })
 }
 
 remove.schema = {

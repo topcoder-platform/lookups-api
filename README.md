@@ -33,6 +33,18 @@ The following parameters can be set in config files or in env variables:
 - ES.COUNTRY_TYPE: Elasticsearch index type for countries
 - ES.EDUCATIONAL_INSTITUTION_INDEX: Elasticsearch index name for educational institutions
 - ES.EDUCATIONAL_INSTITUTION_TYPE: Elasticsearch index type for educational institutions
+- AUTH0_URL: Auth0 URL, used to get TC M2M token
+- AUTH0_AUDIENCE: Auth0 audience, used to get TC M2M token
+- TOKEN_CACHE_TIME: Auth0 token cache time, used to get TC M2M token
+- AUTH0_CLIENT_ID: Auth0 client id, used to get TC M2M token
+- AUTH0_CLIENT_SECRET: Auth0 client secret, used to get TC M2M token
+- AUTH0_PROXY_SERVER_URL: Proxy Auth0 URL, used to get TC M2M token
+- BUSAPI_URL: the bus api, default value is 'https://api.topcoder-dev.com/v5'
+- KAFKA_ERROR_TOPIC: Kafka error topic, default value is 'common.error.reporting',
+- KAFKA_MESSAGE_ORIGINATOR: the Kafka message originator, default value is 'lookups-api'
+- LOOKUP_CREATE_TOPIC: the lookup create Kafka topic, default value is 'lookup.notification.create',
+- LOOKUP_UPDATE_TOPIC: the lookup update Kafka topic, default value is 'lookup.notification.update',
+- LOOKUP_DELETE_TOPIC: the lookup delete Kafka topic, default value is 'lookup.notification.delete'
 
 Test configuration is at `config/test.js`. You don't need to change them.
 The following test parameters can be set in config file or in env variables:

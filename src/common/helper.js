@@ -8,6 +8,10 @@ const AWS = require('aws-sdk')
 const elasticsearch = require('elasticsearch')
 const models = require('../models')
 const errors = require('./errors')
+const logger = require('./logger')
+const busApi = require('tc-bus-api-wrapper')
+const busApiClient = busApi(_.pick(config, ['AUTH0_URL', 'AUTH0_AUDIENCE', 'TOKEN_CACHE_TIME', 'AUTH0_CLIENT_ID',
+  'AUTH0_CLIENT_SECRET', 'BUSAPI_URL', 'KAFKA_ERROR_TOPIC', 'AUTH0_PROXY_SERVER_URL']))
 
 // AWS DynamoDB instance
 let dbInstance
@@ -322,6 +326,23 @@ function setResHeaders (req, res, result) {
   }
 }
 
+/**
+ * Send Kafka event message
+ * @params {String} topic the topic name
+ * @params {Object} payload the payload
+ */
+async function postEvent (topic, payload) {
+  logger.info(`Publish event to Kafka topic ${topic}`)
+  const message = {
+    topic,
+    originator: config.KAFKA_MESSAGE_ORIGINATOR,
+    timestamp: new Date().toISOString(),
+    'mime-type': 'application/json',
+    payload
+  }
+  await busApiClient.postEvent(message)
+}
+
 module.exports = {
   wrapExpress,
   autoWrapExpress,
@@ -335,5 +356,6 @@ module.exports = {
   validateDuplicate,
   getESClient,
   createESIndex,
-  setResHeaders
+  setResHeaders,
+  postEvent
 }

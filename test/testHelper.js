@@ -24,9 +24,17 @@ async function clearDBData () {
  */
 async function insertTestData () {
   const services = [CountryService, EducationalInstitutionService]
-  for (const service of services) {
+  for (let index = 0; index <= 1; index++) {
+    const service = services[index]
     for (let i = 1; i <= 5; i += 1) {
-      await service.create({ name: `a test${i} b` })
+      const res = await service.create({ name: `a test${i} b` })
+      await helper.getESClient().create({
+        index: index === 0 ? config.ES.COUNTRY_INDEX : config.ES.EDUCATIONAL_INSTITUTION_INDEX,
+        type: index === 0 ? config.ES.COUNTRY_TYPE : config.ES.EDUCATIONAL_INSTITUTION_TYPE,
+        id: res.id,
+        body: res,
+        refresh: 'true' // refresh ES so that it is visible for read operations instantly
+      })
     }
   }
 }
