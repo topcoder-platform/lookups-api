@@ -1,6 +1,6 @@
 # Topcoder Lookup API v5
 
-## Prerequisites
+## Prerequisites 
 
 - NodeJS (v10)
 - AWS DynamoDB
