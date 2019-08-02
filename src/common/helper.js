@@ -237,10 +237,10 @@ function getESClient () {
       apiVersion,
       hosts,
       connectionClass: require('http-aws-es') // eslint-disable-line global-require
-      //amazonES: {
+      // amazonES: {
       //  region: config.AMAZON.AWS_REGION,
       //  credentials: new AWS.EnvironmentCredentials('AWS')
-      //}
+      // }
     })
   } else {
     esClient = new elasticsearch.Client({
