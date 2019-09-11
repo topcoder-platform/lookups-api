@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "0cf861f2-31b9-49dc-a967-db4cd908588f",
+		"_postman_id": "54ca65b9-dea9-428c-94a8-893b982a39af",
 		"name": "tc-lookup-api",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -43,7 +43,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"name\": \"uu testing v\"\n}"
+							"raw": "{\n\t\"name\": \"uu testing v\",\n\t\"countryFlag\": \"https://www.google.com\",\n\t\"countryCode\": \"TEST\"\n}"
 						},
 						"url": {
 							"raw": "{{URL}}/lookups/countries",
@@ -314,7 +314,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"name\": \"testing updated\"\n}"
+							"raw": "{\n\t\"name\": \"testing updated\",\n\t\"countryFlag\": \"https://www.google.com\",\n\t\"countryCode\": \"TEST\"\n}"
 						},
 						"url": {
 							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}",

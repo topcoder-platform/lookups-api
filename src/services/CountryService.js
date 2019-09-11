@@ -35,6 +35,18 @@ async function listES (criteria) {
     }
   }
 
+  if (criteria.countryCode) {
+    if (!esQuery.body.query) {
+      esQuery.body.query = {
+        bool: { filter: [{ match_phrase: { countryCode: criteria.countryCode } }] }
+      }
+    } else {
+      _.merge(esQuery.body.query, {
+        bool: { filter: [{ match_phrase: { countryCode: criteria.countryCode } }] }
+      })
+    }
+  }
+
   // Search with constructed query
   const docs = await esClient.search(esQuery)
   // Extract data from hits
@@ -61,11 +73,12 @@ async function list (criteria) {
   }
 
   // then try to get from DB
-  let options
+  const options = {}
   if (criteria.name) {
-    options = {
-      name: { contains: criteria.name }
-    }
+    options.name = { contains: criteria.name }
+  }
+  if (criteria.countryCode) {
+    options.countryCode = { contains: criteria.countryCode }
   }
   // ignore pagination, scan all matched records
   const result = await helper.scan(config.AMAZON.DYNAMODB_COUNTRY_TABLE, options)
@@ -78,7 +91,9 @@ list.schema = {
   criteria: Joi.object().keys({
     page: Joi.page(),
     perPage: Joi.perPage(),
-    name: Joi.string()
+    name: Joi.string(),
+    countryFlag: Joi.string(),
+    countryCode: Joi.string()
   })
 }
 
@@ -127,7 +142,9 @@ async function create (data) {
 
 create.schema = {
   data: Joi.object().keys({
-    name: Joi.string().required()
+    name: Joi.string().required(),
+    countryFlag: Joi.string().required(),
+    countryCode: Joi.string().required()
   }).required()
 }
 
@@ -160,7 +177,9 @@ async function partiallyUpdate (id, data) {
 partiallyUpdate.schema = {
   id: Joi.id(),
   data: Joi.object().keys({
-    name: Joi.string()
+    name: Joi.string(),
+    countryFlag: Joi.string(),
+    countryCode: Joi.string()
   }).required()
 }
 
@@ -177,7 +196,9 @@ async function update (id, data) {
 update.schema = {
   id: Joi.id(),
   data: Joi.object().keys({
-    name: Joi.string().required()
+    name: Joi.string().required(),
+    countryFlag: Joi.string().required(),
+    countryCode: Joi.string().required()
   }).required()
 }
 

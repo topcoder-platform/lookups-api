@@ -57,6 +57,11 @@ paths:
           description: Filter by name, case insensitive, partial match is used
           required: false
           type: string
+        - name: countryCode
+          in: query
+          description: Filter by countryCode, case insensitive, partial match is used
+          required: false
+          type: string
       responses:
         '200':
           description: OK
@@ -115,6 +120,11 @@ paths:
         - name: name
           in: query
           description: Filter by name, case insensitive, partial match is used
+          required: false
+          type: string
+        - name: countryCode
+          in: query
+          description: Filter by countryCode, case insensitive, partial match is used
           required: false
           type: string
       responses:
@@ -826,6 +836,10 @@ definitions:
         format: UUID
       name:
         type: string
+      countryFlag:
+        type: string
+      countryCode:
+        type: string
     required:
       - id
       - name
@@ -833,6 +847,10 @@ definitions:
     type: object
     properties:
       name:
+        type: string
+      countryFlag:
+        type: string
+      countryCode:
         type: string
   EducationalInstitution:
     type: object
