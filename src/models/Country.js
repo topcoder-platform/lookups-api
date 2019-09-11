@@ -15,6 +15,14 @@ const schema = new Schema({
   name: {
     type: String,
     required: true
+  },
+  countryFlag: {
+    type: String,
+    required: true
+  },
+  countryCode: {
+    type: String,
+    required: true
   }
 },
 {
