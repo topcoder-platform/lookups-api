@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "54ca65b9-dea9-428c-94a8-893b982a39af",
+		"_postman_id": "61026333-a622-4ff9-9bcd-3a0cdc4cfa0c",
 		"name": "tc-lookup-api",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -281,7 +281,7 @@
 					"response": []
 				},
 				{
-					"name": "update country",
+					"name": "update country - Flag Only",
 					"event": [
 						{
 							"listen": "test",
@@ -314,7 +314,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"name\": \"testing updated\",\n\t\"countryFlag\": \"https://www.google.com\",\n\t\"countryCode\": \"TEST\"\n}"
+							"raw": "{\n\t\"name\": \"uu testing v\",\n\t\"countryFlag\": \"update1\",\n\t\"countryCode\": \"TEST\"\n}"
 						},
 						"url": {
 							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}",
@@ -331,7 +331,207 @@
 					"response": []
 				},
 				{
-					"name": "partially update country",
+					"name": "update country - Code Only",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"uu testing v\",\n\t\"countryFlag\": \"update1\",\n\t\"countryCode\": \"TEST-Update1\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"countries",
+								"{{COUNTRY_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update country - Both Flag and Code changed",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"uu testing v\",\n\t\"countryFlag\": \"update2\",\n\t\"countryCode\": \"TEST-Update2\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"countries",
+								"{{COUNTRY_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update country - All fields changed",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"uu testing v-Update1\",\n\t\"countryFlag\": \"update3\",\n\t\"countryCode\": \"TEST-Update3\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"countries",
+								"{{COUNTRY_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update country - Name Only",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Another Update\",\n\t\"countryFlag\": \"update3\",\n\t\"countryCode\": \"TEST-Update3\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"countries",
+								"{{COUNTRY_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "partially update country name",
 					"event": [
 						{
 							"listen": "test",
@@ -364,7 +564,107 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"name\": \"testing updated 2\"\n}"
+							"raw": "{\n\t\"name\": \"The Patched Country Name\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"countries",
+								"{{COUNTRY_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "partially update country code",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"countryCode\": \"The Patched Country Code\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"countries",
+								"{{COUNTRY_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "partially update country flag",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"countryFlag\": \"The Patched country flag\"\n}"
 						},
 						"url": {
 							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}",
@@ -452,7 +752,8 @@
 						]
 					}
 				}
-			]
+			],
+			"protocolProfileBehavior": {}
 		},
 		{
 			"name": "educational institutions",
@@ -901,7 +1202,8 @@
 						]
 					}
 				}
-			]
+			],
+			"protocolProfileBehavior": {}
 		},
 		{
 			"name": "health",
@@ -937,7 +1239,8 @@
 					},
 					"response": []
 				}
-			]
+			],
+			"protocolProfileBehavior": {}
 		}
 	],
 	"event": [
@@ -961,5 +1264,6 @@
 				]
 			}
 		}
-	]
+	],
+	"protocolProfileBehavior": {}
 }

@@ -10,4 +10,5 @@ const config = require('config')
 const unitTestHelper = require('./unitTestHelper')
 const service = require('../../src/services/EducationalInstitutionService')
 
-unitTestHelper.generateLookupUnitTests(service, config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE)
+unitTestHelper.generateLookupUnitTests(service, config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE,
+  ['name'], ['name'])

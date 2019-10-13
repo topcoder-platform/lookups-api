@@ -3,6 +3,9 @@
  */
 const _ = require('lodash')
 const chai = require('chai')
+const config = require('config')
+const sinon = require('sinon')
+const helper = require('../../src/common/helper')
 const testHelper = require('../testHelper')
 
 const should = chai.should()
@@ -13,75 +16,168 @@ chai.use(require('chai-as-promised'))
  * @param {Object} service the service to test
  * @param {String} modelName the model name
  */
-function generateLookupUnitTests (service, modelName) {
+function generateLookupUnitTests (service, modelName, fields, searchByFields) {
   describe(`Unit tests for ${modelName} service`, () => {
     // created entity id
     let id
     const notFoundId = '4ef609c7-d81c-4684-80a1-06b7d74d0eab'
+    const validationTestsEntity = {}
+    let postEventBusStub
+    let esClient
 
     before(async () => {
-      await testHelper.recreateESIndices()
-      await testHelper.clearDBData()
-      await testHelper.insertTestData()
+      for (let field of fields) {
+        validationTestsEntity[field] = 'ValidationTest'
+      }
+      await testHelper.clearDBData(modelName)
+
+      if (modelName === config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE) {
+        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX)
+        await testHelper.insertEducationalInstitutionsTestData()
+      } else if (modelName === config.AMAZON.DYNAMODB_COUNTRY_TABLE) {
+        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX)
+        await testHelper.insertCountryTestData()
+      }
+
+      esClient = await helper.getESClient()
     })
 
     after(async () => {
-      await testHelper.recreateESIndices()
-      await testHelper.clearDBData()
+      if (modelName === config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE) {
+        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX)
+      } else if (modelName === config.AMAZON.DYNAMODB_COUNTRY_TABLE) {
+        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX)
+      }
+      await testHelper.clearDBData(modelName)
+    })
+
+    afterEach(() => {
+      sinon.restore()
     })
 
     describe('list tests', () => {
-      it('Call list successfully 1', async () => {
+      it('Call list from ES successfully 1', async () => {
         const result = await service.list({})
         should.equal(result.total, 5)
         should.equal(result.page, 1)
         should.equal(result.perPage, 20)
         should.equal(result.result.length, 5)
         for (let i = 1; i <= 5; i += 1) {
-          const name = `a test${i} b`
-          const found = _.find(result.result, (item) => item.name === name)
-          should.exist(found)
+          let value, found
+          for (let field of fields) {
+            value = `a test${i} b`
+            found = _.find(result.result, (item) => item[field] === value)
+            should.exist(found)
+          }
         }
       })
 
-      it('Call list successfully 2', async () => {
+      it('Call list from ES successfully 2', async () => {
         const result = await service.list({ page: 2, perPage: 2 })
         should.equal(result.total, 5)
         should.equal(result.page, 2)
         should.equal(result.perPage, 2)
         should.equal(result.result.length, 2)
         for (let i = 3; i <= 4; i += 1) {
-          const name = `a test${i} b`
-          const found = _.find(result.result, (item) => item.name === name)
-          should.exist(found)
+          let value, found
+          for (let field of fields) {
+            value = `a test${i} b`
+            found = _.find(result.result, (item) => item[field] === value)
+            should.exist(found)
+          }
         }
       })
 
-      it('Call list successfully 3', async () => {
-        const result = await service.list({ name: 'TEst3' })
-        should.equal(result.total, 1)
-        should.equal(result.page, 1)
-        should.equal(result.perPage, 20)
-        should.equal(result.result.length, 1)
-        should.equal(result.result[0].name, 'a test3 b')
-      })
+      for (let fieldParam of searchByFields) {
+        it(`Call list from ES successfully 3 - by ${fieldParam}`, async () => {
+          const result = await service.list({ [fieldParam]: 'TEst3' })
+          should.equal(result.total, 1)
+          should.equal(result.page, 1)
+          should.equal(result.perPage, 20)
+          should.equal(result.result.length, 1)
+          for (let field of fields) {
+            should.equal(result.result[0][field], 'a test3 b')
+          }
+        })
 
-      it('Call list successfully 4', async () => {
-        const result = await service.list({ name: 'a b' })
-        should.equal(result.total, 0)
-        should.equal(result.page, 1)
-        should.equal(result.perPage, 20)
-        should.equal(result.result.length, 0)
-      })
+        it(`Call list from ES successfully 4 - by ${fieldParam}`, async () => {
+          const result = await service.list({ [fieldParam]: 'a b' })
+          should.equal(result.total, 0)
+          should.equal(result.page, 1)
+          should.equal(result.perPage, 20)
+          should.equal(result.result.length, 0)
+        })
 
-      it('list - invalid name', async () => {
-        try {
-          await service.list({ name: ['invalid'] })
-        } catch (e) {
-          should.equal(e.message.indexOf('"name" must be a string') >= 0, true)
-          return
+        it(`list - invalid ${fieldParam}`, async () => {
+          try {
+            await service.list({ [fieldParam]: ['invalid'] })
+          } catch (e) {
+            should.equal(e.message.indexOf(`"${fieldParam}" must be a string`) >= 0, true)
+            return
+          }
+          throw new Error('should not reach here')
+        })
+      }
+
+      describe('list from Database tests', () => {
+        beforeEach(() => {
+          sinon.stub(esClient, 'search').rejects(new Error('error'))
+        })
+
+        it('Call list from DB successfully 1', async () => {
+          let result = await service.list({})
+          should.equal(result.fromDB, true)
+          should.equal(result.result.length, 5)
+          for (let i = 1; i <= 5; i += 1) {
+            let value, found
+            for (let field of fields) {
+              value = `a test${i} b`
+              found = _.find(result.result, (item) => item[field] === value)
+              should.exist(found)
+            }
+          }
+        })
+
+        it('Call list from DB successfully 2', async () => {
+          let result = await service.list({ page: 2, perPage: 2 })
+          should.equal(result.fromDB, true)
+          should.equal(result.result.length, 5)
+          for (let i = 3; i <= 4; i += 1) {
+            let value, found
+            for (let field of fields) {
+              value = `a test${i} b`
+              found = _.find(result.result, (item) => item[field] === value)
+              should.exist(found)
+            }
+          }
+        })
+
+        for (let fieldParam of searchByFields) {
+          it(`Call list from DB successfully 3 - by ${fieldParam}`, async () => {
+            const result = await service.list({ [fieldParam]: 'test3' })
+            should.equal(result.fromDB, true)
+            should.equal(result.result.length, 1)
+            for (let field of fields) {
+              should.equal(result.result[0][field], 'a test3 b')
+            }
+          })
+
+          it(`Call list from DB successfully 4 - by ${fieldParam}`, async () => {
+            let result = await service.list({ [fieldParam]: 'a b' })
+            should.equal(result.fromDB, true)
+            should.equal(result.result.length, 0)
+          })
+
+          it(`list - invalid ${fieldParam}`, async () => {
+            try {
+              await service.list({ [fieldParam]: ['invalid'] })
+            } catch (e) {
+              should.equal(e.message.indexOf(`"${fieldParam}" must be a string`) >= 0, true)
+              return
+            }
+            throw new Error('should not reach here')
+          })
         }
-        throw new Error('should not reach here')
       })
 
       it('list - invalid page', async () => {
@@ -116,15 +212,33 @@ function generateLookupUnitTests (service, modelName) {
     })
 
     describe('create tests', () => {
+      beforeEach(() => {
+        postEventBusStub = sinon.stub(helper, 'postEvent').resolves([])
+      })
+
       it('Call create successfully', async () => {
-        const result = await service.create({ name: 'testing' })
-        should.equal(result.name, 'testing')
+        const entity = {}
+        for (let field of fields) {
+          entity[field] = 'testing'
+        }
+
+        const result = await service.create(entity)
+        for (let field of fields) {
+          should.equal(result[field], 'testing')
+        }
+        should.equal(postEventBusStub.callCount, 1)
         id = result.id
       })
 
       it('create - name already used', async () => {
-        await service.create({ name: 'testing' }).should.be.rejectedWith(
+        const entity = {}
+        for (let field of fields) {
+          entity[field] = 'testing'
+        }
+
+        await service.create(entity).should.be.rejectedWith(
           `${modelName} with name: testing already exists`)
+        should.equal(postEventBusStub.callCount, 0)
       })
 
       it('create - missing name', async () => {
@@ -132,26 +246,37 @@ function generateLookupUnitTests (service, modelName) {
           await service.create({})
         } catch (e) {
           should.equal(e.message.indexOf('"name" is required') >= 0, true)
+          should.equal(postEventBusStub.callCount, 0)
           return
         }
         throw new Error('should not reach here')
       })
 
-      it('create - invalid name', async () => {
-        try {
-          await service.create({ name: ['xx'] })
-        } catch (e) {
-          should.equal(e.message.indexOf('"name" must be a string') >= 0, true)
-          return
-        }
-        throw new Error('should not reach here')
-      })
+      for (let fieldParam of fields) {
+        it(`create - invalid ${fieldParam}`, async () => {
+          const entity = _.cloneDeep(validationTestsEntity)
+          entity[fieldParam] = ['xx']
+
+          try {
+            await service.create(entity)
+          } catch (e) {
+            should.equal(e.message.indexOf(`"${fieldParam}" must be a string`) >= 0, true)
+            should.equal(postEventBusStub.callCount, 0)
+            return
+          }
+          throw new Error('should not reach here')
+        })
+      }
 
       it('create - unexpected field', async () => {
+        const entity = _.cloneDeep(validationTestsEntity)
+        entity['other'] = 123
+
         try {
-          await service.create({ name: 'some name', other: 123 })
+          await service.create(entity)
         } catch (e) {
           should.equal(e.message.indexOf('"other" is not allowed') >= 0, true)
+          should.equal(postEventBusStub.callCount, 0)
           return
         }
         throw new Error('should not reach here')
@@ -162,7 +287,9 @@ function generateLookupUnitTests (service, modelName) {
       it('Call getEntity successfully', async () => {
         const result = await service.getEntity(id)
         should.equal(result.id, id)
-        should.equal(result.name, 'testing')
+        for (let field of fields) {
+          should.equal(result[field], 'testing')
+        }
       })
 
       it('getEntity - not found', async () => {
@@ -182,20 +309,38 @@ function generateLookupUnitTests (service, modelName) {
     })
 
     describe('update tests', () => {
+      beforeEach(() => {
+        postEventBusStub = sinon.stub(helper, 'postEvent').resolves([])
+      })
+
       it('Call update successfully', async () => {
-        const result = await service.update(id, { name: 'testing2' })
+        const entity = {}
+        for (let field of fields) {
+          entity[field] = 'testing2'
+        }
+
+        const result = await service.update(id, entity)
         should.equal(result.id, id)
-        should.equal(result.name, 'testing2')
+        should.equal(postEventBusStub.callCount, 1)
+
+        for (let field of fields) {
+          should.equal(result[field], 'testing2')
+        }
       })
 
       it('update - name already used', async () => {
-        await service.update(id, { name: 'a test1 b' }).should.be.rejectedWith(
+        const entity = _.cloneDeep(validationTestsEntity)
+        entity.name = 'a test1 b'
+
+        await service.update(id, entity).should.be.rejectedWith(
           `${modelName} with name: a test1 b already exists`)
+        should.equal(postEventBusStub.callCount, 0)
       })
 
       it('update - not found', async () => {
-        await service.update(notFoundId, { name: 'x' }).should.be.rejectedWith(
+        await service.update(notFoundId, _.cloneDeep(validationTestsEntity)).should.be.rejectedWith(
           `${modelName} with id: ${notFoundId} doesn't exist`)
+        should.equal(postEventBusStub.callCount, 0)
       })
 
       it('update - invalid id', async () => {
@@ -203,110 +348,137 @@ function generateLookupUnitTests (service, modelName) {
           await service.update('invalid', { name: 'x' })
         } catch (e) {
           should.equal(e.message.indexOf('"id" must be a valid GUID') >= 0, true)
+          should.equal(postEventBusStub.callCount, 0)
           return
         }
         throw new Error('should not reach here')
       })
 
-      it('update - null name', async () => {
-        try {
-          await service.update(id, { name: null })
-        } catch (e) {
-          should.equal(e.message.indexOf('"name" must be a string') >= 0, true)
-          return
-        }
-        throw new Error('should not reach here')
-      })
+      for (let fieldParam of fields) {
+        it(`update - null ${fieldParam}`, async () => {
+          try {
+            await service.update(id, _.set(_.cloneDeep(validationTestsEntity), fieldParam, null))
+          } catch (e) {
+            should.equal(e.message.indexOf(`"${fieldParam}" must be a string`) >= 0, true)
+            should.equal(postEventBusStub.callCount, 0)
+            return
+          }
+          throw new Error('should not reach here')
+        })
 
-      it('update - invalid name', async () => {
-        try {
-          await service.update(id, { name: { invalid: 'x' } })
-        } catch (e) {
-          should.equal(e.message.indexOf('"name" must be a string') >= 0, true)
-          return
-        }
-        throw new Error('should not reach here')
-      })
+        it(`update - invalid ${fieldParam}`, async () => {
+          try {
+            await service.update(id, _.set(_.cloneDeep(validationTestsEntity), fieldParam, { invalid: 'x' }))
+          } catch (e) {
+            should.equal(e.message.indexOf(`"${fieldParam}" must be a string`) >= 0, true)
+            should.equal(postEventBusStub.callCount, 0)
+            return
+          }
+          throw new Error('should not reach here')
+        })
 
-      it('update - empty name', async () => {
-        try {
-          await service.update(id, { name: '' })
-        } catch (e) {
-          should.equal(e.message.indexOf('"name" is not allowed to be empty') >= 0, true)
-          return
-        }
-        throw new Error('should not reach here')
-      })
+        it(`update - empty ${fieldParam}`, async () => {
+          try {
+            await service.update(id, _.set(_.cloneDeep(validationTestsEntity), fieldParam, ''))
+          } catch (e) {
+            should.equal(e.message.indexOf(`"${fieldParam}" is not allowed to be empty`) >= 0, true)
+            should.equal(postEventBusStub.callCount, 0)
+            return
+          }
+          throw new Error('should not reach here')
+        })
+      }
     })
 
     describe('partiallyUpdate tests', () => {
-      it('Call partiallyUpdate successfully 1', async () => {
-        const result = await service.partiallyUpdate(id, { name: 'testing3' })
-        should.equal(result.id, id)
-        should.equal(result.name, 'testing3')
+      beforeEach(() => {
+        postEventBusStub = sinon.stub(helper, 'postEvent').resolves([])
       })
 
-      it('Call partiallyUpdate successfully 2', async () => {
+      for (let fieldParam of fields) {
+        it(`Call partiallyUpdate successfully ${fieldParam}`, async () => {
+          const result = await service.partiallyUpdate(id, { [fieldParam]: 'testing3' })
+          should.equal(result.id, id)
+          should.equal(result[fieldParam], 'testing3')
+          should.equal(postEventBusStub.callCount, 1)
+        })
+
+        it(`partiallyUpdate - null ${fieldParam}`, async () => {
+          try {
+            await service.partiallyUpdate(id, { [fieldParam]: null })
+          } catch (e) {
+            should.equal(e.message.indexOf(`"${fieldParam}" must be a string`) >= 0, true)
+            should.equal(postEventBusStub.callCount, 0)
+            return
+          }
+          throw new Error('should not reach here')
+        })
+
+        it(`partiallyUpdate - invalid ${fieldParam}`, async () => {
+          try {
+            await service.partiallyUpdate(id, { [fieldParam]: { invalid: 'x' } })
+          } catch (e) {
+            should.equal(e.message.indexOf(`"${fieldParam}" must be a string`) >= 0, true)
+            should.equal(postEventBusStub.callCount, 0)
+            return
+          }
+          throw new Error('should not reach here')
+        })
+
+        it(`partiallyUpdate - empty ${fieldParam}`, async () => {
+          try {
+            await service.partiallyUpdate(id, { [fieldParam]: '' })
+          } catch (e) {
+            should.equal(e.message.indexOf(`"${fieldParam}" is not allowed to be empty`) >= 0, true)
+            should.equal(postEventBusStub.callCount, 0)
+            return
+          }
+          throw new Error('should not reach here')
+        })
+      }
+
+      it('Call partiallyUpdate successfully - fields to update not provided', async () => {
         const result = await service.partiallyUpdate(id, {})
         should.equal(result.id, id)
-        should.equal(result.name, 'testing3')
+        should.equal(postEventBusStub.callCount, 0)
+        for (let field of fields) {
+          should.equal(result[field], 'testing3')
+        }
       })
 
       it('partiallyUpdate - name already used', async () => {
-        await service.partiallyUpdate(id, { name: 'a test2 b' }).should.be.rejectedWith(
+        const entity = _.cloneDeep(validationTestsEntity)
+        entity.name = 'a test2 b'
+        await service.partiallyUpdate(id, entity).should.be.rejectedWith(
           `${modelName} with name: a test2 b already exists`)
+        should.equal(postEventBusStub.callCount, 0)
       })
 
       it('partiallyUpdate - not found', async () => {
-        await service.partiallyUpdate(notFoundId, { name: 'x' }).should.be.rejectedWith(
+        await service.partiallyUpdate(notFoundId, _.cloneDeep(validationTestsEntity)).should.be.rejectedWith(
           `${modelName} with id: ${notFoundId} doesn't exist`)
+        should.equal(postEventBusStub.callCount, 0)
       })
 
       it('partiallyUpdate - invalid id', async () => {
         try {
-          await service.partiallyUpdate('invalid', { name: 'x' })
+          await service.partiallyUpdate('invalid', _.cloneDeep(validationTestsEntity))
         } catch (e) {
           should.equal(e.message.indexOf('"id" must be a valid GUID') >= 0, true)
-          return
-        }
-        throw new Error('should not reach here')
-      })
-
-      it('partiallyUpdate - null name', async () => {
-        try {
-          await service.partiallyUpdate(id, { name: null })
-        } catch (e) {
-          should.equal(e.message.indexOf('"name" must be a string') >= 0, true)
-          return
-        }
-        throw new Error('should not reach here')
-      })
-
-      it('partiallyUpdate - invalid name', async () => {
-        try {
-          await service.partiallyUpdate(id, { name: { invalid: 'x' } })
-        } catch (e) {
-          should.equal(e.message.indexOf('"name" must be a string') >= 0, true)
-          return
-        }
-        throw new Error('should not reach here')
-      })
-
-      it('partiallyUpdate - empty name', async () => {
-        try {
-          await service.partiallyUpdate(id, { name: '' })
-        } catch (e) {
-          should.equal(e.message.indexOf('"name" is not allowed to be empty') >= 0, true)
+          should.equal(postEventBusStub.callCount, 0)
           return
         }
         throw new Error('should not reach here')
       })
 
       it('partiallyUpdate - unexpected field', async () => {
+        const entity = _.cloneDeep(validationTestsEntity)
+        entity['other'] = 'xx'
         try {
-          await service.partiallyUpdate(id, { name: 'xx', other: 'xx' })
+          await service.partiallyUpdate(id, entity)
         } catch (e) {
           should.equal(e.message.indexOf('"other" is not allowed') >= 0, true)
+          should.equal(postEventBusStub.callCount, 0)
           return
         }
         throw new Error('should not reach here')
@@ -314,13 +486,19 @@ function generateLookupUnitTests (service, modelName) {
     })
 
     describe('remove tests', () => {
+      beforeEach(() => {
+        postEventBusStub = sinon.stub(helper, 'postEvent').resolves([])
+      })
+
       it('Call remove successfully', async () => {
         await service.remove(id)
+        should.equal(postEventBusStub.callCount, 1)
       })
 
       it('remove - not found', async () => {
         await service.remove(id).should.be.rejectedWith(
           `${modelName} with id: ${id} doesn't exist`)
+        should.equal(postEventBusStub.callCount, 0)
       })
 
       it('remove - invalid id', async () => {
@@ -328,6 +506,7 @@ function generateLookupUnitTests (service, modelName) {
           await service.remove('invalid')
         } catch (e) {
           should.equal(e.message.indexOf('"id" must be a valid GUID') >= 0, true)
+          should.equal(postEventBusStub.callCount, 0)
           return
         }
         throw new Error('should not reach here')

@@ -1,6 +1,6 @@
 # Topcoder Lookup API v5
 
-## Prerequisites 
+## Prerequisites
 
 - NodeJS (v10)
 - AWS DynamoDB
@@ -57,6 +57,12 @@ The following test parameters can be set in config file or in env variables:
 - M2M_FULL_ACCESS_TOKEN: M2M full access token
 - M2M_READ_ACCESS_TOKEN: M2M read access token
 - M2M_UPDATE_ACCESS_TOKEN: M2M update access token
+- AMAZON.DYNAMODB_COUNTRY_TABLE: The country DynamoDB table used during unit/e2e tests (`test_` is appended to the table name automatically)
+- AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE: The educational institutions DynamoDB table used during unit/e2e tests (`test_` is appended to the table name automatically)
+- ES.COUNTRY_INDEX: The country elasticsearch index used during unit/e2e tests.
+- ES.COUNTRY_TYPE: The country elastic search document type used during unit/e2e tests.
+- ES.EDUCATIONAL_INSTITUTION_INDEX: The educational institution elastic search index used during unit/e2e tests
+- ES.EDUCATIONAL_INSTITUTION_TYPE: The educational institution elastic search document type used during unit/e2e tests.
 
 ## Local DynamoDB setup (Optional)
 
@@ -94,7 +100,7 @@ may be different for different ES versions.
 - Install dependencies `npm install`
 - Run lint `npm run lint`
 - Run lint fix `npm run lint:fix`
-- To delete DynamoDB table if needed `npm run delete-tables`
+- To delete DynamoDB table if needed `npm run delete-tables` **WARNING: This deletes all tables**
 - To create DynamoDB table if needed `npm run create-tables`
 - Create configured Elasticsearch indices, they will be re-created if present: `npm run init-es`
 - Start app `npm start`
@@ -103,7 +109,7 @@ may be different for different ES versions.
 ## Running tests
 
 Tables should be created before running tests.
-Note that running tests will clear all DynamoDB data and re-create Elasticsearch indices.
+Note that running tests will clear all DynamoDB data in test tables and re-create Elasticsearch test indices.
 
 ### Running unit tests
 
@@ -133,14 +139,22 @@ To run integration tests with coverage report
 npm run e2e:cov
 ```
 
+You can see that the controllers functions 'getEntityHead()' and 'listHead()' in both controllers are not covered by the E2E tests.
+According to the HTTP HEAD method documentation https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/HEAD , a GET request is issued behind the scenes, hence these functions are not even hit by the tests even if the HEAD HTTP method was called :
+See 'list head API tests' and 'get entity head API tests' in e2eTestHelper.js, you can find calls like 'await chai.request(app).head(`${basePath}/${id}`).set('Authorization', `Bearer ${config.M2M_FULL_ACCESS_TOKEN}`)'
+
+But this does not hit the controllers functions mentioned above.
+
 ## Verification
 
+- configure and start the application as described above
 - import Postman collection and environment in the docs folder to Postman
-- then run the Postman tests, you may use Postman collection runner to run them
+- then run the Postman tests from top to bottom, you may use Postman collection runner to run them
+- To check if create/update/delete lookups events are properly sent to event bus, go to `https://lauscher.topcoder-dev.com/` login as TonyJ/appirio123 and check the following topics based on the test that was executed : 'lookup.notification.create', 'lookup.notification.update', 'lookup.notification.delete'
+- In postman, you can use 'get country' test to get the country after each update to see if it is correctly updated.
 
 ## Notes
 
 - swagger is updated, adding health check API and some other fixes, you may check it using `http://editor.swagger.io/`
 - Postman tests are also updated to suit latest code
 - all JWT tokens provided in Postman environment file and tests are created in `https://jwt.io` with secret `mysecret`
-

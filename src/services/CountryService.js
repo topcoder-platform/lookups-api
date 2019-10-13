@@ -157,10 +157,13 @@ create.schema = {
 async function partiallyUpdate (id, data) {
   // get data in DB
   const country = await helper.getById(config.AMAZON.DYNAMODB_COUNTRY_TABLE, id)
-  if (data.name && country.name !== data.name) {
-    // ensure name is not used already
-    await helper.validateDuplicate(config.AMAZON.DYNAMODB_COUNTRY_TABLE, 'name', data.name)
-
+  if ((data.name && country.name !== data.name) ||
+     (data.countryFlag && country.countryFlag !== data.countryFlag) ||
+     (data.countryCode && country.countryCode !== data.countryCode)) {
+    if (data.name && country.name !== data.name) {
+      // ensure name is not used already
+      await helper.validateDuplicate(config.AMAZON.DYNAMODB_COUNTRY_TABLE, 'name', data.name)
+    }
     // then update data in DB
     const res = await helper.update(country, data)
 
