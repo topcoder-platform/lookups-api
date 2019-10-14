@@ -77,4 +77,6 @@ workflows:
           context : org-global
           filters:
             branches:
-              only: master
+              only: 
+                - master
+                - dev-integ
