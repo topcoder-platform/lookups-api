@@ -62,7 +62,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
       it('Call list API from ES successfully 1', async () => {
         const response = await chai.request(app)
           .get(basePath)
-          .set('Authorization', `Bearer ${config.COPILOT_TOKEN}`)
         should.equal(response.status, 200)
         should.equal(response.headers['x-page'], '1')
         should.equal(response.headers['x-per-page'], '20')
@@ -84,7 +83,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
       it('Call list API from ES successfully 2', async () => {
         const response = await chai.request(app)
           .get(basePath)
-          .set('Authorization', `Bearer ${config.COPILOT_TOKEN}`)
           .query({ page: 2, perPage: 2 })
         should.equal(response.status, 200)
         should.equal(response.headers['x-page'], '2')
@@ -110,7 +108,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
         it(`Call list from ES successfully 3 - by ${fieldParam}`, async () => {
           const response = await chai.request(app)
             .get(basePath)
-            .set('Authorization', `Bearer ${config.USER_TOKEN}`)
             .query({ [fieldParam]: 'TEst3' })
           should.equal(response.status, 200)
           should.equal(response.headers['x-page'], '1')
@@ -127,7 +124,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
         it(`Call list from ES successfully 4 - by ${fieldParam}`, async () => {
           const response = await chai.request(app)
             .get(basePath)
-            .set('Authorization', `Bearer ${config.USER_TOKEN}`)
             .query({ [fieldParam]: 'a b' })
           should.equal(response.status, 200)
           should.equal(response.headers['x-page'], '1')
@@ -141,7 +137,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
       it(`Call list from ES successfully by all fields`, async () => {
         const response = await chai.request(app)
           .get(basePath)
-          .set('Authorization', `Bearer ${config.USER_TOKEN}`)
           .query(validationTestsEntity)
         should.equal(response.status, 200)
         should.equal(response.body.length, 0)
@@ -155,7 +150,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
         it('Call list API from DB successfully 1', async () => {
           const response = await chai.request(app)
             .get(basePath)
-            .set('Authorization', `Bearer ${config.COPILOT_TOKEN}`)
           should.equal(response.status, 200)
           should.equal(response.body.length, 5)
           for (let i = 1; i <= 5; i += 1) {
@@ -171,7 +165,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
         it('Call list API from DB successfully 2', async () => {
           const response = await chai.request(app)
             .get(basePath)
-            .set('Authorization', `Bearer ${config.COPILOT_TOKEN}`)
             .query({ page: 2, perPage: 2 })
           should.equal(response.status, 200)
 
@@ -190,7 +183,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
           it(`Call list from DB successfully 3 - by ${fieldParam}`, async () => {
             const response = await chai.request(app)
               .get(basePath)
-              .set('Authorization', `Bearer ${config.USER_TOKEN}`)
               .query({ name: 'test3' })
             should.equal(response.status, 200)
 
@@ -203,7 +195,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
           it(`Call list from DB successfully 4 - by ${fieldParam}`, async () => {
             const response = await chai.request(app)
               .get(basePath)
-              .set('Authorization', `Bearer ${config.USER_TOKEN}`)
               .query({ name: 'a b' })
             should.equal(response.status, 200)
             should.equal(response.body.length, 0)
@@ -214,55 +205,14 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
       it('list API - invalid page', async () => {
         const response = await chai.request(app)
           .get(basePath)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
           .query({ page: -1 })
         should.equal(response.status, 400)
         should.equal(response.body.message, '"page" must be larger than or equal to 1')
       })
 
-      it('list API - missing token', async () => {
-        const response = await chai.request(app)
-          .get(basePath)
-        should.equal(response.status, 401)
-        should.equal(response.body.message, 'No token provided.')
-      })
-
-      it('list API - invalid bearer format', async () => {
-        const response = await chai.request(app)
-          .get(basePath)
-          .set('Authorization', 'invalid format')
-        should.equal(response.status, 401)
-        should.equal(response.body.message, 'No token provided.')
-      })
-
-      it('list API - invalid token', async () => {
-        const response = await chai.request(app)
-          .get(basePath)
-          .set('Authorization', `Bearer ${config.INVALID_TOKEN}`)
-        should.equal(response.status, 401)
-        should.equal(response.body.message, 'Failed to authenticate token.')
-      })
-
-      it('list API - expired token', async () => {
-        const response = await chai.request(app)
-          .get(basePath)
-          .set('Authorization', `Bearer ${config.EXPIRED_TOKEN}`)
-        should.equal(response.status, 401)
-        should.equal(response.body.message, 'Failed to authenticate token.')
-      })
-
-      it('list API - not allowed token', async () => {
-        const response = await chai.request(app)
-          .get(basePath)
-          .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
-        should.equal(response.status, 403)
-        should.equal(response.body.message, 'You are not allowed to perform this action!')
-      })
-
       it('list API - invalid perPage', async () => {
         const response = await chai.request(app)
           .get(basePath)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
           .query({ perPage: 'abc' })
         should.equal(response.status, 400)
         should.equal(response.body.message, '"perPage" must be a number')
@@ -271,7 +221,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
       it('list API - unexpected field', async () => {
         const response = await chai.request(app)
           .get(basePath)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
           .query({ other: 123 })
         should.equal(response.status, 400)
         should.equal(response.body.message, '"other" is not allowed')
@@ -282,7 +231,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
       it('Call list head API successfully 1', async () => {
         const response = await chai.request(app)
           .head(basePath)
-          .set('Authorization', `Bearer ${config.COPILOT_TOKEN}`)
         should.equal(response.status, 200)
         should.equal(response.headers['x-page'], '1')
         should.equal(response.headers['x-per-page'], '20')
@@ -295,7 +243,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
       it('Call list head API successfully 2', async () => {
         const response = await chai.request(app)
           .head(basePath)
-          .set('Authorization', `Bearer ${config.COPILOT_TOKEN}`)
           .query({ page: 2, perPage: 2 })
         should.equal(response.status, 200)
         should.equal(response.headers['x-page'], '2')
@@ -311,7 +258,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
       it('Call list head API successfully 3', async () => {
         const response = await chai.request(app)
           .head(basePath)
-          .set('Authorization', `Bearer ${config.USER_TOKEN}`)
           .query({ name: 'TEst3' })
         should.equal(response.status, 200)
         should.equal(response.headers['x-page'], '1')
@@ -325,7 +271,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
       it('Call list head API successfully 4', async () => {
         const response = await chai.request(app)
           .head(basePath)
-          .set('Authorization', `Bearer ${config.USER_TOKEN}`)
           .query({ name: 'a b' })
         should.equal(response.status, 200)
         should.equal(response.headers['x-page'], '1')
@@ -338,47 +283,14 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
       it('list head API - invalid page', async () => {
         const response = await chai.request(app)
           .head(basePath)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
           .query({ page: -1 })
         should.equal(response.status, 400)
-        should.equal(_.isEmpty(response.body), true)
-      })
-
-      it('list head API - missing token', async () => {
-        const response = await chai.request(app)
-          .head(basePath)
-        should.equal(response.status, 401)
-        should.equal(_.isEmpty(response.body), true)
-      })
-
-      it('list head API - invalid token', async () => {
-        const response = await chai.request(app)
-          .head(basePath)
-          .set('Authorization', `Bearer ${config.INVALID_TOKEN}`)
-        should.equal(response.status, 401)
-        should.equal(_.isEmpty(response.body), true)
-      })
-
-      it('list head API - expired token', async () => {
-        const response = await chai.request(app)
-          .head(basePath)
-          .set('Authorization', `Bearer ${config.EXPIRED_TOKEN}`)
-        should.equal(response.status, 401)
-        should.equal(_.isEmpty(response.body), true)
-      })
-
-      it('list head API - not allowed token', async () => {
-        const response = await chai.request(app)
-          .head(basePath)
-          .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
-        should.equal(response.status, 403)
         should.equal(_.isEmpty(response.body), true)
       })
 
       it('list head API - invalid perPage', async () => {
         const response = await chai.request(app)
           .head(basePath)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
           .query({ perPage: 'abc' })
         should.equal(response.status, 400)
         should.equal(_.isEmpty(response.body), true)
@@ -387,7 +299,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
       it('list head API - unexpected field', async () => {
         const response = await chai.request(app)
           .head(basePath)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
           .query({ other: 123 })
         should.equal(response.status, 400)
         should.equal(_.isEmpty(response.body), true)
@@ -486,7 +397,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
       it('Call get entity API successfully', async () => {
         const response = await chai.request(app)
           .get(`${basePath}/${id}`)
-          .set('Authorization', `Bearer ${config.USER_TOKEN}`)
         should.equal(response.status, 200)
         should.equal(response.body.id, id)
         for (let field of fields) {
@@ -494,18 +404,9 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
         }
       })
 
-      it('get entity API - forbidden', async () => {
-        const response = await chai.request(app)
-          .get(`${basePath}/${id}`)
-          .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
-        should.equal(response.status, 403)
-        should.equal(response.body.message, 'You are not allowed to perform this action!')
-      })
-
       it('get entity API - not found', async () => {
         const response = await chai.request(app)
           .get(`${basePath}/${notFoundId}`)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
         should.equal(response.status, 404)
         should.equal(response.body.message, `${modelName} with id: ${notFoundId} doesn't exist`)
       })
@@ -513,7 +414,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
       it('get entity API - invalid id', async () => {
         const response = await chai.request(app)
           .get(`${basePath}/invalid`)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
         should.equal(response.status, 400)
         should.equal(response.body.message, '"id" must be a valid GUID')
       })
@@ -523,23 +423,13 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
       it('Call get entity head API successfully', async () => {
         const response = await chai.request(app)
           .head(`${basePath}/${id}`)
-          .set('Authorization', `Bearer ${config.M2M_FULL_ACCESS_TOKEN}`)
         should.equal(response.status, 200)
-        should.equal(_.isEmpty(response.body), true)
-      })
-
-      it('get entity head API - forbidden', async () => {
-        const response = await chai.request(app)
-          .head(`${basePath}/${id}`)
-          .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
-        should.equal(response.status, 403)
         should.equal(_.isEmpty(response.body), true)
       })
 
       it('get entity head API - not found', async () => {
         const response = await chai.request(app)
           .head(`${basePath}/${notFoundId}`)
-          .set('Authorization', `Bearer ${config.M2M_FULL_ACCESS_TOKEN}`)
         should.equal(response.status, 404)
         should.equal(_.isEmpty(response.body), true)
       })
@@ -547,7 +437,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
       it('get entity head API - invalid id', async () => {
         const response = await chai.request(app)
           .head(`${basePath}/invalid`)
-          .set('Authorization', `Bearer ${config.M2M_READ_ACCESS_TOKEN}`)
         should.equal(response.status, 400)
         should.equal(_.isEmpty(response.body), true)
       })

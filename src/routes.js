@@ -10,17 +10,13 @@ module.exports = {
   '/lookups/countries': {
     get: {
       controller: 'CountryController',
-      method: 'list',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadLookup, constants.Scopes.AllLookup]
+      method: 'list'
+      // any role / scope is allowed
     },
     head: {
       controller: 'CountryController',
-      method: 'listHead',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadLookup, constants.Scopes.AllLookup]
+      method: 'listHead'
+      // any role / scope is allowed
     },
     post: {
       controller: 'CountryController',
@@ -33,17 +29,13 @@ module.exports = {
   '/lookups/countries/:id': {
     get: {
       controller: 'CountryController',
-      method: 'getEntity',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadLookup, constants.Scopes.AllLookup]
+      method: 'getEntity'
+      // any role / scope is allowed
     },
     head: {
       controller: 'CountryController',
-      method: 'getEntityHead',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadLookup, constants.Scopes.AllLookup]
+      method: 'getEntityHead'
+      // any role / scope is allowed
     },
     put: {
       controller: 'CountryController',
@@ -71,17 +63,13 @@ module.exports = {
   '/lookups/educationalInstitutions': {
     get: {
       controller: 'EducationalInstitutionController',
-      method: 'list',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadLookup, constants.Scopes.AllLookup]
+      method: 'list'
+      // any role / scope is allowed
     },
     head: {
       controller: 'EducationalInstitutionController',
-      method: 'listHead',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadLookup, constants.Scopes.AllLookup]
+      method: 'listHead'
+      // any role / scope is allowed
     },
     post: {
       controller: 'EducationalInstitutionController',
@@ -94,17 +82,13 @@ module.exports = {
   '/lookups/educationalInstitutions/:id': {
     get: {
       controller: 'EducationalInstitutionController',
-      method: 'getEntity',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadLookup, constants.Scopes.AllLookup]
+      method: 'getEntity'
+      // any role / scope is allowed
     },
     head: {
       controller: 'EducationalInstitutionController',
-      method: 'getEntityHead',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadLookup, constants.Scopes.AllLookup]
+      method: 'getEntityHead'
+      // any role / scope is allowed
     },
     put: {
       controller: 'EducationalInstitutionController',
