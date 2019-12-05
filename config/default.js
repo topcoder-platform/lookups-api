@@ -22,7 +22,7 @@ module.exports = {
     // table name is model name
     DYNAMODB_COUNTRY_TABLE: process.env.DYNAMODB_COUNTRY_TABLE || 'countries',
     DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE: process.env.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE || 'educationalInstitutions',
-    DYNAMODB_DEVICES_TABLE: process.env.DYNAMODB_DEVICES_TABLE || 'devices'
+    DYNAMODB_DEVICE_TABLE: process.env.DYNAMODB_DEVICE_TABLE || 'devices'
   },
 
   ES: {
@@ -33,8 +33,8 @@ module.exports = {
     COUNTRY_TYPE: process.env.COUNTRY_TYPE || '_doc',
     EDUCATIONAL_INSTITUTION_INDEX: process.env.EDUCATIONAL_INSTITUTION_INDEX || 'educational_institutions',
     EDUCATIONAL_INSTITUTION_TYPE: process.env.EDUCATIONAL_INSTITUTION_TYPE || '_doc',
-    DEVICES_INDEX: process.env.DEVICES_INDEX || 'devices',
-    DEVICES_TYPE: process.env.DEVICES_TYPE || '_doc'
+    DEVICE_INDEX: process.env.DEVICE_INDEX || 'devices',
+    DEVICE_TYPE: process.env.DEVICE_TYPE || '_doc'
   },
 
   AUTH0_URL: process.env.AUTH0_URL,

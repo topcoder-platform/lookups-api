@@ -226,8 +226,9 @@ async function validateDuplicate (modelName, keys, values) {
     options[keys] = { eq: values }
   }
 
+  console.log('options: ' + JSON.stringify(options))
   const records = await scan(modelName, options)
-  console.log(records)
+  console.log('records: ' + JSON.stringify(records))
   if (records.length > 0) {
     throw new errors.ConflictError(`${modelName} with ${keys}: ${values} already exists`)
   }

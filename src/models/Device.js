@@ -12,7 +12,7 @@ const schema = new Schema({
     hashKey: true,
     required: true
   },
-  type: {
+  name: { // this is actually device type
     type: String,
     required: true
   },

@@ -15,8 +15,8 @@ const createTables = async () => {
     'test_' + config.AMAZON.DYNAMODB_COUNTRY_TABLE,
     config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE,
     'test_' + config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE,
-    config.AMAZON.DYNAMODB_DEVICES_TABLE,
-    'test_' + config.AMAZON.DYNAMODB_DEVICES_TABLE
+    config.AMAZON.DYNAMODB_DEVICE_TABLE,
+    'test_' + config.AMAZON.DYNAMODB_DEVICE_TABLE
   ]
   for (const name of names) {
     logger.info(`Create table: ${name}`)

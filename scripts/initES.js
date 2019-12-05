@@ -15,8 +15,8 @@ const initES = async () => {
   logger.info(`Re-create index ${config.ES.EDUCATIONAL_INSTITUTION_INDEX} in Elasticsearch.`)
   await helper.createESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX)
 
-  logger.info(`Re-create index ${config.ES.DEVICES_INDEX} in Elasticsearch.`)
-  await helper.createESIndex(config.ES.DEVICES_INDEX)
+  logger.info(`Re-create index ${config.ES.DEVICE_INDEX} in Elasticsearch.`)
+  await helper.createESIndex(config.ES.DEVICE_INDEX)
 }
 
 initES().then(() => {

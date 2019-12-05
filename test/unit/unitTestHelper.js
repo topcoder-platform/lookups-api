@@ -37,6 +37,9 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields) {
       } else if (modelName === config.AMAZON.DYNAMODB_COUNTRY_TABLE) {
         await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX)
         await testHelper.insertCountryTestData()
+      } else if (modelName === config.AMAZON.DYNAMODB_DEVICE_TABLE) {
+        await testHelper.recreateESIndex(config.ES.DEVICE_INDEX)
+        await testHelper.insertDeviceTestData()
       }
 
       esClient = await helper.getESClient()
@@ -47,6 +50,8 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields) {
         await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX)
       } else if (modelName === config.AMAZON.DYNAMODB_COUNTRY_TABLE) {
         await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX)
+      } else if (modelName === config.AMAZON.DYNAMODB_DEVICE_TABLE) {
+        await testHelper.recreateESIndex(config.ES.DEVICE_INDEX)
       }
       await testHelper.clearDBData(modelName)
     })

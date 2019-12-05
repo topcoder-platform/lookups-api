@@ -20,19 +20,19 @@ async function listES (criteria) {
   // construct ES query
   const esQuery = {
     index: config.ES.DEVICE_INDEX,
-    type: config.ES.DEVICE_TYPE,
+    name: config.ES.DEVICE_TYPE,
     size: criteria.perPage,
     from: (criteria.page - 1) * criteria.perPage, // Es Index starts from 0
     body: {
-      sort: [{ type: { order: 'asc' } }] // sort by type
+      sort: [{ name: { order: 'asc' } }] // sort by device type
     }
   }
 
   // filtering for type
-  if (criteria.type) {
+  if (criteria.name) {
     esQuery.body.query = {
       bool: {
-        filter: [{ match_phrase: { type: criteria.type } }]
+        filter: [{ match_phrase: { name: criteria.name } }]
       }
     }
   }
@@ -116,8 +116,8 @@ async function list (criteria) {
 
   // then try to get from DB
   const options = {}
-  if (criteria.type) {
-    options.type = { contains: criteria.type }
+  if (criteria.name) {
+    options.name = { contains: criteria.name }
   }
   if (criteria.manufacturer) {
     options.manufacturer = { contains: criteria.manufacturer }
@@ -142,7 +142,7 @@ list.schema = {
   criteria: Joi.object().keys({
     page: Joi.page(),
     perPage: Joi.perPage(),
-    type: Joi.string(),
+    name: Joi.string(),
     manufacturer: Joi.string(),
     model: Joi.string(),
     operatingSystem: Joi.string(),
@@ -160,7 +160,7 @@ async function getEntity (id) {
   try {
     return await esClient.getSource({
       index: config.ES.DEVICE_INDEX,
-      type: config.ES.DEVICE_TYPE,
+      name: config.ES.DEVICE_TYPE,
       id
     })
   } catch (e) {
@@ -183,8 +183,8 @@ getEntity.schema = {
  */
 async function create (data) {
   await helper.validateDuplicate(config.AMAZON.DYNAMODB_DEVICE_TABLE,
-    ['type', 'manufacturer', 'model', 'operatingSystem', 'operatingSystemVersion'],
-    [data.type, data.manufacturer, data.model, data.operatingSystem, data.operatingSystemVersion])
+    ['name', 'manufacturer', 'model', 'operatingSystem', 'operatingSystemVersion'],
+    [data.name, data.manufacturer, data.model, data.operatingSystem, data.operatingSystemVersion])
   data.id = uuid()
   // create record in db
   const res = await helper.create(config.AMAZON.DYNAMODB_DEVICE_TABLE, data)
@@ -197,7 +197,7 @@ async function create (data) {
 
 create.schema = {
   data: Joi.object().keys({
-    type: Joi.string().required(),
+    name: Joi.string().required(),
     manufacturer: Joi.string().required(),
     model: Joi.string().required(),
     operatingSystem: Joi.string().required(),
@@ -214,15 +214,15 @@ create.schema = {
 async function partiallyUpdate (id, data) {
   // get data in DB
   const device = await helper.getById(config.AMAZON.DYNAMODB_DEVICE_TABLE, id)
-  if ((data.type && device.type !== data.type) ||
+  if ((data.name && device.name !== data.name) ||
      (data.manufacturer && device.manufacturer !== data.manufacturer) ||
      (data.model && device.model !== data.model) ||
      (data.operatingSystem && device.operatingSystem !== data.operatingSystem) ||
      (data.operatingSystemVersion && device.operatingSystemVersion !== data.operatingSystemVersion)) {
     // ensure same device not exists
     await helper.validateDuplicate(config.AMAZON.DYNAMODB_DEVICE_TABLE,
-      ['type', 'manufacturer', 'model', 'operatingSystem', 'operatingSystemVersion'],
-      [data.type, data.manufacturer, data.model, data.operatingSystem, data.operatingSystemVersion])
+      ['name', 'manufacturer', 'model', 'operatingSystem', 'operatingSystemVersion'],
+      [data.name, data.manufacturer, data.model, data.operatingSystem, data.operatingSystemVersion])
 
     // then update data in DB
     const res = await helper.update(device, data)
@@ -240,7 +240,7 @@ async function partiallyUpdate (id, data) {
 partiallyUpdate.schema = {
   id: Joi.id(),
   data: Joi.object().keys({
-    type: Joi.string(),
+    name: Joi.string(),
     manufacturer: Joi.string(),
     model: Joi.string(),
     operatingSystem: Joi.string(),
@@ -261,7 +261,7 @@ async function update (id, data) {
 update.schema = {
   id: Joi.id(),
   data: Joi.object().keys({
-    type: Joi.string().required(),
+    name: Joi.string().required(),
     manufacturer: Joi.string().required(),
     model: Joi.string().required(),
     operatingSystem: Joi.string().required(),
