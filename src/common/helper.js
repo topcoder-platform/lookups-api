@@ -209,15 +209,27 @@ async function scan (modelName, scanParams) {
 /**
  * Validate the data to ensure no duplication
  * @param {Object} modelName The dynamoose model name
- * @param {String} name The attribute name of dynamoose model
- * @param {String} value The attribute value to be validated
+ * @param {String} keys The attribute name of dynamoose model
+ * @param {String} values The attribute value to be validated
  */
-async function validateDuplicate (modelName, name, value) {
+async function validateDuplicate (modelName, keys, values) {
   const options = {}
-  options[name] = { eq: value }
+  if (Array.isArray(keys)) {
+    if (keys.length !== values.length) {
+      throw new errors.BadRequestError(`size of ${keys} and ${values} do not match.`)
+    }
+
+    keys.forEach(function (key, index) {
+      options[key] = { eq: values[index] }
+    })
+  } else {
+    options[keys] = { eq: values }
+  }
+
   const records = await scan(modelName, options)
+  console.log(records)
   if (records.length > 0) {
-    throw new errors.ConflictError(`${modelName} with ${name}: ${value} already exists`)
+    throw new errors.ConflictError(`${modelName} with ${keys}: ${values} already exists`)
   }
 }
 
