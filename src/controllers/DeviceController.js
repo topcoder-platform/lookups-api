@@ -2,7 +2,7 @@
  * Controller for Device endpoints
  */
 const HttpStatus = require('http-status-codes')
-const service = require('../services/CountryService')
+const service = require('../services/DeviceService')
 const helper = require('../common/helper')
 
 /**

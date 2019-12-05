@@ -27,5 +27,7 @@ exportObj[config.AMAZON.DYNAMODB_COUNTRY_TABLE] =
   dynamoose.model(config.AMAZON.DYNAMODB_COUNTRY_TABLE, require('./Country'))
 exportObj[config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE] =
   dynamoose.model(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, require('./EducationalInstitution'))
+exportObj[config.AMAZON.DYNAMODB_DEVICE_TABLE] =
+  dynamoose.model(config.AMAZON.DYNAMODB_DEVICE_TABLE, require('./Device'))
 
 module.exports = exportObj

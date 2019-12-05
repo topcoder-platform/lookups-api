@@ -68,7 +68,7 @@ async function insertDeviceTestData () {
   sinon.stub(helper, 'postEvent').resolves([])
   for (let i = 1; i <= 5; i += 1) {
     const res = await deviceService.create({
-      name: `a test${i} b`,
+      type: `a test${i} b`,
       manufacturer: `a test${i} b`,
       model: `a test${i} b`,
       operatingSystem: `a test${i} b`,

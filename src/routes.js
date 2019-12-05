@@ -165,7 +165,7 @@ module.exports = {
       scopes: [constants.Scopes.DeleteLookup, constants.Scopes.AllLookup]
     }
   },
-  
+
   '/health': {
     get: {
       controller: 'HealthCheckController',

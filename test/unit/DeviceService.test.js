@@ -12,5 +12,5 @@ const service = require('../../src/services/DeviceService')
 
 unitTestHelper.generateLookupUnitTests(service,
   config.AMAZON.DYNAMODB_DEVICE_TABLE,
-  ['name', 'manufacturer', 'model', 'operatingSystem', 'operatingSystemVersion'],
-  ['name', 'manufacturer', 'model', 'operatingSystem', 'operatingSystemVersion'])
+  ['type', 'manufacturer', 'model', 'operatingSystem', 'operatingSystemVersion'],
+  ['type', 'manufacturer', 'model', 'operatingSystem', 'operatingSystemVersion'])
