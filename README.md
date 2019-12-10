@@ -102,12 +102,13 @@ may be different for different ES versions.
 - To add data to Lookup DynamoDB table `npm run load-data --lookup=<lookup> --file=<path-to-json-file>` 
     - `<lookup>` is the name of the lookup. For example: `devices`.
     - `<path-to-json-file>` is the path to json file. For example: `resources/devices.json`. 
-    - **Example:** `npm run load-data --lookup=devices --file=resources/devices.json`
-- To delete data from Lookup DynamoDB table `npm run clean-data --lookup=<lookup>` 
-**WARNING: This deletes all the data in the lookup**
+    > **Example:** `npm run load-data --lookup=devices --file=resources/devices.json`
+
+- To delete data from Lookup DynamoDB table `npm run clean-data --lookup=<lookup>` **WARNING: This deletes all the data in the lookup**
     - `<lookup>` is the name of the lookup. For example: `devices`.
-    - **Example:** `npm run clean-data --lookup=devices`
-- Supported Lookup:
+    > **Example:** `npm run clean-data --lookup=devices`
+
+- **Supported Lookup:**
     - countries
     - educationalInstitutions
     - devices
