@@ -98,7 +98,7 @@ may be different for different ES versions.
 - Start app `npm start`
 - App is running at `http://localhost:3000`
 
-### Load/Re-load/Clean Data
+### Load/Clean Data
 - To add data to Lookup DynamoDB table `npm run load-data --lookup=<lookup> --file=<path-to-json-file>` 
     - `<lookup>` is the name of the lookup. For example: `devices`.
     - `<path-to-json-file>` is the path to json file. For example: `resources/devices.json`. 
