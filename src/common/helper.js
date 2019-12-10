@@ -226,11 +226,23 @@ async function validateDuplicate (modelName, keys, values) {
     options[keys] = { eq: values }
   }
 
-  console.log('options: ' + JSON.stringify(options))
   const records = await scan(modelName, options)
-  console.log('records: ' + JSON.stringify(records))
   if (records.length > 0) {
-    throw new errors.ConflictError(`${modelName} with ${keys}: ${values} already exists`)
+    if (Array.isArray(keys)) {
+      let str = `${modelName} with [ `
+
+      for (const i in keys) {
+        const key = keys[i]
+        const value = values[i]
+
+        str += `${key}: ${value}`
+        if (i < keys.length - 1) { str += ', ' }
+      }
+
+      throw new errors.ConflictError(`${str} ] already exists`)
+    } else {
+      throw new errors.ConflictError(`${modelName} with ${keys}: ${values} already exists`)
+    }
   }
 }
 
@@ -276,20 +288,48 @@ async function createESIndex (indexName) {
   } catch (err) {
     // ignore
   }
-  // create index
-  await client.indices.create({
+  let props = {
+    name: {
+      type: 'text',
+      fielddata: true
+    }
+  }
+  if (indexName === config.ES.DEVICE_INDEX) {
+    props = {
+      type: {
+        type: 'text',
+        fielddata: true
+      },
+      manufacturer: {
+        type: 'text',
+        fielddata: true
+      },
+      model: {
+        type: 'text',
+        fielddata: true
+      },
+      operatingSystem: {
+        type: 'text',
+        fielddata: true
+      },
+      operatingSystemVersion: {
+        type: 'text',
+        fielddata: true
+      }
+
+    }
+  }
+
+  const ind = {
     index: indexName,
     body: {
       mappings: {
-        properties: {
-          name: {
-            type: 'text',
-            fielddata: true
-          }
-        }
+        properties: props
       }
     }
-  })
+  }
+  // create index
+  await client.indices.create(ind)
 }
 
 /**

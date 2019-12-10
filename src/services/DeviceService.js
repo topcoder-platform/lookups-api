@@ -20,7 +20,7 @@ async function listES (criteria) {
   // construct ES query
   const esQuery = {
     index: config.ES.DEVICE_INDEX,
-    name: config.ES.DEVICE_TYPE,
+    type: config.ES.DEVICE_TYPE,
     size: criteria.perPage,
     from: (criteria.page - 1) * criteria.perPage, // Es Index starts from 0
     body: {
@@ -182,9 +182,10 @@ getEntity.schema = {
  * @returns {Object} the created device
  */
 async function create (data) {
-  // await helper.validateDuplicate(config.AMAZON.DYNAMODB_DEVICE_TABLE,
-  //  ['name', 'manufacturer', 'model', 'operatingSystem', 'operatingSystemVersion'],
-  //  [data.type, data.manufacturer, data.model, data.operatingSystem, data.operatingSystemVersion])
+  await helper.validateDuplicate(config.AMAZON.DYNAMODB_DEVICE_TABLE,
+    ['type', 'manufacturer', 'model', 'operatingSystem', 'operatingSystemVersion'],
+    [data.type, data.manufacturer, data.model, data.operatingSystem, data.operatingSystemVersion])
+
   data.id = uuid()
   // create record in db
   const res = await helper.create(config.AMAZON.DYNAMODB_DEVICE_TABLE, data)
@@ -220,10 +221,14 @@ async function partiallyUpdate (id, data) {
      (data.operatingSystem && device.operatingSystem !== data.operatingSystem) ||
      (data.operatingSystemVersion && device.operatingSystemVersion !== data.operatingSystemVersion)) {
     // ensure same device not exists
-    // await helper.validateDuplicate(config.AMAZON.DYNAMODB_DEVICE_TABLE,
-    //  ['type', 'manufacturer', 'model', 'operatingSystem', 'operatingSystemVersion'],
-    //  [data.type, data.manufacturer, data.model, data.operatingSystem, data.operatingSystemVersion])
 
+    await helper.validateDuplicate(config.AMAZON.DYNAMODB_DEVICE_TABLE,
+      ['type', 'manufacturer', 'model', 'operatingSystem', 'operatingSystemVersion'],
+      [data.type || device.type,
+        data.manufacturer || device.manufacturer,
+        data.model || device.model,
+        data.operatingSystem || device.operatingSystem,
+        data.operatingSystemVersion || device.operatingSystemVersion])
     // then update data in DB
     const res = await helper.update(device, data)
 

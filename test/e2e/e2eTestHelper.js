@@ -11,6 +11,7 @@ const testHelper = require('../testHelper')
 const app = require('../../app')
 
 const should = chai.should()
+const expect = chai.expect
 chai.use(chaiHttp)
 chai.use(require('chai-as-promised'))
 
@@ -19,7 +20,7 @@ chai.use(require('chai-as-promised'))
  * @param {String} basePath the API base path
  * @param {String} modelName the model name
  */
-function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
+function generateLookupE2ETests (basePath, modelName, fields, searchByFields, requiredFields = ['name']) {
   describe(`E2E tests for ${modelName} APIs`, () => {
     // created entity id
     let id
@@ -188,7 +189,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
           it(`Call list from DB successfully 3 - by ${fieldParam}`, async () => {
             const response = await chai.request(app)
               .get(basePath)
-              .query({ name: 'test3' })
+              .query({ [fieldParam]: 'test3' })
             should.equal(response.status, 200)
 
             should.equal(response.body.length, 1)
@@ -200,11 +201,17 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
           it(`Call list from DB successfully 4 - by ${fieldParam}`, async () => {
             const response = await chai.request(app)
               .get(basePath)
-              .query({ name: 'a b' })
+              .query({ [fieldParam]: 'a b' })
             should.equal(response.status, 200)
             should.equal(response.body.length, 0)
           })
         }
+
+        it('Call list head API successfully', async () => {
+          const response = await chai.request(app)
+            .head(basePath).query({ [searchByFields[0]]: 'a b' })
+          should.equal(response.status, 200)
+        })
       })
 
       it('list API - invalid page', async () => {
@@ -259,32 +266,33 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
         should.equal(response.headers['x-next-page'], '3')
         should.equal(_.isEmpty(response.body), true)
       })
-
-      it('Call list head API successfully 3', async () => {
-        const response = await chai.request(app)
-          .head(basePath)
-          .query({ name: 'TEst3' })
-        should.equal(response.status, 200)
-        should.equal(response.headers['x-page'], '1')
-        should.equal(response.headers['x-per-page'], '20')
-        should.equal(response.headers['x-total'], '1')
-        should.equal(response.headers['x-total-pages'], '1')
-        should.exist(response.headers['link'])
-        should.equal(_.isEmpty(response.body), true)
-      })
-
-      it('Call list head API successfully 4', async () => {
-        const response = await chai.request(app)
-          .head(basePath)
-          .query({ name: 'a b' })
-        should.equal(response.status, 200)
-        should.equal(response.headers['x-page'], '1')
-        should.equal(response.headers['x-per-page'], '20')
-        should.equal(response.headers['x-total'], '0')
-        should.equal(response.headers['x-total-pages'], '0')
-        should.equal(_.isEmpty(response.body), true)
-      })
-
+      for (let fieldParam of searchByFields) {
+        it('Call list head API successfully 3', async () => {
+          const response = await chai.request(app)
+            .head(basePath)
+            .query({ [fieldParam]: 'TEst3' })
+          should.equal(response.status, 200)
+          should.equal(response.headers['x-page'], '1')
+          should.equal(response.headers['x-per-page'], '20')
+          should.equal(response.headers['x-total'], '1')
+          should.equal(response.headers['x-total-pages'], '1')
+          should.exist(response.headers['link'])
+          should.equal(_.isEmpty(response.body), true)
+        })
+      }
+      for (let fieldParam of searchByFields) {
+        it('Call list head API successfully 4', async () => {
+          const response = await chai.request(app)
+            .head(basePath)
+            .query({ [fieldParam]: 'a b' })
+          should.equal(response.status, 200)
+          should.equal(response.headers['x-page'], '1')
+          should.equal(response.headers['x-per-page'], '20')
+          should.equal(response.headers['x-total'], '0')
+          should.equal(response.headers['x-total-pages'], '0')
+          should.equal(_.isEmpty(response.body), true)
+        })
+      }
       it('list head API - invalid page', async () => {
         const response = await chai.request(app)
           .head(basePath)
@@ -334,7 +342,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
         id = response.body.id
       })
 
-      it('create API - name already used', async () => {
+      it('create API - already used', async () => {
         const entity = {}
         for (let field of fields) {
           entity[field] = 'testing'
@@ -345,7 +353,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
           .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
           .send(entity)
         should.equal(response.status, 409)
-        should.equal(response.body.message, `${modelName} with name: testing already exists`)
+        expect(response.body.message).to.have.string('already exists')
         should.equal(postEventBusStub.callCount, 0)
       })
 
@@ -353,21 +361,29 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
         const response = await chai.request(app)
           .post(basePath)
           .set('Authorization', `Bearer ${config.M2M_READ_ACCESS_TOKEN}`)
-          .send({ name: 'abcdef' })
+          .send({ [searchByFields[0]]: 'abcdef' })
         should.equal(response.status, 403)
         should.equal(response.body.message, 'You are not allowed to perform this action!')
         should.equal(postEventBusStub.callCount, 0)
       })
-
-      it('create API - missing name', async () => {
-        const response = await chai.request(app)
-          .post(basePath)
-          .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
-          .send({})
-        should.equal(response.status, 400)
-        should.equal(response.body.message, '"name" is required')
-        should.equal(postEventBusStub.callCount, 0)
-      })
+      // This test check every required field.
+      for (const field of requiredFields) {
+        it(`create API - missing required field ${field}`, async () => {
+          let entity = {}
+          for (const field2 of requiredFields) {
+            if (field2 !== field) {
+              entity[field2] = 'testing'
+            }
+          }
+          const response = await chai.request(app)
+            .post(basePath)
+            .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
+            .send(entity)
+          should.equal(response.status, 400)
+          should.equal(response.body.message, `"${field}" is required`)
+          should.equal(postEventBusStub.callCount, 0)
+        })
+      }
 
       for (let fieldParam of fields) {
         it(`create API - invalid ${fieldParam}`, async () => {
@@ -473,14 +489,16 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
 
       it('update API - name already used', async () => {
         const entity = _.cloneDeep(validationTestsEntity)
-        entity.name = 'a test4 b'
+        for (const field of requiredFields) {
+          entity[field] = 'a test4 b'
+        }
 
         const response = await chai.request(app)
           .put(`${basePath}/${id}`)
           .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
           .send(entity)
         should.equal(response.status, 409)
-        should.equal(response.body.message, `${modelName} with name: a test4 b already exists`)
+        expect(response.body.message).to.have.string(`already exists`)
         should.equal(postEventBusStub.callCount, 0)
       })
 
@@ -560,7 +578,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
             .send({ [fieldParam]: 'testing3' })
           should.equal(response.status, 200)
           should.equal(response.body.id, id)
-          should.equal(response.body.name, 'testing3')
+          should.equal(response.body[fieldParam], 'testing3')
           should.equal(postEventBusStub.callCount, 1)
         })
 
@@ -602,17 +620,24 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
           .send({})
         should.equal(response.status, 200)
         should.equal(response.body.id, id)
-        should.equal(response.body.name, 'testing3')
+        for (let fieldParam of fields) {
+          should.equal(response.body[fieldParam], 'testing3')
+        }
         should.equal(postEventBusStub.callCount, 0)
       })
 
       it('partially update API - name already used', async () => {
+        let entity = validationTestsEntity
+        for (const field of fields) {
+          entity = _.set(_.cloneDeep(entity), field, 'a test5 b')
+        }
+
         const response = await chai.request(app)
           .patch(`${basePath}/${id}`)
           .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
-          .send(_.set(_.cloneDeep(validationTestsEntity), 'name', 'a test5 b'))
+          .send(entity)
         should.equal(response.status, 409)
-        should.equal(response.body.message, `${modelName} with name: a test5 b already exists`)
+        expect(response.body.message).to.have.string(`already exists`)
         should.equal(postEventBusStub.callCount, 0)
       })
 
@@ -683,6 +708,13 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields) {
         should.equal(response.status, 400)
         should.equal(response.body.message, '"id" must be a valid GUID')
         should.equal(postEventBusStub.callCount, 0)
+      })
+
+      it('remove API - Wrong url', async () => {
+        const response = await chai.request(app)
+          .delete(`${basePath}`)
+          .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
+        should.equal(response.status, 404)
       })
     })
   })

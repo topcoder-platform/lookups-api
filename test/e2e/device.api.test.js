@@ -12,4 +12,5 @@ const e2eTestHelper = require('./e2eTestHelper')
 e2eTestHelper.generateLookupE2ETests(`${config.API_VERSION}/lookups/devices`,
   config.AMAZON.DYNAMODB_DEVICE_TABLE,
   ['type', 'manufacturer', 'model', 'operatingSystem', 'operatingSystemVersion'],
+  ['type', 'manufacturer', 'model', 'operatingSystem', 'operatingSystemVersion'],
   ['type', 'manufacturer', 'model', 'operatingSystem', 'operatingSystemVersion'])
