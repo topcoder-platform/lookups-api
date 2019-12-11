@@ -119,18 +119,26 @@ Note that running tests will clear all DynamoDB data in test tables and re-creat
 
 ### Running unit tests
 To run unit tests alone
-> npm run test
+```bash
+npm run test
+```
 
 To run unit tests with coverage report
-> npm run test:cov
+```bash
+npm run test:cov
+```
 
 ### Running integration tests
 
 To run integration tests alone
-> npm run e2e
+```bash
+npm run e2e
+```
 
 To run integration tests with coverage report
-> npm run e2e:cov
+```bash
+npm run e2e:cov
+```
 
 You can see that the controllers functions 'getEntityHead()' and 'listHead()' in both controllers are not covered by the E2E tests.
 According to the HTTP HEAD method documentation https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/HEAD , a GET request is issued behind the scenes, hence these functions are not even hit by the tests even if the HEAD HTTP method was called :

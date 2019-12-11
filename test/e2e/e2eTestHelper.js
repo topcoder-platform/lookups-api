@@ -20,7 +20,7 @@ chai.use(require('chai-as-promised'))
  * @param {String} basePath the API base path
  * @param {String} modelName the model name
  */
-function generateLookupE2ETests (basePath, modelName, fields, searchByFields, requiredFields = ['name']) {
+function generateLookupE2ETests (basePath, modelName, fields, searchByFields, indexedFields) {
   describe(`E2E tests for ${modelName} APIs`, () => {
     // created entity id
     let id
@@ -36,13 +36,13 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, re
       await testHelper.clearDBData(modelName)
 
       if (modelName === config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE) {
-        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX)
+        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX, indexedFields)
         await testHelper.insertEducationalInstitutionsTestData()
       } else if (modelName === config.AMAZON.DYNAMODB_COUNTRY_TABLE) {
-        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX)
+        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX, indexedFields)
         await testHelper.insertCountryTestData()
       } else if (modelName === config.AMAZON.DYNAMODB_DEVICE_TABLE) {
-        await testHelper.recreateESIndex(config.ES.DEVICE_INDEX)
+        await testHelper.recreateESIndex(config.ES.DEVICE_INDEX, indexedFields)
         await testHelper.insertDeviceTestData()
       }
 
@@ -51,11 +51,11 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, re
 
     after(async () => {
       if (modelName === config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE) {
-        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX)
+        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX, indexedFields)
       } else if (modelName === config.AMAZON.DYNAMODB_COUNTRY_TABLE) {
-        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX)
+        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX, indexedFields)
       } else if (modelName === config.AMAZON.DYNAMODB_DEVICE_TABLE) {
-        await testHelper.recreateESIndex(config.ES.DEVICE_INDEX)
+        await testHelper.recreateESIndex(config.ES.DEVICE_INDEX, indexedFields)
       }
       await testHelper.clearDBData(modelName)
     })
@@ -367,10 +367,10 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, re
         should.equal(postEventBusStub.callCount, 0)
       })
       // This test check every required field.
-      for (const field of requiredFields) {
+      for (const field of indexedFields) {
         it(`create API - missing required field ${field}`, async () => {
           let entity = {}
-          for (const field2 of requiredFields) {
+          for (const field2 of indexedFields) {
             if (field2 !== field) {
               entity[field2] = 'testing'
             }
@@ -489,7 +489,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, re
 
       it('update API - name already used', async () => {
         const entity = _.cloneDeep(validationTestsEntity)
-        for (const field of requiredFields) {
+        for (const field of indexedFields) {
           entity[field] = 'a test4 b'
         }
 

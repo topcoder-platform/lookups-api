@@ -10,5 +10,8 @@ const config = require('config')
 const unitTestHelper = require('./unitTestHelper')
 const service = require('../../src/services/CountryService')
 
-unitTestHelper.generateLookupUnitTests(service, config.AMAZON.DYNAMODB_COUNTRY_TABLE,
-  ['name', 'countryCode', 'countryFlag'], ['name', 'countryCode'])
+unitTestHelper.generateLookupUnitTests(service,
+  config.AMAZON.DYNAMODB_COUNTRY_TABLE,
+  ['name', 'countryCode', 'countryFlag'],
+  ['name', 'countryCode'],
+  ['name', 'countryCode', 'countryFlag'])

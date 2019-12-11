@@ -6,7 +6,7 @@ const service = require('../services/DeviceService')
 const helper = require('../common/helper')
 
 /**
- * List countries
+ * List devices
  * @param {Object} req the request
  * @param {Object} res the response
  */

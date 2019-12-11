@@ -87,8 +87,8 @@ async function insertDeviceTestData () {
 /**
  * Re-create ES indices.
  */
-async function recreateESIndex (indexName) {
-  await helper.createESIndex(indexName)
+async function recreateESIndex (indexName, indexedFields) {
+  await helper.createESIndex(indexName, indexedFields)
 }
 
 module.exports = {

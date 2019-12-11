@@ -280,7 +280,7 @@ function getESClient () {
  * Create Elasticsearch index, it will be deleted and re-created if present.
  * @param {String} indexName the ES index name
  */
-async function createESIndex (indexName) {
+async function createESIndex (indexName, fields) {
   const client = getESClient()
   // delete index if present
   try {
@@ -288,35 +288,13 @@ async function createESIndex (indexName) {
   } catch (err) {
     // ignore
   }
-  let props = {
-    name: {
+
+  // prepare props
+  const props = {}
+  for (const field in fields) {
+    props[fields[field]] = {
       type: 'text',
       fielddata: true
-    }
-  }
-  if (indexName === config.ES.DEVICE_INDEX) {
-    props = {
-      type: {
-        type: 'text',
-        fielddata: true
-      },
-      manufacturer: {
-        type: 'text',
-        fielddata: true
-      },
-      model: {
-        type: 'text',
-        fielddata: true
-      },
-      operatingSystem: {
-        type: 'text',
-        fielddata: true
-      },
-      operatingSystemVersion: {
-        type: 'text',
-        fielddata: true
-      }
-
     }
   }
 
