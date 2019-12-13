@@ -209,15 +209,40 @@ async function scan (modelName, scanParams) {
 /**
  * Validate the data to ensure no duplication
  * @param {Object} modelName The dynamoose model name
- * @param {String} name The attribute name of dynamoose model
- * @param {String} value The attribute value to be validated
+ * @param {String} keys The attribute name of dynamoose model
+ * @param {String} values The attribute value to be validated
  */
-async function validateDuplicate (modelName, name, value) {
+async function validateDuplicate (modelName, keys, values) {
   const options = {}
-  options[name] = { eq: value }
+  if (Array.isArray(keys)) {
+    if (keys.length !== values.length) {
+      throw new errors.BadRequestError(`size of ${keys} and ${values} do not match.`)
+    }
+
+    keys.forEach(function (key, index) {
+      options[key] = { eq: values[index] }
+    })
+  } else {
+    options[keys] = { eq: values }
+  }
+
   const records = await scan(modelName, options)
   if (records.length > 0) {
-    throw new errors.ConflictError(`${modelName} with ${name}: ${value} already exists`)
+    if (Array.isArray(keys)) {
+      let str = `${modelName} with [ `
+
+      for (const i in keys) {
+        const key = keys[i]
+        const value = values[i]
+
+        str += `${key}: ${value}`
+        if (i < keys.length - 1) { str += ', ' }
+      }
+
+      throw new errors.ConflictError(`${str} ] already exists`)
+    } else {
+      throw new errors.ConflictError(`${modelName} with ${keys}: ${values} already exists`)
+    }
   }
 }
 
@@ -255,7 +280,7 @@ function getESClient () {
  * Create Elasticsearch index, it will be deleted and re-created if present.
  * @param {String} indexName the ES index name
  */
-async function createESIndex (indexName) {
+async function createESIndex (indexName, fields) {
   const client = getESClient()
   // delete index if present
   try {
@@ -263,20 +288,26 @@ async function createESIndex (indexName) {
   } catch (err) {
     // ignore
   }
-  // create index
-  await client.indices.create({
+
+  // prepare props
+  const props = {}
+  for (const field in fields) {
+    props[fields[field]] = {
+      type: 'text',
+      fielddata: true
+    }
+  }
+
+  const ind = {
     index: indexName,
     body: {
       mappings: {
-        properties: {
-          name: {
-            type: 'text',
-            fielddata: true
-          }
-        }
+        properties: props
       }
     }
-  })
+  }
+  // create index
+  await client.indices.create(ind)
 }
 
 /**

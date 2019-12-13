@@ -4,6 +4,7 @@
 const config = require('config')
 const helper = require('../src/common/helper')
 const countryService = require('../src/services/CountryService')
+const deviceService = require('../src/services/DeviceService')
 const educationalInstitutionService = require('../src/services/EducationalInstitutionService')
 const sinon = require('sinon')
 
@@ -60,15 +61,40 @@ async function insertCountryTestData () {
 }
 
 /**
+ * Insert devices test data
+ */
+async function insertDeviceTestData () {
+  // This is used to prevent sending events for creating the test data to Kafka
+  sinon.stub(helper, 'postEvent').resolves([])
+  for (let i = 1; i <= 5; i += 1) {
+    const res = await deviceService.create({
+      type: `a test${i} b`,
+      manufacturer: `a test${i} b`,
+      model: `a test${i} b`,
+      operatingSystem: `a test${i} b`,
+      operatingSystemVersion: `a test${i} b`
+    })
+    await helper.getESClient().create({
+      index: config.ES.DEVICE_INDEX,
+      type: config.ES.DEVICE_TYPE,
+      id: res.id,
+      body: res,
+      refresh: 'true' // refresh ES so that it is visible for read operations instantly
+    })
+  }
+}
+
+/**
  * Re-create ES indices.
  */
-async function recreateESIndex (indexName) {
-  await helper.createESIndex(indexName)
+async function recreateESIndex (indexName, indexedFields) {
+  await helper.createESIndex(indexName, indexedFields)
 }
 
 module.exports = {
   clearDBData,
   insertEducationalInstitutionsTestData,
   insertCountryTestData,
+  insertDeviceTestData,
   recreateESIndex
 }

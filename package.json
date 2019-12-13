@@ -9,6 +9,8 @@
     "lint:fix": "standard --fix",
     "create-tables": "node scripts/createTables.js",
     "delete-tables": "node scripts/deleteTables.js",
+    "load-data": "node scripts/loadData.js",
+    "clean-data": "node scripts/cleanData.js",
     "init-es": "node scripts/initES.js",
     "test": "mocha -t 20000 test/unit/*.test.js --exit",
     "e2e": "mocha -t 20000 test/e2e/*.test.js --exit",

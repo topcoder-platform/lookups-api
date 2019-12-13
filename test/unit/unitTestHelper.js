@@ -16,7 +16,7 @@ chai.use(require('chai-as-promised'))
  * @param {Object} service the service to test
  * @param {String} modelName the model name
  */
-function generateLookupUnitTests (service, modelName, fields, searchByFields) {
+function generateLookupUnitTests (service, modelName, fields, searchByFields, indexedFields) {
   describe(`Unit tests for ${modelName} service`, () => {
     // created entity id
     let id
@@ -32,11 +32,14 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields) {
       await testHelper.clearDBData(modelName)
 
       if (modelName === config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE) {
-        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX)
+        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX, indexedFields)
         await testHelper.insertEducationalInstitutionsTestData()
       } else if (modelName === config.AMAZON.DYNAMODB_COUNTRY_TABLE) {
-        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX)
+        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX, indexedFields)
         await testHelper.insertCountryTestData()
+      } else if (modelName === config.AMAZON.DYNAMODB_DEVICE_TABLE) {
+        await testHelper.recreateESIndex(config.ES.DEVICE_INDEX, indexedFields)
+        await testHelper.insertDeviceTestData()
       }
 
       esClient = await helper.getESClient()
@@ -44,9 +47,11 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields) {
 
     after(async () => {
       if (modelName === config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE) {
-        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX)
+        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX, indexedFields)
       } else if (modelName === config.AMAZON.DYNAMODB_COUNTRY_TABLE) {
-        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX)
+        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX, indexedFields)
+      } else if (modelName === config.AMAZON.DYNAMODB_DEVICE_TABLE) {
+        await testHelper.recreateESIndex(config.ES.DEVICE_INDEX, indexedFields)
       }
       await testHelper.clearDBData(modelName)
     })
@@ -178,6 +183,16 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields) {
             throw new Error('should not reach here')
           })
         }
+
+        it(`Call list from DB successfully 4 - by all`, async () => {
+          let entity = {}
+          for (let fieldParam in searchByFields) {
+            entity[searchByFields[fieldParam]] = validationTestsEntity[searchByFields[fieldParam]]
+          }
+          let result = await service.list(entity)
+          should.equal(result.fromDB, true)
+          should.equal(result.result.length, 0)
+        })
       })
 
       it('list - invalid page', async () => {
@@ -230,22 +245,22 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields) {
         id = result.id
       })
 
-      it('create - name already used', async () => {
+      it('create - element already exists', async () => {
         const entity = {}
         for (let field of fields) {
           entity[field] = 'testing'
         }
 
         await service.create(entity).should.be.rejectedWith(
-          `${modelName} with name: testing already exists`)
+          `already exists`)
         should.equal(postEventBusStub.callCount, 0)
       })
 
-      it('create - missing name', async () => {
+      it('create - missing required attribute', async () => {
         try {
           await service.create({})
         } catch (e) {
-          should.equal(e.message.indexOf('"name" is required') >= 0, true)
+          should.equal(e.message.indexOf(' is required') >= 0, true)
           should.equal(postEventBusStub.callCount, 0)
           return
         }
@@ -280,6 +295,16 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields) {
           return
         }
         throw new Error('should not reach here')
+      })
+
+      it('create - validateDuplicate - Bad Request', async () => {
+        let values = []
+        values.push('testing')
+        try {
+          helper.validateDuplicate(modelName, fields)
+        } catch (e) {
+          should.equal(e.message.indexOf(`size of ${fields} and ${values} do not match.`) >= 0, true)
+        }
       })
     })
 
@@ -328,12 +353,14 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields) {
         }
       })
 
-      it('update - name already used', async () => {
+      it(`update - already exists`, async () => {
         const entity = _.cloneDeep(validationTestsEntity)
-        entity.name = 'a test1 b'
+        for (const field of indexedFields) {
+          entity[field] = 'a test1 b'
+        }
 
         await service.update(id, entity).should.be.rejectedWith(
-          `${modelName} with name: a test1 b already exists`)
+          `already exists`)
         should.equal(postEventBusStub.callCount, 0)
       })
 
@@ -448,9 +475,12 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields) {
 
       it('partiallyUpdate - name already used', async () => {
         const entity = _.cloneDeep(validationTestsEntity)
-        entity.name = 'a test2 b'
+        for (const field of indexedFields) {
+          entity[field] = 'a test2 b'
+        }
+
         await service.partiallyUpdate(id, entity).should.be.rejectedWith(
-          `${modelName} with name: a test2 b already exists`)
+          `already exists`)
         should.equal(postEventBusStub.callCount, 0)
       })
 

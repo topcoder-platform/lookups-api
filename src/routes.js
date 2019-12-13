@@ -112,6 +112,60 @@ module.exports = {
       scopes: [constants.Scopes.DeleteLookup, constants.Scopes.AllLookup]
     }
   },
+
+  '/lookups/devices': {
+    get: {
+      controller: 'DeviceController',
+      method: 'list'
+      // any role / scope is allowed
+    },
+    head: {
+      controller: 'DeviceController',
+      method: 'listHead'
+      // any role / scope is allowed
+    },
+    post: {
+      controller: 'DeviceController',
+      method: 'create',
+      auth: 'jwt',
+      access: [constants.UserRoles.Admin],
+      scopes: [constants.Scopes.CreateLookup, constants.Scopes.AllLookup]
+    }
+  },
+  '/lookups/devices/:id': {
+    get: {
+      controller: 'DeviceController',
+      method: 'getEntity'
+      // any role / scope is allowed
+    },
+    head: {
+      controller: 'DeviceController',
+      method: 'getEntityHead'
+      // any role / scope is allowed
+    },
+    put: {
+      controller: 'DeviceController',
+      method: 'update',
+      auth: 'jwt',
+      access: [constants.UserRoles.Admin],
+      scopes: [constants.Scopes.UpdateLookup, constants.Scopes.AllLookup]
+    },
+    patch: {
+      controller: 'DeviceController',
+      method: 'partiallyUpdate',
+      auth: 'jwt',
+      access: [constants.UserRoles.Admin],
+      scopes: [constants.Scopes.UpdateLookup, constants.Scopes.AllLookup]
+    },
+    delete: {
+      controller: 'DeviceController',
+      method: 'remove',
+      auth: 'jwt',
+      access: [constants.UserRoles.Admin],
+      scopes: [constants.Scopes.DeleteLookup, constants.Scopes.AllLookup]
+    }
+  },
+
   '/health': {
     get: {
       controller: 'HealthCheckController',
