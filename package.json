@@ -44,7 +44,7 @@
     "joi": "^14.0.0",
     "lodash": "^4.17.15",
     "tc-bus-api-wrapper": "github:topcoder-platform/tc-bus-api-wrapper",
-    "tc-core-library-js": "github:appirio-tech/tc-core-library-js",
+    "tc-core-library-js": "github:appirio-tech/tc-core-library-js#v2.6.4"
     "uuid": "^3.3.2",
     "winston": "^3.1.0"
   },
