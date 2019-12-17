@@ -114,7 +114,7 @@ async function list (criteria) {
     // log and ignore
     logger.logFullError(e)
   }
-  if(result.result.length > 0) {
+  if (result.result.length > 0) {
     return result
   }
 
