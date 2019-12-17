@@ -280,7 +280,7 @@ function getESClient () {
  * Create Elasticsearch index, it will be deleted and re-created if present.
  * @param {String} indexName the ES index name
  */
-async function createESIndex (indexName, fields) {
+async function createESIndex (indexName, typeName, fields) {
   const client = getESClient()
   // delete index if present
   try {
@@ -302,7 +302,9 @@ async function createESIndex (indexName, fields) {
     index: indexName,
     body: {
       mappings: {
-        properties: props
+        [typeName]: {
+          properties: props
+        }
       }
     }
   }

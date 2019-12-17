@@ -202,7 +202,7 @@ create.schema = {
     manufacturer: Joi.string().required(),
     model: Joi.string().required(),
     operatingSystem: Joi.string().required(),
-    operatingSystemVersion: Joi.string().required()
+    operatingSystemVersion: Joi.string().allow('', null).empty(['', null]).default('ZZZZ')
   }).required()
 }
 
@@ -249,7 +249,7 @@ partiallyUpdate.schema = {
     manufacturer: Joi.string(),
     model: Joi.string(),
     operatingSystem: Joi.string(),
-    operatingSystemVersion: Joi.string()
+    operatingSystemVersion: Joi.string().allow('', null).empty(['', null]).default('ZZZZ')
   }).required()
 }
 
@@ -270,7 +270,7 @@ update.schema = {
     manufacturer: Joi.string().required(),
     model: Joi.string().required(),
     operatingSystem: Joi.string().required(),
-    operatingSystemVersion: Joi.string().required()
+    operatingSystemVersion: Joi.string().allow('', null).empty(['', null]).default('ZZZZ')
   }).required()
 }
 
