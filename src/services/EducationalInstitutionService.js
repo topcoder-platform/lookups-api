@@ -53,11 +53,15 @@ async function listES (criteria) {
  */
 async function list (criteria) {
   // first try to get from ES
+  let result
   try {
-    return await listES(criteria)
+    result = await listES(criteria)
   } catch (e) {
     // log and ignore
     logger.logFullError(e)
+  }
+  if(result.result.length > 0) {
+    return result
   }
 
   // then try to get from DB
@@ -68,7 +72,7 @@ async function list (criteria) {
     }
   }
   // ignore pagination, scan all matched records
-  const result = await helper.scan(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, options)
+  result = await helper.scan(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, options)
   // return fromDB:true to indicate it is got from db,
   // and response headers ('X-Total', 'X-Page', etc.) are not set in this case
   return { fromDB: true, result }
