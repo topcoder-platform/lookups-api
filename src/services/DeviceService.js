@@ -24,69 +24,58 @@ async function listES (criteria) {
     size: criteria.perPage,
     from: (criteria.page - 1) * criteria.perPage, // Es Index starts from 0
     body: {
-      sort: [{ type: { order: 'asc' } }] // sort by device type
+      sort: [{ type: { order: 'asc' } }], // sort by device type
+      query: {
+        bool: {
+          must: []
+        }
+      }
     }
   }
 
   // filtering for type
   if (criteria.type) {
-    esQuery.body.query = {
-      bool: {
-        filter: [{ match_phrase: { type: criteria.type } }]
+    esQuery.body.query.bool.must.push({
+      match_phrase: {
+        type: criteria.type
       }
-    }
+    })
   }
 
   // filtering for manufacturer
   if (criteria.manufacturer) {
-    if (!esQuery.body.query) {
-      esQuery.body.query = {
-        bool: { filter: [{ match_phrase: { manufacturer: criteria.manufacturer } }] }
+    esQuery.body.query.bool.must.push({
+      match_phrase: {
+        manufacturer: criteria.manufacturer
       }
-    } else {
-      _.merge(esQuery.body.query, {
-        bool: { filter: [{ match_phrase: { manufacturer: criteria.manufacturer } }] }
-      })
-    }
+    })
   }
 
   // filtering for model
   if (criteria.model) {
-    if (!esQuery.body.query) {
-      esQuery.body.query = {
-        bool: { filter: [{ match_phrase: { model: criteria.model } }] }
+    esQuery.body.query.bool.must.push({
+      match_phrase: {
+        model: criteria.model
       }
-    } else {
-      _.merge(esQuery.body.query, {
-        bool: { filter: [{ match_phrase: { model: criteria.model } }] }
-      })
-    }
+    })
   }
 
   // filtering for operatingSystem
   if (criteria.operatingSystem) {
-    if (!esQuery.body.query) {
-      esQuery.body.query = {
-        bool: { filter: [{ match_phrase: { operatingSystem: criteria.operatingSystem } }] }
+    esQuery.body.query.bool.must.push({
+      match_phrase: {
+        operatingSystem: criteria.operatingSystem
       }
-    } else {
-      _.merge(esQuery.body.query, {
-        bool: { filter: [{ match_phrase: { operatingSystem: criteria.operatingSystem } }] }
-      })
-    }
+    })
   }
 
   // filtering for operatingSystemVersion
   if (criteria.operatingSystemVersion) {
-    if (!esQuery.body.query) {
-      esQuery.body.query = {
-        bool: { filter: [{ match_phrase: { operatingSystemVersion: criteria.operatingSystemVersion } }] }
+    esQuery.body.query.bool.must.push({
+      match_phrase: {
+        operatingSystemVersion: criteria.operatingSystemVersion
       }
-    } else {
-      _.merge(esQuery.body.query, {
-        bool: { filter: [{ match_phrase: { operatingSystemVersion: criteria.operatingSystemVersion } }] }
-      })
-    }
+    })
   }
 
   // Search with constructed query
