@@ -14,7 +14,8 @@ module.exports = {
   AMAZON: {
     // table names used for testing
     DYNAMODB_COUNTRY_TABLE: process.env.DYNAMODB_COUNTRY_TABLE ? 'test_' + process.env.DYNAMODB_COUNTRY_TABLE : 'test_countries',
-    DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE: process.env.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE ? 'test_' + process.env.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE : 'test_educationalInstitutions'
+    DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE: process.env.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE ? 'test_' + process.env.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE : 'test_educationalInstitutions',
+    DYNAMODB_DEVICE_TABLE: process.env.DYNAMODB_DEVICE_TABLE ? 'test_' + process.env.DYNAMODB_DEVICE_TABLE : 'test_devices'
   },
   ES: {
     COUNTRY_INDEX: process.env.COUNTRY_INDEX || 'test_countries',

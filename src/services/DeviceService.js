@@ -103,7 +103,7 @@ async function list (criteria) {
     // log and ignore
     logger.logFullError(e)
   }
-  if (result.result.length > 0) {
+  if (result && result.result.length > 0) {
     return result
   }
 
@@ -284,13 +284,79 @@ remove.schema = {
   id: Joi.id()
 }
 
+/**
+ * Iterate devices of given criteria, call deviceHandler function for each iterated device
+ * @param {Object} criteria the search criteria
+ * @param {Function} deviceHandler the device handler function
+ */
+async function iterateDevices (criteria, deviceHandler) {
+  // it will delegate to the list function;
+  // the list function will first try Elasticsearch, if failed then try DB;
+  // so this iterateDevices also has the functionality to try ES first then if failed try DB
+
+  const perPage = 100
+  let page = 1
+  let total = 1
+  // query each page of devices
+  while ((page - 1) * perPage < total) {
+    const res = await list(_.assignIn({ page, perPage }, criteria))
+    // handle each device
+    _.forEach(res.result, (device) => deviceHandler(device))
+
+    if (res.fromDB) {
+      // if devices are got from DB, then all matched devices are returned, no pagination is used, no next pages
+      return
+    }
+    // prepare for next page
+    page += 1
+    total = res.total
+  }
+}
+
+/**
+ * Get distinct device types.
+ * @returns {Array} the distinct device types
+ */
+async function getTypes () {
+  const result = []
+  await iterateDevices({}, (device) => {
+    if (!_.includes(result, device.type)) {
+      result.push(device.type)
+    }
+  })
+  return result
+}
+
+/**
+ * Get distinct device manufacturers.
+ * @param {Object} criteria the search criteria
+ * @returns {Array} the distinct device manufacturers
+ */
+async function getManufacturers (criteria) {
+  const result = []
+  await iterateDevices(criteria, (device) => {
+    if (!_.includes(result, device.manufacturer)) {
+      result.push(device.manufacturer)
+    }
+  })
+  return result
+}
+
+getManufacturers.schema = {
+  criteria: Joi.object().keys({
+    type: Joi.string().required()
+  }).required()
+}
+
 module.exports = {
   list,
   getEntity,
   create,
   partiallyUpdate,
   update,
-  remove
+  remove,
+  getTypes,
+  getManufacturers
 }
 
 logger.buildService(module.exports)

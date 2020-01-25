@@ -87,6 +87,26 @@ async function remove (req, res) {
   res.status(HttpStatus.NO_CONTENT).end()
 }
 
+/**
+ * Get distinct device types
+ * @param {Object} req the request
+ * @param {Object} res the response
+ */
+async function getTypes (req, res) {
+  const result = await service.getTypes()
+  res.send(result)
+}
+
+/**
+ * Get distinct device manufacturers
+ * @param {Object} req the request
+ * @param {Object} res the response
+ */
+async function getManufacturers (req, res) {
+  const result = await service.getManufacturers(req.query)
+  res.send(result)
+}
+
 module.exports = {
   list,
   listHead,
@@ -95,5 +115,7 @@ module.exports = {
   create,
   update,
   partiallyUpdate,
-  remove
+  remove,
+  getTypes,
+  getManufacturers
 }

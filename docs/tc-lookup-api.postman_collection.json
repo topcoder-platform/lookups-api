@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "b109819a-3d49-40bd-a47b-8bd4fb07670c",
+		"_postman_id": "4802b022-4a66-43f5-b223-cbbcfd91ad9e",
 		"name": "tc-lookup-api",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -1181,6 +1181,214 @@
 									"key": "type",
 									"value": "Device Test Type"
 								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get device types",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/types",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"types"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get device manufacturers",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/manufacturers?type=Device Test Type",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"manufacturers"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "Device Test Type"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get device manufacturers - empty result",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/manufacturers?type=xyz",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"manufacturers"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "xyz"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get device manufacturers - missing type",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/manufacturers",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"manufacturers"
 							]
 						}
 					},

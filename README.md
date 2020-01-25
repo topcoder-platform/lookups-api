@@ -4,8 +4,8 @@
 - NodeJS (v10)
 - AWS DynamoDB
 - Java 6+ (used if using runnable jar of local DynamoDB)
-- Docker, Docker Compose (used if using docker of local DynamoDB)
-- Elasticsearch 7.1.1
+- Docker, Docker Compose (used if using docker of local DynamoDB/Elasticsearch)
+- Elasticsearch 6.8
 
 ## Configuration
 Configuration for the application is at `config/default.js` and `config/production.js`. The following parameters can be set in config files or in env variables:
@@ -84,9 +84,13 @@ in config file or via environment variables. You may create tables using below `
 
 ## Elasticsearch setup
 This page `https://www.elastic.co/downloads/elasticsearch` contains various ways to setup Elasticsearch,
-choose a way suitable for you system, setup version 7.1.1, update Elasticsearch connection host if needed.
+choose a way suitable for you system, setup version 6.8, update Elasticsearch connection host if needed.
 Make sure to use correct version, different versions may behave differently, especially the index creation
 may be different for different ES versions.
+
+If you want to use docker of local Elasticsearch:
+- you may go to `es-docker` folder, and run `docker-compose up` to start local Elasticsearch
+- local Elasticsearch is running at `http://localhost:9200`
 
 ## Local Deployment
 - Install dependencies `npm install`
@@ -154,6 +158,6 @@ But this does not hit the controllers functions mentioned above.
 - In postman, you can use 'get country' test to get the country after each update to see if it is correctly updated.
 
 ## Notes
-- swagger is updated, adding health check API and some other fixes, you may check it using `http://editor.swagger.io/`
+- swagger is updated, you may check it using `http://editor.swagger.io/`
 - Postman tests are also updated to suit latest code
 - all JWT tokens provided in Postman environment file and tests are created in `https://jwt.io` with secret `mysecret`

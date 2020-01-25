@@ -36,13 +36,14 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
       await testHelper.clearDBData(modelName)
 
       if (modelName === config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE) {
-        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX, indexedFields)
+        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX,
+          config.ES.EDUCATIONAL_INSTITUTION_TYPE, indexedFields)
         await testHelper.insertEducationalInstitutionsTestData()
       } else if (modelName === config.AMAZON.DYNAMODB_COUNTRY_TABLE) {
-        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX, indexedFields)
+        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX, config.ES.COUNTRY_TYPE, indexedFields)
         await testHelper.insertCountryTestData()
       } else if (modelName === config.AMAZON.DYNAMODB_DEVICE_TABLE) {
-        await testHelper.recreateESIndex(config.ES.DEVICE_INDEX, indexedFields)
+        await testHelper.recreateESIndex(config.ES.DEVICE_INDEX, config.ES.DEVICE_TYPE, indexedFields)
         await testHelper.insertDeviceTestData()
       }
 
@@ -51,12 +52,14 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
 
     after(async () => {
       if (modelName === config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE) {
-        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX, indexedFields)
+        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX,
+          config.ES.EDUCATIONAL_INSTITUTION_TYPE, indexedFields)
       } else if (modelName === config.AMAZON.DYNAMODB_COUNTRY_TABLE) {
-        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX, indexedFields)
+        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX, config.ES.COUNTRY_TYPE, indexedFields)
       } else if (modelName === config.AMAZON.DYNAMODB_DEVICE_TABLE) {
-        await testHelper.recreateESIndex(config.ES.DEVICE_INDEX, indexedFields)
+        await testHelper.recreateESIndex(config.ES.DEVICE_INDEX, config.ES.DEVICE_TYPE, indexedFields)
       }
+
       await testHelper.clearDBData(modelName)
     })
 
@@ -98,16 +101,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
         should.exist(response.headers['link'])
         should.equal(response.headers['x-prev-page'], '1')
         should.equal(response.headers['x-next-page'], '3')
-
         should.equal(response.body.length, 2)
-        for (let i = 3; i <= 4; i += 1) {
-          let value, found
-          for (let field of fields) {
-            value = `a test${i} b`
-            found = _.find(response.body, (item) => item[field] === value)
-            should.exist(found)
-          }
-        }
       })
 
       for (let fieldParam of searchByFields) {
@@ -132,10 +126,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
             .get(basePath)
             .query({ [fieldParam]: 'a b' })
           should.equal(response.status, 200)
-          should.equal(response.headers['x-page'], '1')
-          should.equal(response.headers['x-per-page'], '20')
-          should.equal(response.headers['x-total'], '0')
-          should.equal(response.headers['x-total-pages'], '0')
           should.equal(response.body.length, 0)
         })
       }
@@ -266,6 +256,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
         should.equal(response.headers['x-next-page'], '3')
         should.equal(_.isEmpty(response.body), true)
       })
+
       for (let fieldParam of searchByFields) {
         it('Call list head API successfully 3', async () => {
           const response = await chai.request(app)
@@ -280,16 +271,13 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
           should.equal(_.isEmpty(response.body), true)
         })
       }
+
       for (let fieldParam of searchByFields) {
         it('Call list head API successfully 4', async () => {
           const response = await chai.request(app)
             .head(basePath)
             .query({ [fieldParam]: 'a b' })
           should.equal(response.status, 200)
-          should.equal(response.headers['x-page'], '1')
-          should.equal(response.headers['x-per-page'], '20')
-          should.equal(response.headers['x-total'], '0')
-          should.equal(response.headers['x-total-pages'], '0')
           should.equal(_.isEmpty(response.body), true)
         })
       }
@@ -366,24 +354,16 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
         should.equal(response.body.message, 'You are not allowed to perform this action!')
         should.equal(postEventBusStub.callCount, 0)
       })
-      // This test check every required field.
-      for (const field of indexedFields) {
-        it(`create API - missing required field ${field}`, async () => {
-          let entity = {}
-          for (const field2 of indexedFields) {
-            if (field2 !== field) {
-              entity[field2] = 'testing'
-            }
-          }
-          const response = await chai.request(app)
-            .post(basePath)
-            .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
-            .send(entity)
-          should.equal(response.status, 400)
-          should.equal(response.body.message, `"${field}" is required`)
-          should.equal(postEventBusStub.callCount, 0)
-        })
-      }
+
+      it(`create API - missing required fields`, async () => {
+        const response = await chai.request(app)
+          .post(basePath)
+          .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
+          .send({})
+        should.equal(response.status, 400)
+        should.equal(response.body.message.indexOf('is required') >= 0, true)
+        should.equal(postEventBusStub.callCount, 0)
+      })
 
       for (let fieldParam of fields) {
         it(`create API - invalid ${fieldParam}`, async () => {
@@ -533,16 +513,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
       })
 
       for (let fieldParam of fields) {
-        it(`update API - null ${fieldParam}`, async () => {
-          const response = await chai.request(app)
-            .put(`${basePath}/${id}`)
-            .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
-            .send(_.set(_.cloneDeep(validationTestsEntity), fieldParam, null))
-          should.equal(response.status, 400)
-          should.equal(response.body.message, `"${fieldParam}" must be a string`)
-          should.equal(postEventBusStub.callCount, 0)
-        })
-
         it(`update API - invalid ${fieldParam}`, async () => {
           const response = await chai.request(app)
             .put(`${basePath}/${id}`)
@@ -550,16 +520,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
             .send(_.set(_.cloneDeep(validationTestsEntity), fieldParam, { invalid: 'x' }))
           should.equal(response.status, 400)
           should.equal(response.body.message, `"${fieldParam}" must be a string`)
-          should.equal(postEventBusStub.callCount, 0)
-        })
-
-        it(`update API - empty ${fieldParam}`, async () => {
-          const response = await chai.request(app)
-            .put(`${basePath}/${id}`)
-            .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
-            .send(_.set(_.cloneDeep(validationTestsEntity), fieldParam, ''))
-          should.equal(response.status, 400)
-          should.equal(response.body.message, `"${fieldParam}" is not allowed to be empty`)
           should.equal(postEventBusStub.callCount, 0)
         })
       }
@@ -582,16 +542,6 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
           should.equal(postEventBusStub.callCount, 1)
         })
 
-        it(`partially update API - null ${fieldParam}`, async () => {
-          const response = await chai.request(app)
-            .patch(`${basePath}/${id}`)
-            .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
-            .send({ [fieldParam]: null })
-          should.equal(response.status, 400)
-          should.equal(response.body.message, `"${fieldParam}" must be a string`)
-          should.equal(postEventBusStub.callCount, 0)
-        })
-
         it(`partially update API - invalid ${fieldParam}`, async () => {
           const response = await chai.request(app)
             .patch(`${basePath}/${id}`)
@@ -601,30 +551,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
           should.equal(response.body.message, `"${fieldParam}" must be a string`)
           should.equal(postEventBusStub.callCount, 0)
         })
-
-        it(`partially update API - empty ${fieldParam}`, async () => {
-          const response = await chai.request(app)
-            .patch(`${basePath}/${id}`)
-            .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
-            .send({ [fieldParam]: '' })
-          should.equal(response.status, 400)
-          should.equal(response.body.message, `"${fieldParam}" is not allowed to be empty`)
-          should.equal(postEventBusStub.callCount, 0)
-        })
       }
-
-      it('Call partially update API successfully - no fields to update', async () => {
-        const response = await chai.request(app)
-          .patch(`${basePath}/${id}`)
-          .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
-          .send({})
-        should.equal(response.status, 200)
-        should.equal(response.body.id, id)
-        for (let fieldParam of fields) {
-          should.equal(response.body[fieldParam], 'testing3')
-        }
-        should.equal(postEventBusStub.callCount, 0)
-      })
 
       it('partially update API - name already used', async () => {
         let entity = validationTestsEntity
@@ -717,6 +644,131 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
         should.equal(response.status, 404)
       })
     })
+
+    if (modelName === config.AMAZON.DYNAMODB_DEVICE_TABLE) {
+      describe('get device types tests', () => {
+        it('Call get device types from ES successfully', async () => {
+          const response = await chai.request(app)
+            .get(`${basePath}/types`)
+          should.equal(response.status, 200)
+          const result = response.body
+          should.equal(result.length, 5)
+          for (let i = 1; i <= 5; i += 1) {
+            should.equal(_.includes(result, `a test${i} b`), true)
+          }
+        })
+
+        describe('get device types from Database tests', () => {
+          beforeEach(() => {
+            sinon.stub(esClient, 'search').rejects(new Error('error'))
+          })
+
+          it('Call get device types from DB successfully', async () => {
+            const response = await chai.request(app)
+              .get(`${basePath}/types`)
+            should.equal(response.status, 200)
+            const result = response.body
+            should.equal(result.length, 5)
+            for (let i = 1; i <= 5; i += 1) {
+              should.equal(_.includes(result, `a test${i} b`), true)
+            }
+          })
+        })
+      })
+
+      describe('get device manufacturers tests', () => {
+        it('Call get device manufacturers from ES successfully 1', async () => {
+          const response = await chai.request(app)
+            .get(`${basePath}/manufacturers`)
+            .query({ type: 'a' })
+          should.equal(response.status, 200)
+          const result = response.body
+          should.equal(result.length, 5)
+          for (let i = 1; i <= 5; i += 1) {
+            should.equal(_.includes(result, `a test${i} b`), true)
+          }
+        })
+
+        it('Call get device manufacturers from ES successfully 2', async () => {
+          const response = await chai.request(app)
+            .get(`${basePath}/manufacturers`)
+            .query({ type: 'A test3' })
+          should.equal(response.status, 200)
+          const result = response.body
+          should.equal(result.length, 1)
+          should.equal(result[0], 'a test3 b')
+        })
+
+        it('Call get device manufacturers from ES successfully 3', async () => {
+          const response = await chai.request(app)
+            .get(`${basePath}/manufacturers`)
+            .query({ type: 'xyz' })
+          should.equal(response.status, 200)
+          const result = response.body
+          should.equal(result.length, 0)
+        })
+
+        describe('get device manufacturers from Database tests', () => {
+          beforeEach(() => {
+            sinon.stub(esClient, 'search').rejects(new Error('error'))
+          })
+
+          it('Call get device manufacturers from DB successfully 1', async () => {
+            const response = await chai.request(app)
+              .get(`${basePath}/manufacturers`)
+              .query({ type: 'b' })
+            should.equal(response.status, 200)
+            const result = response.body
+            should.equal(result.length, 5)
+            for (let i = 1; i <= 5; i += 1) {
+              should.equal(_.includes(result, `a test${i} b`), true)
+            }
+          })
+
+          it('Call get device manufacturers from DB successfully 2', async () => {
+            const response = await chai.request(app)
+              .get(`${basePath}/manufacturers`)
+              .query({ type: 'test3' })
+            should.equal(response.status, 200)
+            const result = response.body
+            should.equal(result.length, 1)
+            should.equal(result[0], 'a test3 b')
+          })
+
+          it('Call get device manufacturers from DB successfully 3', async () => {
+            const response = await chai.request(app)
+              .get(`${basePath}/manufacturers`)
+              .query({ type: 'abc' })
+            should.equal(response.status, 200)
+            const result = response.body
+            should.equal(result.length, 0)
+          })
+        })
+
+        it('get device manufacturers - missing type', async () => {
+          const response = await chai.request(app)
+            .get(`${basePath}/manufacturers`)
+          should.equal(response.status, 400)
+          should.equal(response.body.message, '"type" is required')
+        })
+
+        it('get device manufacturers - empty type', async () => {
+          const response = await chai.request(app)
+            .get(`${basePath}/manufacturers`)
+            .query({ type: '' })
+          should.equal(response.status, 400)
+          should.equal(response.body.message, '"type" is not allowed to be empty')
+        })
+
+        it('get device manufacturers - unexpected field', async () => {
+          const response = await chai.request(app)
+            .get(`${basePath}/manufacturers`)
+            .query({ type: 'a', other: 'b' })
+          should.equal(response.status, 400)
+          should.equal(response.body.message, '"other" is not allowed')
+        })
+      })
+    }
   })
 }
 

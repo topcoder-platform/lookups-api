@@ -132,6 +132,20 @@ module.exports = {
       scopes: [constants.Scopes.CreateLookup, constants.Scopes.AllLookup]
     }
   },
+  '/lookups/devices/types': {
+    get: {
+      controller: 'DeviceController',
+      method: 'getTypes'
+      // any role / scope is allowed
+    }
+  },
+  '/lookups/devices/manufacturers': {
+    get: {
+      controller: 'DeviceController',
+      method: 'getManufacturers'
+      // any role / scope is allowed
+    }
+  },
   '/lookups/devices/:id': {
     get: {
       controller: 'DeviceController',
