@@ -28,7 +28,7 @@ module.exports = {
   ES: {
     // above AWS_REGION is used if we use AWS ES
     HOST: process.env.ES_HOST || 'localhost:9200',
-    API_VERSION: process.env.ES_API_VERSION || '7.1',
+    API_VERSION: process.env.ES_API_VERSION || '6.8',
     COUNTRY_INDEX: process.env.COUNTRY_INDEX || 'countries',
     COUNTRY_TYPE: process.env.COUNTRY_TYPE || '_doc',
     EDUCATIONAL_INSTITUTION_INDEX: process.env.EDUCATIONAL_INSTITUTION_INDEX || 'educational_institutions',

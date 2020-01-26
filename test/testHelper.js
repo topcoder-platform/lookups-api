@@ -86,9 +86,12 @@ async function insertDeviceTestData () {
 
 /**
  * Re-create ES indices.
+ * @param indexName The index name
+ * @param typeName The index type name
+ * @param indexedFields The indexed fields
  */
-async function recreateESIndex (indexName, indexedFields) {
-  await helper.createESIndex(indexName, indexedFields)
+async function recreateESIndex (indexName, typeName, indexedFields) {
+  await helper.createESIndex(indexName, typeName, indexedFields)
 }
 
 module.exports = {

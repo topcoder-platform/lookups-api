@@ -279,6 +279,8 @@ function getESClient () {
 /**
  * Create Elasticsearch index, it will be deleted and re-created if present.
  * @param {String} indexName the ES index name
+ * @param {String} typeName the ES index type name
+ * @param {Array} fields the indexed fields
  */
 async function createESIndex (indexName, typeName, fields) {
   const client = getESClient()
@@ -291,8 +293,8 @@ async function createESIndex (indexName, typeName, fields) {
 
   // prepare props
   const props = {}
-  for (const field in fields) {
-    props[fields[field]] = {
+  for (const field of fields) {
+    props[field] = {
       type: 'text',
       fielddata: true
     }

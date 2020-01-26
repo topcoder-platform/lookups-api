@@ -32,13 +32,14 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
       await testHelper.clearDBData(modelName)
 
       if (modelName === config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE) {
-        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX, indexedFields)
+        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX,
+          config.ES.EDUCATIONAL_INSTITUTION_TYPE, indexedFields)
         await testHelper.insertEducationalInstitutionsTestData()
       } else if (modelName === config.AMAZON.DYNAMODB_COUNTRY_TABLE) {
-        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX, indexedFields)
+        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX, config.ES.COUNTRY_TYPE, indexedFields)
         await testHelper.insertCountryTestData()
       } else if (modelName === config.AMAZON.DYNAMODB_DEVICE_TABLE) {
-        await testHelper.recreateESIndex(config.ES.DEVICE_INDEX, indexedFields)
+        await testHelper.recreateESIndex(config.ES.DEVICE_INDEX, config.ES.DEVICE_TYPE, indexedFields)
         await testHelper.insertDeviceTestData()
       }
 
@@ -47,11 +48,12 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
 
     after(async () => {
       if (modelName === config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE) {
-        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX, indexedFields)
+        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX,
+          config.ES.EDUCATIONAL_INSTITUTION_TYPE, indexedFields)
       } else if (modelName === config.AMAZON.DYNAMODB_COUNTRY_TABLE) {
-        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX, indexedFields)
+        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX, config.ES.COUNTRY_TYPE, indexedFields)
       } else if (modelName === config.AMAZON.DYNAMODB_DEVICE_TABLE) {
-        await testHelper.recreateESIndex(config.ES.DEVICE_INDEX, indexedFields)
+        await testHelper.recreateESIndex(config.ES.DEVICE_INDEX, config.ES.DEVICE_TYPE, indexedFields)
       }
       await testHelper.clearDBData(modelName)
     })
@@ -83,14 +85,6 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
         should.equal(result.page, 2)
         should.equal(result.perPage, 2)
         should.equal(result.result.length, 2)
-        for (let i = 3; i <= 4; i += 1) {
-          let value, found
-          for (let field of fields) {
-            value = `a test${i} b`
-            found = _.find(result.result, (item) => item[field] === value)
-            should.exist(found)
-          }
-        }
       })
 
       for (let fieldParam of searchByFields) {
@@ -107,9 +101,6 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
 
         it(`Call list from ES successfully 4 - by ${fieldParam}`, async () => {
           const result = await service.list({ [fieldParam]: 'a b' })
-          should.equal(result.total, 0)
-          should.equal(result.page, 1)
-          should.equal(result.perPage, 20)
           should.equal(result.result.length, 0)
         })
 
@@ -382,33 +373,11 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
       })
 
       for (let fieldParam of fields) {
-        it(`update - null ${fieldParam}`, async () => {
-          try {
-            await service.update(id, _.set(_.cloneDeep(validationTestsEntity), fieldParam, null))
-          } catch (e) {
-            should.equal(e.message.indexOf(`"${fieldParam}" must be a string`) >= 0, true)
-            should.equal(postEventBusStub.callCount, 0)
-            return
-          }
-          throw new Error('should not reach here')
-        })
-
         it(`update - invalid ${fieldParam}`, async () => {
           try {
             await service.update(id, _.set(_.cloneDeep(validationTestsEntity), fieldParam, { invalid: 'x' }))
           } catch (e) {
             should.equal(e.message.indexOf(`"${fieldParam}" must be a string`) >= 0, true)
-            should.equal(postEventBusStub.callCount, 0)
-            return
-          }
-          throw new Error('should not reach here')
-        })
-
-        it(`update - empty ${fieldParam}`, async () => {
-          try {
-            await service.update(id, _.set(_.cloneDeep(validationTestsEntity), fieldParam, ''))
-          } catch (e) {
-            should.equal(e.message.indexOf(`"${fieldParam}" is not allowed to be empty`) >= 0, true)
             should.equal(postEventBusStub.callCount, 0)
             return
           }
@@ -430,17 +399,6 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
           should.equal(postEventBusStub.callCount, 1)
         })
 
-        it(`partiallyUpdate - null ${fieldParam}`, async () => {
-          try {
-            await service.partiallyUpdate(id, { [fieldParam]: null })
-          } catch (e) {
-            should.equal(e.message.indexOf(`"${fieldParam}" must be a string`) >= 0, true)
-            should.equal(postEventBusStub.callCount, 0)
-            return
-          }
-          throw new Error('should not reach here')
-        })
-
         it(`partiallyUpdate - invalid ${fieldParam}`, async () => {
           try {
             await service.partiallyUpdate(id, { [fieldParam]: { invalid: 'x' } })
@@ -451,27 +409,7 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
           }
           throw new Error('should not reach here')
         })
-
-        it(`partiallyUpdate - empty ${fieldParam}`, async () => {
-          try {
-            await service.partiallyUpdate(id, { [fieldParam]: '' })
-          } catch (e) {
-            should.equal(e.message.indexOf(`"${fieldParam}" is not allowed to be empty`) >= 0, true)
-            should.equal(postEventBusStub.callCount, 0)
-            return
-          }
-          throw new Error('should not reach here')
-        })
       }
-
-      it('Call partiallyUpdate successfully - fields to update not provided', async () => {
-        const result = await service.partiallyUpdate(id, {})
-        should.equal(result.id, id)
-        should.equal(postEventBusStub.callCount, 0)
-        for (let field of fields) {
-          should.equal(result[field], 'testing3')
-        }
-      })
 
       it('partiallyUpdate - name already used', async () => {
         const entity = _.cloneDeep(validationTestsEntity)
@@ -542,6 +480,118 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
         throw new Error('should not reach here')
       })
     })
+
+    if (modelName === config.AMAZON.DYNAMODB_DEVICE_TABLE) {
+      describe('get device types tests', () => {
+        it('Call get device types from ES successfully', async () => {
+          const result = await service.getTypes()
+          should.equal(result.length, 5)
+          for (let i = 1; i <= 5; i += 1) {
+            should.equal(_.includes(result, `a test${i} b`), true)
+          }
+        })
+
+        describe('get device types from Database tests', () => {
+          beforeEach(() => {
+            sinon.stub(esClient, 'search').rejects(new Error('error'))
+          })
+
+          it('Call get device types from DB successfully', async () => {
+            const result = await service.getTypes()
+            should.equal(result.length, 5)
+            for (let i = 1; i <= 5; i += 1) {
+              should.equal(_.includes(result, `a test${i} b`), true)
+            }
+          })
+        })
+      })
+
+      describe('get device manufacturers tests', () => {
+        it('Call get device manufacturers from ES successfully 1', async () => {
+          const result = await service.getManufacturers({ type: 'a' })
+          should.equal(result.length, 5)
+          for (let i = 1; i <= 5; i += 1) {
+            should.equal(_.includes(result, `a test${i} b`), true)
+          }
+        })
+
+        it('Call get device manufacturers from ES successfully 2', async () => {
+          const result = await service.getManufacturers({ type: 'A test3' })
+          should.equal(result.length, 1)
+          should.equal(result[0], 'a test3 b')
+        })
+
+        it('Call get device manufacturers from ES successfully 3', async () => {
+          const result = await service.getManufacturers({ type: 'xyz' })
+          should.equal(result.length, 0)
+        })
+
+        describe('get device manufacturers from Database tests', () => {
+          beforeEach(() => {
+            sinon.stub(esClient, 'search').rejects(new Error('error'))
+          })
+
+          it('Call get device manufacturers from DB successfully 1', async () => {
+            const result = await service.getManufacturers({ type: 'b' })
+            should.equal(result.length, 5)
+            for (let i = 1; i <= 5; i += 1) {
+              should.equal(_.includes(result, `a test${i} b`), true)
+            }
+          })
+
+          it('Call get device manufacturers from DB successfully 2', async () => {
+            const result = await service.getManufacturers({ type: 'test3' })
+            should.equal(result.length, 1)
+            should.equal(result[0], 'a test3 b')
+          })
+
+          it('Call get device manufacturers from DB successfully 3', async () => {
+            const result = await service.getManufacturers({ type: 'abc' })
+            should.equal(result.length, 0)
+          })
+        })
+
+        it('get device manufacturers - missing type', async () => {
+          try {
+            await service.getManufacturers({})
+          } catch (e) {
+            should.equal(e.message.indexOf('"type" is required') >= 0, true)
+            return
+          }
+          throw new Error('should not reach here')
+        })
+
+        it('get device manufacturers - empty type', async () => {
+          try {
+            await service.getManufacturers({ type: '' })
+          } catch (e) {
+            should.equal(e.message.indexOf('"type" is not allowed to be empty') >= 0, true)
+            return
+          }
+          throw new Error('should not reach here')
+        })
+
+        it('get device manufacturers - invalid type', async () => {
+          try {
+            await service.getManufacturers({ type: [1, 2] })
+          } catch (e) {
+            should.equal(e.message.indexOf('"type" must be a string') >= 0, true)
+            return
+          }
+          throw new Error('should not reach here')
+        })
+
+        it('get device manufacturers - unexpected field', async () => {
+          try {
+            await service.getManufacturers({ type: 'a', other: 123 })
+          } catch (e) {
+            should.equal(e.message.indexOf('"other" is not allowed') >= 0, true)
+            return
+          }
+          throw new Error('should not reach here')
+        })
+      })
+    }
   })
 }
 
