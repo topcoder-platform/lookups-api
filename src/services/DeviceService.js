@@ -153,7 +153,7 @@ async function getEntity (id) {
   try {
     return await esClient.getSource({
       index: config.ES.DEVICE_INDEX,
-      name: config.ES.DEVICE_TYPE,
+      type: config.ES.DEVICE_TYPE,
       id
     })
   } catch (e) {
