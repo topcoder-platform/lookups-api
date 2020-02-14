@@ -30,7 +30,7 @@ async function listES (criteria) {
   if (criteria.name) {
     esQuery.body.query = {
       bool: {
-        filter: [{ match_phrase: { name: criteria.name } }]
+        filter: [{ term: { name: criteria.name } }]
       }
     }
   }
@@ -38,11 +38,11 @@ async function listES (criteria) {
   if (criteria.countryCode) {
     if (!esQuery.body.query) {
       esQuery.body.query = {
-        bool: { filter: [{ match_phrase: { countryCode: criteria.countryCode } }] }
+        bool: { filter: [{ term: { countryCode: criteria.countryCode } }] }
       }
     } else {
       _.merge(esQuery.body.query, {
-        bool: { filter: [{ match_phrase: { countryCode: criteria.countryCode } }] }
+        bool: { filter: [{ term: { countryCode: criteria.countryCode } }] }
       })
     }
   }
@@ -79,10 +79,10 @@ async function list (criteria) {
   // then try to get from DB
   const options = {}
   if (criteria.name) {
-    options.name = { contains: criteria.name }
+    options.name = { eq: criteria.name }
   }
   if (criteria.countryCode) {
-    options.countryCode = { contains: criteria.countryCode }
+    options.countryCode = { eq: criteria.countryCode }
   }
   // ignore pagination, scan all matched records
   result = await helper.scan(config.AMAZON.DYNAMODB_COUNTRY_TABLE, options)

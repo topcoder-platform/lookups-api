@@ -30,7 +30,7 @@ async function listES (criteria) {
   if (criteria.name) {
     esQuery.body.query = {
       bool: {
-        filter: [{ match_phrase: { name: criteria.name } }]
+        filter: [{ term: { name: criteria.name } }]
       }
     }
   }
@@ -68,7 +68,7 @@ async function list (criteria) {
   let options
   if (criteria.name) {
     options = {
-      name: { contains: criteria.name }
+      name: { eq: criteria.name }
     }
   }
   // ignore pagination, scan all matched records

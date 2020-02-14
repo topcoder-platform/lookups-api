@@ -36,7 +36,7 @@ async function listES (criteria) {
   // filtering for type
   if (criteria.type) {
     esQuery.body.query.bool.must.push({
-      match_phrase: {
+      term: {
         type: criteria.type
       }
     })
@@ -45,7 +45,7 @@ async function listES (criteria) {
   // filtering for manufacturer
   if (criteria.manufacturer) {
     esQuery.body.query.bool.must.push({
-      match_phrase: {
+      term: {
         manufacturer: criteria.manufacturer
       }
     })
@@ -54,7 +54,7 @@ async function listES (criteria) {
   // filtering for model
   if (criteria.model) {
     esQuery.body.query.bool.must.push({
-      match_phrase: {
+      term: {
         model: criteria.model
       }
     })
@@ -63,7 +63,7 @@ async function listES (criteria) {
   // filtering for operatingSystem
   if (criteria.operatingSystem) {
     esQuery.body.query.bool.must.push({
-      match_phrase: {
+      term: {
         operatingSystem: criteria.operatingSystem
       }
     })
@@ -72,7 +72,7 @@ async function listES (criteria) {
   // filtering for operatingSystemVersion
   if (criteria.operatingSystemVersion) {
     esQuery.body.query.bool.must.push({
-      match_phrase: {
+      term: {
         operatingSystemVersion: criteria.operatingSystemVersion
       }
     })
@@ -110,19 +110,19 @@ async function list (criteria) {
   // then try to get from DB
   const options = {}
   if (criteria.type) {
-    options.type = { contains: criteria.type }
+    options.type = { eq: criteria.type }
   }
   if (criteria.manufacturer) {
-    options.manufacturer = { contains: criteria.manufacturer }
+    options.manufacturer = { eq: criteria.manufacturer }
   }
   if (criteria.model) {
-    options.model = { contains: criteria.model }
+    options.model = { eq: criteria.model }
   }
   if (criteria.operatingSystem) {
-    options.operatingSystem = { contains: criteria.operatingSystem }
+    options.operatingSystem = { eq: criteria.operatingSystem }
   }
   if (criteria.operatingSystemVersion) {
-    options.operatingSystemVersion = { contains: criteria.operatingSystemVersion }
+    options.operatingSystemVersion = { eq: criteria.operatingSystemVersion }
   }
   // ignore pagination, scan all matched records
   result = await helper.scan(config.AMAZON.DYNAMODB_DEVICE_TABLE, options)
