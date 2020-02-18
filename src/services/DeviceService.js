@@ -323,9 +323,9 @@ async function getTypes () {
   await iterateDevices({}, (device) => {
     if (!_.includes(result, device.type)) {
       result.push(device.type)
-      if (_.includes(invalidTypes, device.type)) {
-        logger.info(JSON.stringify(device))
-      }
+    }
+    if (_.includes(invalidTypes, device.type)) {
+      logger.info(JSON.stringify(device))
     }
   })
   return result
