@@ -319,13 +319,9 @@ async function iterateDevices (criteria, deviceHandler) {
  */
 async function getTypes () {
   const result = []
-  const invalidTypes = ['Device Test Type', 'Device Test Type12', 'Device Test Type1', 'Device Test Type44', 'Device Test Type123', 'mobile', 'Mobile1', 'android']
   await iterateDevices({}, (device) => {
     if (!_.includes(result, device.type)) {
       result.push(device.type)
-    }
-    if (_.includes(invalidTypes, device.type)) {
-      logger.info(JSON.stringify(device))
     }
   })
   return result
