@@ -242,7 +242,7 @@ partiallyUpdate.schema = {
     manufacturer: Joi.string(),
     model: Joi.string(),
     operatingSystem: Joi.string(),
-    operatingSystemVersion: Joi.string().allow('', null).empty(['', null]).default('ZZZZ')
+    operatingSystemVersion: Joi.string()
   }).required()
 }
 
