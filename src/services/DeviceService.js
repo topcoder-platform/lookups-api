@@ -323,9 +323,6 @@ async function getTypes () {
     if (!_.includes(result, device.type)) {
       result.push(device.type)
     }
-    if (device.type === 'Mobile') {
-      logger.info(JSON.stringify(device))
-    }
   })
   return result
 }
