@@ -6,22 +6,37 @@ require('../app-bootstrap')
 const logger = require('../src/common/logger')
 
 const fs = require('fs')
+const uuid = require('uuid/v4')
 const scriptHelper = require('./helpers')
+const servicesHelper = require('../src/common/helper')
 /**
- * Add data from the given file to the service.
+ * Add data from the given file to the db and es.
  *
- * @param {*} service : One of the services.
+ * @param {String} lookupName
  * @param {String} lookupFilePath
  */
-const loadData = async (service, lookupFilePath) => {
+const loadData = async (lookupName, lookupFilePath) => {
   let duplicatesCount = 0
   let successfulsCount = 0
   let errorsCount = 0
   let rawdata = fs.readFileSync(lookupFilePath)
   let entities = JSON.parse(rawdata)
+
+  const [getTableName, esIndex, esType] = await scriptHelper.getLookupKey(lookupName)
   for (const entity of entities) {
     try {
-      await service.create(entity)
+      // create record in db
+      entity.id = uuid()
+      const res = await servicesHelper.create(getTableName, entity)
+
+      // create record in es
+      await servicesHelper.getESClient().create({
+        index: esIndex,
+        type: esType,
+        id: res.id,
+        body: res,
+        refresh: 'true' // refresh ES so that it is visible for read operations instantly
+      })
       successfulsCount += 1
     } catch (e) {
       if (e.name === 'ConflictError') {
@@ -36,37 +51,22 @@ const loadData = async (service, lookupFilePath) => {
   return [successfulsCount, duplicatesCount, errorsCount]
 }
 (async function () {
-  const lookupName = process.env.npm_config_lookup
-  const lookupFilePath = process.env.npm_config_file
-  if (!lookupFilePath) {
-    logger.error(`file argument should be provided`)
+  if (process.env.NODE_ENV !== 'development') {
+    logger.error(`Load data should be executed in development env`)
     process.exit()
   }
 
-  if (!lookupName) {
-    logger.error(`Lookup argument should be provided`)
-    process.exit()
-  }
-
-  const checked = await scriptHelper.lookupCheck(lookupName)
-  if (!checked) {
-    logger.error(`The lookup ${lookupName} is not supported`)
-    process.exit()
-  }
-
-  let service = await scriptHelper.getLookupService(lookupName)
-  logger.info(`Load Data for lookup ${lookupName} using file ${lookupFilePath}`)
-
-  loadData(service, lookupFilePath).then((res) => {
-    let str = `Loaded: ${res[0]}, Duplicates: ${res[1]}`
-    if (res[2] > 0) {
-      str = `${str}, Errors: ${res[2]}`
-    }
-    logger.info(str)
-
-    process.exit()
-  }).catch((e) => {
-    logger.logFullError(e)
-    process.exit()
+  Object.keys(require('../src/models')).forEach(function (key) {
+    const fileName = key === 'educationalInstitutions' ? 'educational_institutions' : key
+    logger.info(`Load Data for lookup ${key} using file ./resources/${fileName}.json`)
+    loadData(key, `./resources/${fileName}.json`).then((res) => {
+      let str = `Loaded: ${res[0]}, Duplicates: ${res[1]}`
+      if (res[2] > 0) {
+        str = `${str}, Errors: ${res[2]}`
+      }
+      logger.info(str)
+    }).catch((e) => {
+      logger.logFullError(e)
+    })
   })
 })()

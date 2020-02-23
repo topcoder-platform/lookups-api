@@ -1,57 +1,20 @@
-
-const devicesService = require('../src/services/DeviceService')
-const countriesService = require('../src/services/CountryService')
-const educationalInstitutionService = require('../src/services/EducationalInstitutionService')
 const config = require('config')
-/**
- * Return true if lookName is valid (one of the models)
- * @param {String} lookupName
- */
-async function lookupCheck (lookupName) {
-  const allowedLookups = Object.keys(require('../src/models'))
-  if (!allowedLookups.includes(lookupName)) {
-    return false
-  } else {
-    return true
-  }
-}
-/**
- * Get service object based on lookupName.
- * @param {String} lookupName
- */
-async function getLookupService (lookupName) {
-  let service = null
 
-  switch (lookupName) {
-    case 'devices':
-      service = devicesService
-      break
-    case 'educationalInstitutions':
-      service = educationalInstitutionService
-      break
-    case 'countries':
-      service = countriesService
-      break
-    default:
-      break
-  }
-  return service
-}
 /**
- * Get the table based on the lookupName
+ * Get the table, esIndex and esType based on the lookupName
  * @param {String} lookupName
  */
-async function getTableName (lookupName) {
-  let table = null
+async function getLookupKey (lookupName) {
+  let table = []
   switch (lookupName) {
     case 'devices':
-      table = config.AMAZON.DYNAMODB_DEVICE_TABLE
+      table = [config.AMAZON.DYNAMODB_DEVICE_TABLE, config.ES.DEVICE_INDEX, config.ES.DEVICE_TYPE]
       break
     case 'educationalInstitutions':
-      table = config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE
+      table = [config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, config.ES.EDUCATIONAL_INSTITUTION_INDEX, config.ES.EDUCATIONAL_INSTITUTION_TYPE]
       break
     case 'countries':
-      table = config.AMAZON.DYNAMODB_COUNTRY_TABLE
+      table = [config.AMAZON.DYNAMODB_COUNTRY_TABLE, config.ES.COUNTRY_INDEX, config.ES.COUNTRY_TYPE]
       break
     default:
       break
@@ -60,7 +23,5 @@ async function getTableName (lookupName) {
 }
 
 module.exports = {
-  lookupCheck,
-  getLookupService,
-  getTableName
+  getLookupKey
 }
