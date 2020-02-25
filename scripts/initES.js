@@ -10,7 +10,7 @@ const helper = require('../src/common/helper')
 
 const initES = async () => {
   logger.info(`Re-create index ${config.ES.COUNTRY_INDEX} with mapping ${config.ES.COUNTRY_TYPE} in Elasticsearch.`)
-  await helper.createESIndex(config.ES.COUNTRY_INDEX, config.ES.COUNTRY_TYPE, ['name'])
+  await helper.createESIndex(config.ES.COUNTRY_INDEX, config.ES.COUNTRY_TYPE, ['name', 'countryCode', 'countryFlag'])
 
   logger.info(`Re-create index ${config.ES.EDUCATIONAL_INSTITUTION_INDEX} with mapping ${config.ES.EDUCATIONAL_INSTITUTION_TYPE} in Elasticsearch.`)
   await helper.createESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX, config.ES.EDUCATIONAL_INSTITUTION_TYPE, ['name'])

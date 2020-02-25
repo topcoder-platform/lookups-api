@@ -24,15 +24,21 @@ async function listES (criteria) {
     size: criteria.perPage,
     from: (criteria.page - 1) * criteria.perPage, // Es Index starts from 0
     body: {
-      sort: [{ name: { order: 'asc' } }]
-    }
-  }
-  if (criteria.name) {
-    esQuery.body.query = {
-      bool: {
-        filter: [{ term: { name: criteria.name } }]
+      sort: [{ name: { order: 'asc' } }],
+      query: {
+        bool: {
+          must: []
+        }
       }
     }
+  }
+  // filtering for name
+  if (criteria.name) {
+    esQuery.body.query.bool.must.push({
+      match_phrase: {
+        name: criteria.name
+      }
+    })
   }
 
   // Search with constructed query

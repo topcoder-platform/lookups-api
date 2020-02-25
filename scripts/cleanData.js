@@ -18,8 +18,12 @@ const cleanData = async (lookupName) => {
   const [getTableName, esIndex, esType] = await scriptHelper.getLookupKey(lookupName)
   const records = await servicesHelper.scan(getTableName)
   for (const record of records) {
-    await record.delete()
-    await esClient.delete({ index: esIndex, type: esType, id: record.id })
+    try {
+      await record.delete()
+      await esClient.delete({ index: esIndex, type: esType, id: record.id })
+    } catch (e) {
+      logger.logFullError(e)
+    }
   }
 }
 (async function () {

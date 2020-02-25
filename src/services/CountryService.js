@@ -24,27 +24,29 @@ async function listES (criteria) {
     size: criteria.perPage,
     from: (criteria.page - 1) * criteria.perPage, // Es Index starts from 0
     body: {
-      sort: [{ name: { order: 'asc' } }]
+      sort: [{ name: { order: 'asc' } }],
+      query: {
+        bool: {
+          must: []
+        }
+      }
     }
   }
+  // filtering for name
   if (criteria.name) {
-    esQuery.body.query = {
-      bool: {
-        filter: [{ term: { name: criteria.name } }]
+    esQuery.body.query.bool.must.push({
+      match_phrase: {
+        name: criteria.name
       }
-    }
+    })
   }
-
+  // filtering for countryCode
   if (criteria.countryCode) {
-    if (!esQuery.body.query) {
-      esQuery.body.query = {
-        bool: { filter: [{ term: { countryCode: criteria.countryCode } }] }
+    esQuery.body.query.bool.must.push({
+      match_phrase: {
+        countryCode: criteria.countryCode
       }
-    } else {
-      _.merge(esQuery.body.query, {
-        bool: { filter: [{ term: { countryCode: criteria.countryCode } }] }
-      })
-    }
+    })
   }
 
   // Search with constructed query
