@@ -16,41 +16,41 @@ const esClient = helper.getESClient()
  * @param {Object} criteria the search criteria
  * @returns {Object} the search result
  */
-// async function listES (criteria) {
-//   // construct ES query
-//   const esQuery = {
-//     index: config.ES.EDUCATIONAL_INSTITUTION_INDEX,
-//     type: config.ES.EDUCATIONAL_INSTITUTION_TYPE,
-//     size: criteria.perPage,
-//     from: (criteria.page - 1) * criteria.perPage, // Es Index starts from 0
-//     body: {
-//       sort: [{ name: { order: 'asc' } }],
-//       query: {
-//         bool: {
-//           must: []
-//         }
-//       }
-//     }
-//   }
-//   // filtering for name
-//   if (criteria.name) {
-//     esQuery.body.query.bool.must.push({
-//       term: {
-//         name: criteria.name
-//       }
-//     })
-//   }
+async function listES (criteria) {
+  // construct ES query
+  const esQuery = {
+    index: config.ES.EDUCATIONAL_INSTITUTION_INDEX,
+    type: config.ES.EDUCATIONAL_INSTITUTION_TYPE,
+    size: criteria.perPage,
+    from: (criteria.page - 1) * criteria.perPage, // Es Index starts from 0
+    body: {
+      sort: [{ name: { order: 'asc' } }],
+      query: {
+        bool: {
+          must: []
+        }
+      }
+    }
+  }
+  // filtering for name
+  if (criteria.name) {
+    esQuery.body.query.bool.must.push({
+      term: {
+        name: criteria.name
+      }
+    })
+  }
 
-//   // Search with constructed query
-//   const docs = await esClient.search(esQuery)
-//   // Extract data from hits
-//   let total = docs.hits.total
-//   if (_.isObject(total)) {
-//     total = total.value || 0
-//   }
-//   const result = _.map(docs.hits.hits, (item) => item._source)
-//   return { total, page: criteria.page, perPage: criteria.perPage, result }
-// }
+  // Search with constructed query
+  const docs = await esClient.search(esQuery)
+  // Extract data from hits
+  let total = docs.hits.total
+  if (_.isObject(total)) {
+    total = total.value || 0
+  }
+  const result = _.map(docs.hits.hits, (item) => item._source)
+  return { total, page: criteria.page, perPage: criteria.perPage, result }
+}
 
 /**
  * List educational institutions.
@@ -60,12 +60,12 @@ const esClient = helper.getESClient()
 async function list (criteria) {
   // first try to get from ES
   let result
-  // try {
-  //   result = await listES(criteria)
-  // } catch (e) {
-  //   // log and ignore
-  //   logger.logFullError(e)
-  // }
+  try {
+    result = await listES(criteria)
+  } catch (e) {
+    // log and ignore
+    logger.logFullError(e)
+  }
   if (result && result.result.length > 0) {
     return result
   }

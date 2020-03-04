@@ -16,78 +16,78 @@ const esClient = helper.getESClient()
  * @param {Object} criteria the search criteria
  * @returns {Object} the search result
  */
-// async function listES (criteria) {
-//   // construct ES query
-//   const esQuery = {
-//     index: config.ES.DEVICE_INDEX,
-//     type: config.ES.DEVICE_TYPE,
-//     size: criteria.perPage,
-//     from: (criteria.page - 1) * criteria.perPage, // Es Index starts from 0
-//     body: {
-//       sort: [{ type: { order: 'asc' } }], // sort by device type
-//       query: {
-//         bool: {
-//           must: []
-//         }
-//       }
-//     }
-//   }
+async function listES (criteria) {
+  // construct ES query
+  const esQuery = {
+    index: config.ES.DEVICE_INDEX,
+    type: config.ES.DEVICE_TYPE,
+    size: criteria.perPage,
+    from: (criteria.page - 1) * criteria.perPage, // Es Index starts from 0
+    body: {
+      sort: [{ type: { order: 'asc' } }], // sort by device type
+      query: {
+        bool: {
+          must: []
+        }
+      }
+    }
+  }
 
-//   // filtering for type
-//   if (criteria.type) {
-//     esQuery.body.query.bool.must.push({
-//       term: {
-//         type: criteria.type
-//       }
-//     })
-//   }
+  // filtering for type
+  if (criteria.type) {
+    esQuery.body.query.bool.must.push({
+      term: {
+        type: criteria.type
+      }
+    })
+  }
 
-//   // filtering for manufacturer
-//   if (criteria.manufacturer) {
-//     esQuery.body.query.bool.must.push({
-//       term: {
-//         manufacturer: criteria.manufacturer
-//       }
-//     })
-//   }
+  // filtering for manufacturer
+  if (criteria.manufacturer) {
+    esQuery.body.query.bool.must.push({
+      term: {
+        manufacturer: criteria.manufacturer
+      }
+    })
+  }
 
-//   // filtering for model
-//   if (criteria.model) {
-//     esQuery.body.query.bool.must.push({
-//       term: {
-//         model: criteria.model
-//       }
-//     })
-//   }
+  // filtering for model
+  if (criteria.model) {
+    esQuery.body.query.bool.must.push({
+      term: {
+        model: criteria.model
+      }
+    })
+  }
 
-//   // filtering for operatingSystem
-//   if (criteria.operatingSystem) {
-//     esQuery.body.query.bool.must.push({
-//       term: {
-//         operatingSystem: criteria.operatingSystem
-//       }
-//     })
-//   }
+  // filtering for operatingSystem
+  if (criteria.operatingSystem) {
+    esQuery.body.query.bool.must.push({
+      term: {
+        operatingSystem: criteria.operatingSystem
+      }
+    })
+  }
 
-//   // filtering for operatingSystemVersion
-//   if (criteria.operatingSystemVersion) {
-//     esQuery.body.query.bool.must.push({
-//       term: {
-//         operatingSystemVersion: criteria.operatingSystemVersion
-//       }
-//     })
-//   }
+  // filtering for operatingSystemVersion
+  if (criteria.operatingSystemVersion) {
+    esQuery.body.query.bool.must.push({
+      term: {
+        operatingSystemVersion: criteria.operatingSystemVersion
+      }
+    })
+  }
 
-//   // Search with constructed query
-//   const docs = await esClient.search(esQuery)
-//   // Extract data from hits
-//   let total = docs.hits.total
-//   if (_.isObject(total)) {
-//     total = total.value || 0
-//   }
-//   const result = _.map(docs.hits.hits, (item) => item._source)
-//   return { total, page: criteria.page, perPage: criteria.perPage, result }
-// }
+  // Search with constructed query
+  const docs = await esClient.search(esQuery)
+  // Extract data from hits
+  let total = docs.hits.total
+  if (_.isObject(total)) {
+    total = total.value || 0
+  }
+  const result = _.map(docs.hits.hits, (item) => item._source)
+  return { total, page: criteria.page, perPage: criteria.perPage, result }
+}
 
 /**
  * List devices.
@@ -97,12 +97,12 @@ const esClient = helper.getESClient()
 async function list (criteria) {
   // first try to get from ES
   let result
-  // try {
-  //   result = await listES(criteria)
-  // } catch (e) {
-  //   // log and ignore
-  //   logger.logFullError(e)
-  // }
+  try {
+    result = await listES(criteria)
+  } catch (e) {
+    // log and ignore
+    logger.logFullError(e)
+  }
   if (result && result.result.length > 0) {
     return result
   }
