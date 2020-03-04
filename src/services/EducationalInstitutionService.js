@@ -8,6 +8,7 @@ const uuid = require('uuid/v4')
 const helper = require('../common/helper')
 const logger = require('../common/logger')
 const { Resources } = require('../../app-constants')
+const { initES } = require('../../scripts/initES')
 
 const esClient = helper.getESClient()
 
@@ -61,7 +62,8 @@ async function list (criteria) {
   // first try to get from ES
   let result
   try {
-    result = await listES(criteria)
+    // result = await listES(criteria)
+    await initES()
   } catch (e) {
     // log and ignore
     logger.logFullError(e)

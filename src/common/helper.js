@@ -295,8 +295,7 @@ async function createESIndex (indexName, typeName, fields) {
   const props = {}
   for (const field of fields) {
     props[field] = {
-      type: 'text',
-      fielddata: true
+      type: 'keyword'
     }
   }
 
