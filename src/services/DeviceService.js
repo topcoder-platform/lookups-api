@@ -97,12 +97,12 @@ async function listES (criteria) {
 async function list (criteria) {
   // first try to get from ES
   let result
-  try {
-    result = await listES(criteria)
-  } catch (e) {
-    // log and ignore
-    logger.logFullError(e)
-  }
+  // try {
+  //   result = await listES(criteria)
+  // } catch (e) {
+  //   // log and ignore
+  //   logger.logFullError(e)
+  // }
   if (result && result.result.length > 0) {
     return result
   }
