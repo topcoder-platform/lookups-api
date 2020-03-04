@@ -26,5 +26,3 @@ initES().then(() => {
   logger.logFullError(e)
   process.exit()
 })
-
-module.exports = { initES }
