@@ -35,7 +35,7 @@ async function listES (criteria) {
   // filtering for name
   if (criteria.name) {
     esQuery.body.query.bool.must.push({
-      match_phrase: {
+      term: {
         name: criteria.name
       }
     })
@@ -43,7 +43,7 @@ async function listES (criteria) {
   // filtering for countryCode
   if (criteria.countryCode) {
     esQuery.body.query.bool.must.push({
-      match_phrase: {
+      term: {
         countryCode: criteria.countryCode
       }
     })

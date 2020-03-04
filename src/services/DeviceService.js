@@ -36,7 +36,7 @@ async function listES (criteria) {
   // filtering for type
   if (criteria.type) {
     esQuery.body.query.bool.must.push({
-      match_phrase: {
+      term: {
         type: criteria.type
       }
     })
@@ -45,7 +45,7 @@ async function listES (criteria) {
   // filtering for manufacturer
   if (criteria.manufacturer) {
     esQuery.body.query.bool.must.push({
-      match_phrase: {
+      term: {
         manufacturer: criteria.manufacturer
       }
     })
@@ -54,7 +54,7 @@ async function listES (criteria) {
   // filtering for model
   if (criteria.model) {
     esQuery.body.query.bool.must.push({
-      match_phrase: {
+      term: {
         model: criteria.model
       }
     })
@@ -63,7 +63,7 @@ async function listES (criteria) {
   // filtering for operatingSystem
   if (criteria.operatingSystem) {
     esQuery.body.query.bool.must.push({
-      match_phrase: {
+      term: {
         operatingSystem: criteria.operatingSystem
       }
     })
@@ -72,7 +72,7 @@ async function listES (criteria) {
   // filtering for operatingSystemVersion
   if (criteria.operatingSystemVersion) {
     esQuery.body.query.bool.must.push({
-      match_phrase: {
+      term: {
         operatingSystemVersion: criteria.operatingSystemVersion
       }
     })
