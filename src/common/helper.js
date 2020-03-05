@@ -363,7 +363,7 @@ function setResHeaders (req, res, result) {
   let accessControlExposeHeaders = res.get('Access-Control-Expose-Headers') || ''
   accessControlExposeHeaders += accessControlExposeHeaders ? ', ' : ''
   // append new values, to not override values set by someone else
-  accessControlExposeHeaders += 'X-Page, X-Per-Page, X-Total, X-Total-Pages'
+  accessControlExposeHeaders += 'X-Page, X-Per-Page, X-Total, X-Total-Pages, X-Prev-Page, X-Next-Page'
 
   res.set('Access-Control-Expose-Headers', accessControlExposeHeaders)
 }
