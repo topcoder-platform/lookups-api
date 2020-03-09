@@ -24,15 +24,29 @@ async function listES (criteria) {
     size: criteria.perPage,
     from: (criteria.page - 1) * criteria.perPage, // Es Index starts from 0
     body: {
-      sort: [{ name: { order: 'asc' } }]
-    }
-  }
-  if (criteria.name) {
-    esQuery.body.query = {
-      bool: {
-        filter: [{ match_phrase: { name: criteria.name } }]
+      sort: [{ name: { order: 'asc' } }],
+      query: {
+        bool: {
+          must: []
+        }
       }
     }
+  }
+  // filtering for name
+  if (criteria.name) {
+    esQuery.body.query.bool.must.push({
+      term: {
+        name: criteria.name
+      }
+    })
+  }
+  // filtering for countryCode
+  if (criteria.countryCode) {
+    esQuery.body.query.bool.must.push({
+      term: {
+        countryCode: criteria.countryCode
+      }
+    })
   }
 
   // Search with constructed query
@@ -53,22 +67,27 @@ async function listES (criteria) {
  */
 async function list (criteria) {
   // first try to get from ES
+  let result
   try {
-    return await listES(criteria)
+    result = await listES(criteria)
   } catch (e) {
     // log and ignore
     logger.logFullError(e)
   }
+  if (result && result.result.length > 0) {
+    return result
+  }
 
   // then try to get from DB
-  let options
+  const options = {}
   if (criteria.name) {
-    options = {
-      name: { contains: criteria.name }
-    }
+    options.name = { eq: criteria.name }
+  }
+  if (criteria.countryCode) {
+    options.countryCode = { eq: criteria.countryCode }
   }
   // ignore pagination, scan all matched records
-  const result = await helper.scan(config.AMAZON.DYNAMODB_COUNTRY_TABLE, options)
+  result = await helper.scan(config.AMAZON.DYNAMODB_COUNTRY_TABLE, options)
   // return fromDB:true to indicate it is got from db,
   // and response headers ('X-Total', 'X-Page', etc.) are not set in this case
   return { fromDB: true, result }
@@ -78,7 +97,9 @@ list.schema = {
   criteria: Joi.object().keys({
     page: Joi.page(),
     perPage: Joi.perPage(),
-    name: Joi.string()
+    name: Joi.string(),
+    countryFlag: Joi.string(),
+    countryCode: Joi.string()
   })
 }
 
@@ -127,7 +148,9 @@ async function create (data) {
 
 create.schema = {
   data: Joi.object().keys({
-    name: Joi.string().required()
+    name: Joi.string().required(),
+    countryFlag: Joi.string().required(),
+    countryCode: Joi.string().required()
   }).required()
 }
 
@@ -140,10 +163,13 @@ create.schema = {
 async function partiallyUpdate (id, data) {
   // get data in DB
   const country = await helper.getById(config.AMAZON.DYNAMODB_COUNTRY_TABLE, id)
-  if (data.name && country.name !== data.name) {
-    // ensure name is not used already
-    await helper.validateDuplicate(config.AMAZON.DYNAMODB_COUNTRY_TABLE, 'name', data.name)
-
+  if ((data.name && country.name !== data.name) ||
+     (data.countryFlag && country.countryFlag !== data.countryFlag) ||
+     (data.countryCode && country.countryCode !== data.countryCode)) {
+    if (data.name && country.name !== data.name) {
+      // ensure name is not used already
+      await helper.validateDuplicate(config.AMAZON.DYNAMODB_COUNTRY_TABLE, 'name', data.name)
+    }
     // then update data in DB
     const res = await helper.update(country, data)
 
@@ -160,7 +186,9 @@ async function partiallyUpdate (id, data) {
 partiallyUpdate.schema = {
   id: Joi.id(),
   data: Joi.object().keys({
-    name: Joi.string()
+    name: Joi.string(),
+    countryFlag: Joi.string(),
+    countryCode: Joi.string()
   }).required()
 }
 
@@ -177,7 +205,9 @@ async function update (id, data) {
 update.schema = {
   id: Joi.id(),
   data: Joi.object().keys({
-    name: Joi.string().required()
+    name: Joi.string().required(),
+    countryFlag: Joi.string().required(),
+    countryCode: Joi.string().required()
   }).required()
 }
 

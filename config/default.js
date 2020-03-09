@@ -21,17 +21,20 @@ module.exports = {
     DYNAMODB_WRITE_CAPACITY_UNITS: process.env.DYNAMODB_WRITE_CAPACITY_UNITS || 5,
     // table name is model name
     DYNAMODB_COUNTRY_TABLE: process.env.DYNAMODB_COUNTRY_TABLE || 'countries',
-    DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE: process.env.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE || 'educationalInstitutions'
+    DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE: process.env.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE || 'educationalInstitutions',
+    DYNAMODB_DEVICE_TABLE: process.env.DYNAMODB_DEVICE_TABLE || 'devices'
   },
 
   ES: {
     // above AWS_REGION is used if we use AWS ES
     HOST: process.env.ES_HOST || 'localhost:9200',
-    API_VERSION: process.env.ES_API_VERSION || '7.1',
+    API_VERSION: process.env.ES_API_VERSION || '6.8',
     COUNTRY_INDEX: process.env.COUNTRY_INDEX || 'countries',
     COUNTRY_TYPE: process.env.COUNTRY_TYPE || '_doc',
     EDUCATIONAL_INSTITUTION_INDEX: process.env.EDUCATIONAL_INSTITUTION_INDEX || 'educational_institutions',
-    EDUCATIONAL_INSTITUTION_TYPE: process.env.EDUCATIONAL_INSTITUTION_TYPE || '_doc'
+    EDUCATIONAL_INSTITUTION_TYPE: process.env.EDUCATIONAL_INSTITUTION_TYPE || '_doc',
+    DEVICE_INDEX: process.env.DEVICE_INDEX || 'devices',
+    DEVICE_TYPE: process.env.DEVICE_TYPE || '_doc'
   },
 
   AUTH0_URL: process.env.AUTH0_URL,

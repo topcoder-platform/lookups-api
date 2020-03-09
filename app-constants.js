@@ -15,6 +15,7 @@ const Scopes = {
 
 const Resources = {
   Country: 'country',
+  Device: 'device',
   EducationalInstitution: 'educationalInstitution'
 }
 

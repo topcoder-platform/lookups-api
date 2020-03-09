@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "0cf861f2-31b9-49dc-a967-db4cd908588f",
+		"_postman_id": "4802b022-4a66-43f5-b223-cbbcfd91ad9e",
 		"name": "tc-lookup-api",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -19,6 +19,104 @@
 									"pm.test(\"Status code is 201\", function () {",
 									"    pm.response.to.have.status(201);",
 									"    pm.environment.set(\"COUNTRY_ID\", pm.response.json().id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"uu testing v\",\n\t\"countryFlag\": \"https://www.google.com\",\n\t\"countryCode\": \"TEST\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/countries",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"countries"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create country - Duplicate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 409\", function () {",
+									"    pm.response.to.have.status(409);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"uu testing v\",\n\t\"countryFlag\": \"https://www.google.com\",\n\t\"countryCode\": \"TEST\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/countries",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"countries"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create country - Error",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -281,7 +379,7 @@
 					"response": []
 				},
 				{
-					"name": "update country",
+					"name": "update country - Flag Only",
 					"event": [
 						{
 							"listen": "test",
@@ -314,7 +412,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"name\": \"testing updated\"\n}"
+							"raw": "{\n\t\"name\": \"uu testing v\",\n\t\"countryFlag\": \"update1\",\n\t\"countryCode\": \"TEST\"\n}"
 						},
 						"url": {
 							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}",
@@ -331,7 +429,257 @@
 					"response": []
 				},
 				{
-					"name": "partially update country",
+					"name": "update country - Code Only",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"uu testing v\",\n\t\"countryFlag\": \"update1\",\n\t\"countryCode\": \"TEST-Update1\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"countries",
+								"{{COUNTRY_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update country - Both Flag and Code changed",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"uu testing v\",\n\t\"countryFlag\": \"update2\",\n\t\"countryCode\": \"TEST-Update2\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"countries",
+								"{{COUNTRY_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update country - All fields changed",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"uu testing v-Update1\",\n\t\"countryFlag\": \"update3\",\n\t\"countryCode\": \"TEST-Update3\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"countries",
+								"{{COUNTRY_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update country - Name Only",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Another Update\",\n\t\"countryFlag\": \"update3\",\n\t\"countryCode\": \"TEST-Update3\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"countries",
+								"{{COUNTRY_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update country - Error",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Another Update\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"countries",
+								"{{COUNTRY_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "partially update country name",
 					"event": [
 						{
 							"listen": "test",
@@ -364,7 +712,107 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"name\": \"testing updated 2\"\n}"
+							"raw": "{\n\t\"name\": \"The Patched Country Name\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"countries",
+								"{{COUNTRY_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "partially update country code",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"countryCode\": \"The Patched Country Code\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"countries",
+								"{{COUNTRY_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "partially update country flag",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"countryFlag\": \"The Patched country flag\"\n}"
 						},
 						"url": {
 							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}",
@@ -452,7 +900,1180 @@
 						]
 					}
 				}
-			]
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "devices",
+			"item": [
+				{
+					"name": "create device",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set(\"DEVICE_ID\", pm.response.json().id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"type\": \"Device Test Type\",\n\t\"manufacturer\": \"Manufacturer Test\",\n\t\"model\": \"Model Test\",\n\t\"operatingSystem\": \"Operating System Test\",\n\t\"operatingSystemVersion\": \"11\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create device - Duplicate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 409\", function () {",
+									"    pm.response.to.have.status(409);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"type\": \"Device Test Type\",\n\t\"manufacturer\": \"Manufacturer Test\",\n\t\"model\": \"Model Test\",\n\t\"operatingSystem\": \"Operating System Test\",\n\t\"operatingSystemVersion\": \"11\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create device - error",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"type\": \"Device Test Type\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "list devices",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{COPILOT_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices?type=Device Test Type&manufacturer=Manufacturer Test&model=Model Test&operatingSystem=Operating System Test&operatingSystemVersion=11",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "Device Test Type"
+								},
+								{
+									"key": "manufacturer",
+									"value": "Manufacturer Test"
+								},
+								{
+									"key": "model",
+									"value": "Model Test"
+								},
+								{
+									"key": "operatingSystem",
+									"value": "Operating System Test"
+								},
+								{
+									"key": "operatingSystemVersion",
+									"value": "11"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "list devices head",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "HEAD",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{COPILOT_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices?type=Device Test Type",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "Device Test Type"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get device types",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/types",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"types"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get device manufacturers",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/manufacturers?type=Device Test Type",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"manufacturers"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "Device Test Type"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get device manufacturers - empty result",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/manufacturers?type=xyz",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"manufacturers"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "xyz"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get device manufacturers - missing type",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/manufacturers",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"manufacturers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get devices",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{USER_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/{{DEVICE_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"{{DEVICE_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get country head",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "HEAD",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{USER_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/{{DEVICE_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"{{DEVICE_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update device - Type Only",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"type\": \"Device Test Type Updated\",\n\t\"manufacturer\": \"Manufacturer Test\",\n\t\"model\": \"Model Test\",\n\t\"operatingSystem\": \"Operating System Test\",\n\t\"operatingSystemVersion\": \"11\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/{{DEVICE_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"{{DEVICE_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update device - manufacturer Only",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"type\": \"Device Test Type Updated\",\n\t\"manufacturer\": \"Manufacturer Test Updated\",\n\t\"model\": \"Model Test\",\n\t\"operatingSystem\": \"Operating System Test\",\n\t\"operatingSystemVersion\": \"11\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/{{DEVICE_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"{{DEVICE_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update device - operatingSystem Only",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"type\": \"Device Test Type Updated\",\n\t\"manufacturer\": \"Manufacturer Test Updated\",\n\t\"model\": \"Model Test Updated\",\n\t\"operatingSystem\": \"Operating System Test Updated\",\n\t\"operatingSystemVersion\": \"11\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/{{DEVICE_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"{{DEVICE_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update device - operatingSystem Version Only",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"type\": \"Device Test Type Updated\",\n\t\"manufacturer\": \"Manufacturer Test Updated\",\n\t\"model\": \"Model Test Updated\",\n\t\"operatingSystem\": \"Operating System Test Updated\",\n\t\"operatingSystemVersion\": \"11 Updated\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/{{DEVICE_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"{{DEVICE_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update device - error",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"type\": \"Device Test Type Updated\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/{{DEVICE_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"{{DEVICE_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "partially update device type",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"type\": \"The Patched Device Type\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/{{DEVICE_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"{{DEVICE_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "partially update device manufacturer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"manufacturer\": \"The Patched manufacturer\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/{{DEVICE_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"{{DEVICE_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "partially update device operatingSystem",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"operatingSystem\": \"The Patched operatingSystem\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/{{DEVICE_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"{{DEVICE_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "partially update device operatingSystemVersion",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"operatingSystemVersion\": \"The Patched OS Version\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/{{DEVICE_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"{{DEVICE_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "partially update device manufacturer Copy Copy Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"manufacturer\": \"The Patched manufacturer\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/{{DEVICE_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"{{DEVICE_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete device",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/{{DEVICE_ID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"{{DEVICE_ID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "4b651537-6c26-4f18-ae6d-6f3c53aa7f18",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "1f50ae8d-c7dd-46d6-9b99-6c69b641ee3d",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
 		},
 		{
 			"name": "educational institutions",
@@ -493,6 +2114,104 @@
 						"body": {
 							"mode": "raw",
 							"raw": "{\n\t\"name\": \"xx testing yy\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/educationalInstitutions",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"educationalInstitutions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create educational institution - Duplicate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 409\", function () {",
+									"    pm.response.to.have.status(409);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{M2M_FULL_ACCESS_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"xx testing yy\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/educationalInstitutions",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"educationalInstitutions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create educational institution - Error",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{M2M_FULL_ACCESS_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"XXname\": \"xx testing yy\"\n}"
 						},
 						"url": {
 							"raw": "{{URL}}/lookups/educationalInstitutions",
@@ -901,7 +2620,8 @@
 						]
 					}
 				}
-			]
+			],
+			"protocolProfileBehavior": {}
 		},
 		{
 			"name": "health",
@@ -937,7 +2657,8 @@
 					},
 					"response": []
 				}
-			]
+			],
+			"protocolProfileBehavior": {}
 		}
 	],
 	"event": [
@@ -961,5 +2682,6 @@
 				]
 			}
 		}
-	]
+	],
+	"protocolProfileBehavior": {}
 }

@@ -6,8 +6,8 @@ const config = require('config')
 const dynamoose = require('dynamoose')
 
 dynamoose.AWS.config.update({
-  accessKeyId: config.AMAZON.AWS_ACCESS_KEY_ID,
-  secretAccessKey: config.AMAZON.AWS_SECRET_ACCESS_KEY,
+  // accessKeyId: config.AMAZON.AWS_ACCESS_KEY_ID,
+  // secretAccessKey: config.AMAZON.AWS_SECRET_ACCESS_KEY,
   region: config.AMAZON.AWS_REGION
 })
 
@@ -27,5 +27,7 @@ exportObj[config.AMAZON.DYNAMODB_COUNTRY_TABLE] =
   dynamoose.model(config.AMAZON.DYNAMODB_COUNTRY_TABLE, require('./Country'))
 exportObj[config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE] =
   dynamoose.model(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, require('./EducationalInstitution'))
+exportObj[config.AMAZON.DYNAMODB_DEVICE_TABLE] =
+  dynamoose.model(config.AMAZON.DYNAMODB_DEVICE_TABLE, require('./Device'))
 
 module.exports = exportObj

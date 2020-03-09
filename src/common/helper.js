@@ -11,7 +11,7 @@ const errors = require('./errors')
 const logger = require('./logger')
 const busApi = require('tc-bus-api-wrapper')
 const busApiClient = busApi(_.pick(config, ['AUTH0_URL', 'AUTH0_AUDIENCE', 'TOKEN_CACHE_TIME', 'AUTH0_CLIENT_ID',
-  'AUTH0_CLIENT_SECRET', 'BUSAPI_URL', 'KAFKA_ERROR_TOPIC', 'AUTH0_PROXY_SERVER_URL']))
+  'AUTH0_CLIENT_SECRET', 'BUSAPI_URL', 'KAFKA_ERROR_TOPIC']))
 
 // AWS DynamoDB instance
 let dbInstance
@@ -20,8 +20,8 @@ let dbInstance
 let esClient
 
 AWS.config.update({
-  accessKeyId: config.AMAZON.AWS_ACCESS_KEY_ID,
-  secretAccessKey: config.AMAZON.AWS_SECRET_ACCESS_KEY,
+  // accessKeyId: config.AMAZON.AWS_ACCESS_KEY_ID,
+  // secretAccessKey: config.AMAZON.AWS_SECRET_ACCESS_KEY,
   region: config.AMAZON.AWS_REGION
 })
 
@@ -209,15 +209,40 @@ async function scan (modelName, scanParams) {
 /**
  * Validate the data to ensure no duplication
  * @param {Object} modelName The dynamoose model name
- * @param {String} name The attribute name of dynamoose model
- * @param {String} value The attribute value to be validated
+ * @param {String} keys The attribute name of dynamoose model
+ * @param {String} values The attribute value to be validated
  */
-async function validateDuplicate (modelName, name, value) {
+async function validateDuplicate (modelName, keys, values) {
   const options = {}
-  options[name] = { eq: value }
+  if (Array.isArray(keys)) {
+    if (keys.length !== values.length) {
+      throw new errors.BadRequestError(`size of ${keys} and ${values} do not match.`)
+    }
+
+    keys.forEach(function (key, index) {
+      options[key] = { eq: values[index] }
+    })
+  } else {
+    options[keys] = { eq: values }
+  }
+
   const records = await scan(modelName, options)
   if (records.length > 0) {
-    throw new errors.ConflictError(`${modelName} with ${name}: ${value} already exists`)
+    if (Array.isArray(keys)) {
+      let str = `${modelName} with [ `
+
+      for (const i in keys) {
+        const key = keys[i]
+        const value = values[i]
+
+        str += `${key}: ${value}`
+        if (i < keys.length - 1) { str += ', ' }
+      }
+
+      throw new errors.ConflictError(`${str} ] already exists`)
+    } else {
+      throw new errors.ConflictError(`${modelName} with ${keys}: ${values} already exists`)
+    }
   }
 }
 
@@ -236,11 +261,11 @@ function getESClient () {
     esClient = elasticsearch.Client({
       apiVersion,
       hosts,
-      connectionClass: require('http-aws-es'), // eslint-disable-line global-require
-      amazonES: {
-        region: config.AMAZON.AWS_REGION,
-        credentials: new AWS.EnvironmentCredentials('AWS')
-      }
+      connectionClass: require('http-aws-es') // eslint-disable-line global-require
+      // amazonES: {
+      //  region: config.AMAZON.AWS_REGION,
+      //  credentials: new AWS.EnvironmentCredentials('AWS')
+      // }
     })
   } else {
     esClient = new elasticsearch.Client({
@@ -254,8 +279,10 @@ function getESClient () {
 /**
  * Create Elasticsearch index, it will be deleted and re-created if present.
  * @param {String} indexName the ES index name
+ * @param {String} typeName the ES index type name
+ * @param {Array} fields the indexed fields
  */
-async function createESIndex (indexName) {
+async function createESIndex (indexName, typeName, fields) {
   const client = getESClient()
   // delete index if present
   try {
@@ -263,20 +290,27 @@ async function createESIndex (indexName) {
   } catch (err) {
     // ignore
   }
-  // create index
-  await client.indices.create({
+
+  // prepare props
+  const props = {}
+  for (const field of fields) {
+    props[field] = {
+      type: 'keyword'
+    }
+  }
+
+  const ind = {
     index: indexName,
     body: {
       mappings: {
-        properties: {
-          name: {
-            type: 'text',
-            fielddata: true
-          }
+        [typeName]: {
+          properties: props
         }
       }
     }
-  })
+  }
+  // create index
+  await client.indices.create(ind)
 }
 
 /**
@@ -324,6 +358,14 @@ function setResHeaders (req, res, result) {
     }
     res.set('Link', link)
   }
+
+  // Allow browsers access pagination data in headers
+  let accessControlExposeHeaders = res.get('Access-Control-Expose-Headers') || ''
+  accessControlExposeHeaders += accessControlExposeHeaders ? ', ' : ''
+  // append new values, to not override values set by someone else
+  accessControlExposeHeaders += 'X-Page, X-Per-Page, X-Total, X-Total-Pages, X-Prev-Page, X-Next-Page'
+
+  res.set('Access-Control-Expose-Headers', accessControlExposeHeaders)
 }
 
 /**

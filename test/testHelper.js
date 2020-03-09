@@ -3,52 +3,101 @@
  */
 const config = require('config')
 const helper = require('../src/common/helper')
-const CountryService = require('../src/services/CountryService')
-const EducationalInstitutionService = require('../src/services/EducationalInstitutionService')
+const countryService = require('../src/services/CountryService')
+const deviceService = require('../src/services/DeviceService')
+const educationalInstitutionService = require('../src/services/EducationalInstitutionService')
+const sinon = require('sinon')
 
 /**
- * Clear data in database
+ * Clear data in the specified table in the database
+ *
+ * @param tableName The table name from which to clean the data
  */
-async function clearDBData () {
-  const tables = [config.AMAZON.DYNAMODB_COUNTRY_TABLE, config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE]
-  for (const table of tables) {
-    const records = await helper.scan(table)
-    for (const record of records) {
-      await record.delete()
-    }
+async function clearDBData (tableName) {
+  const records = await helper.scan(tableName)
+  for (const record of records) {
+    await record.delete()
   }
 }
 
 /**
- * Insert test data
+ * Insert Educational Institutions test data
  */
-async function insertTestData () {
-  const services = [CountryService, EducationalInstitutionService]
-  for (let index = 0; index <= 1; index++) {
-    const service = services[index]
-    for (let i = 1; i <= 5; i += 1) {
-      const res = await service.create({ name: `a test${i} b` })
-      await helper.getESClient().create({
-        index: index === 0 ? config.ES.COUNTRY_INDEX : config.ES.EDUCATIONAL_INSTITUTION_INDEX,
-        type: index === 0 ? config.ES.COUNTRY_TYPE : config.ES.EDUCATIONAL_INSTITUTION_TYPE,
-        id: res.id,
-        body: res,
-        refresh: 'true' // refresh ES so that it is visible for read operations instantly
-      })
-    }
+async function insertEducationalInstitutionsTestData () {
+  // This is used to prevent sending events for creating the test data to Kafka
+  sinon.stub(helper, 'postEvent').resolves([])
+  for (let i = 1; i <= 5; i += 1) {
+    const res = await educationalInstitutionService.create({ name: `a test${i} b` })
+    await helper.getESClient().create({
+      index: config.ES.EDUCATIONAL_INSTITUTION_INDEX,
+      type: config.ES.EDUCATIONAL_INSTITUTION_TYPE,
+      id: res.id,
+      body: res,
+      refresh: 'true' // refresh ES so that it is visible for read operations instantly
+    })
+  }
+}
+
+/**
+ * Insert countries test data
+ */
+async function insertCountryTestData () {
+  // This is used to prevent sending events for creating the test data to Kafka
+  sinon.stub(helper, 'postEvent').resolves([])
+  for (let i = 1; i <= 5; i += 1) {
+    const res = await countryService.create({
+      name: `a test${i} b`,
+      countryFlag: `a test${i} b`,
+      countryCode: `a test${i} b`
+    })
+    await helper.getESClient().create({
+      index: config.ES.COUNTRY_INDEX,
+      type: config.ES.COUNTRY_TYPE,
+      id: res.id,
+      body: res,
+      refresh: 'true' // refresh ES so that it is visible for read operations instantly
+    })
+  }
+}
+
+/**
+ * Insert devices test data
+ */
+async function insertDeviceTestData () {
+  // This is used to prevent sending events for creating the test data to Kafka
+  sinon.stub(helper, 'postEvent').resolves([])
+  for (let i = 1; i <= 5; i += 1) {
+    const res = await deviceService.create({
+      type: `a test${i} b`,
+      manufacturer: `a test${i} b`,
+      model: `a test${i} b`,
+      operatingSystem: `a test${i} b`,
+      operatingSystemVersion: `a test${i} b`
+    })
+    await helper.getESClient().create({
+      index: config.ES.DEVICE_INDEX,
+      type: config.ES.DEVICE_TYPE,
+      id: res.id,
+      body: res,
+      refresh: 'true' // refresh ES so that it is visible for read operations instantly
+    })
   }
 }
 
 /**
  * Re-create ES indices.
+ * @param indexName The index name
+ * @param typeName The index type name
+ * @param indexedFields The indexed fields
  */
-async function recreateESIndices () {
-  await helper.createESIndex(config.ES.COUNTRY_INDEX)
-  await helper.createESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX)
+async function recreateESIndex (indexName, typeName, indexedFields) {
+  await helper.createESIndex(indexName, typeName, indexedFields)
 }
 
 module.exports = {
   clearDBData,
-  insertTestData,
-  recreateESIndices
+  insertEducationalInstitutionsTestData,
+  insertCountryTestData,
+  insertDeviceTestData,
+  recreateESIndex
 }

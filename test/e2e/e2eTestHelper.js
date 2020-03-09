@@ -5,10 +5,13 @@ const _ = require('lodash')
 const chai = require('chai')
 const chaiHttp = require('chai-http')
 const config = require('config')
+const helper = require('../../src/common/helper')
+const sinon = require('sinon')
 const testHelper = require('../testHelper')
 const app = require('../../app')
 
 const should = chai.should()
+const expect = chai.expect
 chai.use(chaiHttp)
 chai.use(require('chai-as-promised'))
 
@@ -17,28 +20,57 @@ chai.use(require('chai-as-promised'))
  * @param {String} basePath the API base path
  * @param {String} modelName the model name
  */
-function generateLookupE2ETests (basePath, modelName) {
+function generateLookupE2ETests (basePath, modelName, fields, searchByFields, indexedFields) {
   describe(`E2E tests for ${modelName} APIs`, () => {
     // created entity id
     let id
     const notFoundId = '4ef609c7-d81c-4684-80a1-06b7d74d0eab'
+    const validationTestsEntity = {}
+    let postEventBusStub
+    let esClient
 
     before(async () => {
-      await testHelper.recreateESIndices()
-      await testHelper.clearDBData()
-      await testHelper.insertTestData()
+      for (let field of fields) {
+        validationTestsEntity[field] = 'ValidationTest'
+      }
+      await testHelper.clearDBData(modelName)
+
+      if (modelName === config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE) {
+        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX,
+          config.ES.EDUCATIONAL_INSTITUTION_TYPE, indexedFields)
+        await testHelper.insertEducationalInstitutionsTestData()
+      } else if (modelName === config.AMAZON.DYNAMODB_COUNTRY_TABLE) {
+        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX, config.ES.COUNTRY_TYPE, indexedFields)
+        await testHelper.insertCountryTestData()
+      } else if (modelName === config.AMAZON.DYNAMODB_DEVICE_TABLE) {
+        await testHelper.recreateESIndex(config.ES.DEVICE_INDEX, config.ES.DEVICE_TYPE, indexedFields)
+        await testHelper.insertDeviceTestData()
+      }
+
+      esClient = await helper.getESClient()
     })
 
     after(async () => {
-      await testHelper.recreateESIndices()
-      await testHelper.clearDBData()
+      if (modelName === config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE) {
+        await testHelper.recreateESIndex(config.ES.EDUCATIONAL_INSTITUTION_INDEX,
+          config.ES.EDUCATIONAL_INSTITUTION_TYPE, indexedFields)
+      } else if (modelName === config.AMAZON.DYNAMODB_COUNTRY_TABLE) {
+        await testHelper.recreateESIndex(config.ES.COUNTRY_INDEX, config.ES.COUNTRY_TYPE, indexedFields)
+      } else if (modelName === config.AMAZON.DYNAMODB_DEVICE_TABLE) {
+        await testHelper.recreateESIndex(config.ES.DEVICE_INDEX, config.ES.DEVICE_TYPE, indexedFields)
+      }
+
+      await testHelper.clearDBData(modelName)
+    })
+
+    afterEach(() => {
+      sinon.restore()
     })
 
     describe('list API tests', () => {
-      it('Call list API successfully 1', async () => {
+      it('Call list API from ES successfully 1', async () => {
         const response = await chai.request(app)
           .get(basePath)
-          .set('Authorization', `Bearer ${config.COPILOT_TOKEN}`)
         should.equal(response.status, 200)
         should.equal(response.headers['x-page'], '1')
         should.equal(response.headers['x-per-page'], '20')
@@ -48,16 +80,18 @@ function generateLookupE2ETests (basePath, modelName) {
 
         should.equal(response.body.length, 5)
         for (let i = 1; i <= 5; i += 1) {
-          const name = `a test${i} b`
-          const found = _.find(response.body, (item) => item.name === name)
-          should.exist(found)
+          let value, found
+          for (let field of fields) {
+            value = `a test${i} b`
+            found = _.find(response.body, (item) => item[field] === value)
+            should.exist(found)
+          }
         }
       })
 
-      it('Call list API successfully 2', async () => {
+      it('Call list API from ES successfully 2', async () => {
         const response = await chai.request(app)
           .get(basePath)
-          .set('Authorization', `Bearer ${config.COPILOT_TOKEN}`)
           .query({ page: 2, perPage: 2 })
         should.equal(response.status, 200)
         should.equal(response.headers['x-page'], '2')
@@ -67,95 +101,120 @@ function generateLookupE2ETests (basePath, modelName) {
         should.exist(response.headers['link'])
         should.equal(response.headers['x-prev-page'], '1')
         should.equal(response.headers['x-next-page'], '3')
-
         should.equal(response.body.length, 2)
-        for (let i = 3; i <= 4; i += 1) {
-          const name = `a test${i} b`
-          const found = _.find(response.body, (item) => item.name === name)
-          should.exist(found)
-        }
       })
 
-      it('Call list API successfully 3', async () => {
-        const response = await chai.request(app)
-          .get(basePath)
-          .set('Authorization', `Bearer ${config.USER_TOKEN}`)
-          .query({ name: 'TEst3' })
-        should.equal(response.status, 200)
-        should.equal(response.headers['x-page'], '1')
-        should.equal(response.headers['x-per-page'], '20')
-        should.equal(response.headers['x-total'], '1')
-        should.equal(response.headers['x-total-pages'], '1')
-        should.exist(response.headers['link'])
-        should.equal(response.body.length, 1)
-        should.equal(response.body[0].name, 'a test3 b')
-      })
+      for (let fieldParam of searchByFields) {
+        it(`Call list from ES successfully 3 - by ${fieldParam}`, async () => {
+          const response = await chai.request(app)
+            .get(basePath)
+            .query({ [fieldParam]: 'TEst3' })
+          should.equal(response.status, 200)
+          should.equal(response.headers['x-page'], '1')
+          should.equal(response.headers['x-per-page'], '20')
+          should.equal(response.headers['x-total'], '1')
+          should.equal(response.headers['x-total-pages'], '1')
+          should.exist(response.headers['link'])
+          should.equal(response.body.length, 1)
+          for (let field of fields) {
+            should.equal(response.body[0][field], 'a test3 b')
+          }
+        })
 
-      it('Call list API successfully 4', async () => {
+        it(`Call list from ES successfully 4 - by ${fieldParam}`, async () => {
+          const response = await chai.request(app)
+            .get(basePath)
+            .query({ [fieldParam]: 'a b' })
+          should.equal(response.status, 200)
+          should.equal(response.body.length, 0)
+        })
+      }
+
+      it(`Call list from ES successfully by all fields`, async () => {
         const response = await chai.request(app)
           .get(basePath)
-          .set('Authorization', `Bearer ${config.USER_TOKEN}`)
-          .query({ name: 'a b' })
+          .query(validationTestsEntity)
         should.equal(response.status, 200)
-        should.equal(response.headers['x-page'], '1')
-        should.equal(response.headers['x-per-page'], '20')
-        should.equal(response.headers['x-total'], '0')
-        should.equal(response.headers['x-total-pages'], '0')
         should.equal(response.body.length, 0)
+      })
+
+      describe('list from Database tests', () => {
+        beforeEach(() => {
+          sinon.stub(esClient, 'search').rejects(new Error('error'))
+        })
+
+        it('Call list API from DB successfully 1', async () => {
+          const response = await chai.request(app)
+            .get(basePath)
+          should.equal(response.status, 200)
+          should.equal(response.body.length, 5)
+          for (let i = 1; i <= 5; i += 1) {
+            let value, found
+            for (let field of fields) {
+              value = `a test${i} b`
+              found = _.find(response.body, (item) => item[field] === value)
+              should.exist(found)
+            }
+          }
+        })
+
+        it('Call list API from DB successfully 2', async () => {
+          const response = await chai.request(app)
+            .get(basePath)
+            .query({ page: 2, perPage: 2 })
+          should.equal(response.status, 200)
+
+          should.equal(response.body.length, 5)
+          for (let i = 3; i <= 4; i += 1) {
+            let value, found
+            for (let field of fields) {
+              value = `a test${i} b`
+              found = _.find(response.body, (item) => item[field] === value)
+              should.exist(found)
+            }
+          }
+        })
+
+        for (let fieldParam of searchByFields) {
+          it(`Call list from DB successfully 3 - by ${fieldParam}`, async () => {
+            const response = await chai.request(app)
+              .get(basePath)
+              .query({ [fieldParam]: 'test3' })
+            should.equal(response.status, 200)
+
+            should.equal(response.body.length, 1)
+            for (let field of fields) {
+              should.equal(response.body[0][field], 'a test3 b')
+            }
+          })
+
+          it(`Call list from DB successfully 4 - by ${fieldParam}`, async () => {
+            const response = await chai.request(app)
+              .get(basePath)
+              .query({ [fieldParam]: 'a b' })
+            should.equal(response.status, 200)
+            should.equal(response.body.length, 0)
+          })
+        }
+
+        it('Call list head API successfully', async () => {
+          const response = await chai.request(app)
+            .head(basePath).query({ [searchByFields[0]]: 'a b' })
+          should.equal(response.status, 200)
+        })
       })
 
       it('list API - invalid page', async () => {
         const response = await chai.request(app)
           .get(basePath)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
           .query({ page: -1 })
         should.equal(response.status, 400)
         should.equal(response.body.message, '"page" must be larger than or equal to 1')
       })
 
-      it('list API - missing token', async () => {
-        const response = await chai.request(app)
-          .get(basePath)
-        should.equal(response.status, 401)
-        should.equal(response.body.message, 'No token provided.')
-      })
-
-      it('list API - invalid bearer format', async () => {
-        const response = await chai.request(app)
-          .get(basePath)
-          .set('Authorization', 'invalid format')
-        should.equal(response.status, 401)
-        should.equal(response.body.message, 'No token provided.')
-      })
-
-      it('list API - invalid token', async () => {
-        const response = await chai.request(app)
-          .get(basePath)
-          .set('Authorization', `Bearer ${config.INVALID_TOKEN}`)
-        should.equal(response.status, 401)
-        should.equal(response.body.message, 'Failed to authenticate token.')
-      })
-
-      it('list API - expired token', async () => {
-        const response = await chai.request(app)
-          .get(basePath)
-          .set('Authorization', `Bearer ${config.EXPIRED_TOKEN}`)
-        should.equal(response.status, 401)
-        should.equal(response.body.message, 'Failed to authenticate token.')
-      })
-
-      it('list API - not allowed token', async () => {
-        const response = await chai.request(app)
-          .get(basePath)
-          .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
-        should.equal(response.status, 403)
-        should.equal(response.body.message, 'You are not allowed to perform this action!')
-      })
-
       it('list API - invalid perPage', async () => {
         const response = await chai.request(app)
           .get(basePath)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
           .query({ perPage: 'abc' })
         should.equal(response.status, 400)
         should.equal(response.body.message, '"perPage" must be a number')
@@ -164,7 +223,6 @@ function generateLookupE2ETests (basePath, modelName) {
       it('list API - unexpected field', async () => {
         const response = await chai.request(app)
           .get(basePath)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
           .query({ other: 123 })
         should.equal(response.status, 400)
         should.equal(response.body.message, '"other" is not allowed')
@@ -175,7 +233,6 @@ function generateLookupE2ETests (basePath, modelName) {
       it('Call list head API successfully 1', async () => {
         const response = await chai.request(app)
           .head(basePath)
-          .set('Authorization', `Bearer ${config.COPILOT_TOKEN}`)
         should.equal(response.status, 200)
         should.equal(response.headers['x-page'], '1')
         should.equal(response.headers['x-per-page'], '20')
@@ -188,7 +245,6 @@ function generateLookupE2ETests (basePath, modelName) {
       it('Call list head API successfully 2', async () => {
         const response = await chai.request(app)
           .head(basePath)
-          .set('Authorization', `Bearer ${config.COPILOT_TOKEN}`)
           .query({ page: 2, perPage: 2 })
         should.equal(response.status, 200)
         should.equal(response.headers['x-page'], '2')
@@ -201,77 +257,41 @@ function generateLookupE2ETests (basePath, modelName) {
         should.equal(_.isEmpty(response.body), true)
       })
 
-      it('Call list head API successfully 3', async () => {
-        const response = await chai.request(app)
-          .head(basePath)
-          .set('Authorization', `Bearer ${config.USER_TOKEN}`)
-          .query({ name: 'TEst3' })
-        should.equal(response.status, 200)
-        should.equal(response.headers['x-page'], '1')
-        should.equal(response.headers['x-per-page'], '20')
-        should.equal(response.headers['x-total'], '1')
-        should.equal(response.headers['x-total-pages'], '1')
-        should.exist(response.headers['link'])
-        should.equal(_.isEmpty(response.body), true)
-      })
+      for (let fieldParam of searchByFields) {
+        it('Call list head API successfully 3', async () => {
+          const response = await chai.request(app)
+            .head(basePath)
+            .query({ [fieldParam]: 'TEst3' })
+          should.equal(response.status, 200)
+          should.equal(response.headers['x-page'], '1')
+          should.equal(response.headers['x-per-page'], '20')
+          should.equal(response.headers['x-total'], '1')
+          should.equal(response.headers['x-total-pages'], '1')
+          should.exist(response.headers['link'])
+          should.equal(_.isEmpty(response.body), true)
+        })
+      }
 
-      it('Call list head API successfully 4', async () => {
-        const response = await chai.request(app)
-          .head(basePath)
-          .set('Authorization', `Bearer ${config.USER_TOKEN}`)
-          .query({ name: 'a b' })
-        should.equal(response.status, 200)
-        should.equal(response.headers['x-page'], '1')
-        should.equal(response.headers['x-per-page'], '20')
-        should.equal(response.headers['x-total'], '0')
-        should.equal(response.headers['x-total-pages'], '0')
-        should.equal(_.isEmpty(response.body), true)
-      })
-
+      for (let fieldParam of searchByFields) {
+        it('Call list head API successfully 4', async () => {
+          const response = await chai.request(app)
+            .head(basePath)
+            .query({ [fieldParam]: 'a b' })
+          should.equal(response.status, 200)
+          should.equal(_.isEmpty(response.body), true)
+        })
+      }
       it('list head API - invalid page', async () => {
         const response = await chai.request(app)
           .head(basePath)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
           .query({ page: -1 })
         should.equal(response.status, 400)
-        should.equal(_.isEmpty(response.body), true)
-      })
-
-      it('list head API - missing token', async () => {
-        const response = await chai.request(app)
-          .head(basePath)
-        should.equal(response.status, 401)
-        should.equal(_.isEmpty(response.body), true)
-      })
-
-      it('list head API - invalid token', async () => {
-        const response = await chai.request(app)
-          .head(basePath)
-          .set('Authorization', `Bearer ${config.INVALID_TOKEN}`)
-        should.equal(response.status, 401)
-        should.equal(_.isEmpty(response.body), true)
-      })
-
-      it('list head API - expired token', async () => {
-        const response = await chai.request(app)
-          .head(basePath)
-          .set('Authorization', `Bearer ${config.EXPIRED_TOKEN}`)
-        should.equal(response.status, 401)
-        should.equal(_.isEmpty(response.body), true)
-      })
-
-      it('list head API - not allowed token', async () => {
-        const response = await chai.request(app)
-          .head(basePath)
-          .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
-        should.equal(response.status, 403)
         should.equal(_.isEmpty(response.body), true)
       })
 
       it('list head API - invalid perPage', async () => {
         const response = await chai.request(app)
           .head(basePath)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
           .query({ perPage: 'abc' })
         should.equal(response.status, 400)
         should.equal(_.isEmpty(response.body), true)
@@ -280,7 +300,6 @@ function generateLookupE2ETests (basePath, modelName) {
       it('list head API - unexpected field', async () => {
         const response = await chai.request(app)
           .head(basePath)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
           .query({ other: 123 })
         should.equal(response.status, 400)
         should.equal(_.isEmpty(response.body), true)
@@ -288,59 +307,90 @@ function generateLookupE2ETests (basePath, modelName) {
     })
 
     describe('create API tests', () => {
+      beforeEach(() => {
+        postEventBusStub = sinon.stub(helper, 'postEvent').resolves([])
+      })
+
       it('Call create API successfully', async () => {
+        const entity = {}
+        for (let field of fields) {
+          entity[field] = 'testing'
+        }
+
         const response = await chai.request(app)
           .post(basePath)
           .set('Authorization', `Bearer ${config.M2M_FULL_ACCESS_TOKEN}`)
-          .send({ name: 'testing' })
+          .send(entity)
         should.equal(response.status, 201)
-        should.equal(response.body.name, 'testing')
+
+        for (let field of fields) {
+          should.equal(response.body[field], 'testing')
+        }
+        should.equal(postEventBusStub.callCount, 1)
         id = response.body.id
       })
 
-      it('create API - name already used', async () => {
+      it('create API - already used', async () => {
+        const entity = {}
+        for (let field of fields) {
+          entity[field] = 'testing'
+        }
+
         const response = await chai.request(app)
           .post(basePath)
           .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
-          .send({ name: 'testing' })
+          .send(entity)
         should.equal(response.status, 409)
-        should.equal(response.body.message, `${modelName} with name: testing already exists`)
+        expect(response.body.message).to.have.string('already exists')
+        should.equal(postEventBusStub.callCount, 0)
       })
 
       it('create API - forbidden', async () => {
         const response = await chai.request(app)
           .post(basePath)
           .set('Authorization', `Bearer ${config.M2M_READ_ACCESS_TOKEN}`)
-          .send({ name: 'abcdef' })
+          .send({ [searchByFields[0]]: 'abcdef' })
         should.equal(response.status, 403)
         should.equal(response.body.message, 'You are not allowed to perform this action!')
+        should.equal(postEventBusStub.callCount, 0)
       })
 
-      it('create API - missing name', async () => {
+      it(`create API - missing required fields`, async () => {
         const response = await chai.request(app)
           .post(basePath)
           .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
           .send({})
         should.equal(response.status, 400)
-        should.equal(response.body.message, '"name" is required')
+        should.equal(response.body.message.indexOf('is required') >= 0, true)
+        should.equal(postEventBusStub.callCount, 0)
       })
 
-      it('create API - invalid name', async () => {
-        const response = await chai.request(app)
-          .post(basePath)
-          .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
-          .send({ name: ['xx'] })
-        should.equal(response.status, 400)
-        should.equal(response.body.message, '"name" must be a string')
-      })
+      for (let fieldParam of fields) {
+        it(`create API - invalid ${fieldParam}`, async () => {
+          const entity = _.cloneDeep(validationTestsEntity)
+          entity[fieldParam] = ['xx']
+
+          const response = await chai.request(app)
+            .post(basePath)
+            .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
+            .send(entity)
+          should.equal(response.status, 400)
+          should.equal(response.body.message, `"${fieldParam}" must be a string`)
+          should.equal(postEventBusStub.callCount, 0)
+        })
+      }
 
       it('create API - unexpected field', async () => {
+        const entity = _.cloneDeep(validationTestsEntity)
+        entity['other'] = 123
+
         const response = await chai.request(app)
           .post(basePath)
           .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
-          .send({ name: 'abc', other: 'def' })
+          .send(entity)
         should.equal(response.status, 400)
         should.equal(response.body.message, '"other" is not allowed')
+        should.equal(postEventBusStub.callCount, 0)
       })
     })
 
@@ -348,24 +398,16 @@ function generateLookupE2ETests (basePath, modelName) {
       it('Call get entity API successfully', async () => {
         const response = await chai.request(app)
           .get(`${basePath}/${id}`)
-          .set('Authorization', `Bearer ${config.USER_TOKEN}`)
         should.equal(response.status, 200)
         should.equal(response.body.id, id)
-        should.equal(response.body.name, 'testing')
-      })
-
-      it('get entity API - forbidden', async () => {
-        const response = await chai.request(app)
-          .get(`${basePath}/${id}`)
-          .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
-        should.equal(response.status, 403)
-        should.equal(response.body.message, 'You are not allowed to perform this action!')
+        for (let field of fields) {
+          should.equal(response.body[field], 'testing')
+        }
       })
 
       it('get entity API - not found', async () => {
         const response = await chai.request(app)
           .get(`${basePath}/${notFoundId}`)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
         should.equal(response.status, 404)
         should.equal(response.body.message, `${modelName} with id: ${notFoundId} doesn't exist`)
       })
@@ -373,7 +415,6 @@ function generateLookupE2ETests (basePath, modelName) {
       it('get entity API - invalid id', async () => {
         const response = await chai.request(app)
           .get(`${basePath}/invalid`)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
         should.equal(response.status, 400)
         should.equal(response.body.message, '"id" must be a valid GUID')
       })
@@ -383,23 +424,13 @@ function generateLookupE2ETests (basePath, modelName) {
       it('Call get entity head API successfully', async () => {
         const response = await chai.request(app)
           .head(`${basePath}/${id}`)
-          .set('Authorization', `Bearer ${config.M2M_FULL_ACCESS_TOKEN}`)
         should.equal(response.status, 200)
-        should.equal(_.isEmpty(response.body), true)
-      })
-
-      it('get entity head API - forbidden', async () => {
-        const response = await chai.request(app)
-          .head(`${basePath}/${id}`)
-          .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
-        should.equal(response.status, 403)
         should.equal(_.isEmpty(response.body), true)
       })
 
       it('get entity head API - not found', async () => {
         const response = await chai.request(app)
           .head(`${basePath}/${notFoundId}`)
-          .set('Authorization', `Bearer ${config.M2M_FULL_ACCESS_TOKEN}`)
         should.equal(response.status, 404)
         should.equal(_.isEmpty(response.body), true)
       })
@@ -407,122 +438,141 @@ function generateLookupE2ETests (basePath, modelName) {
       it('get entity head API - invalid id', async () => {
         const response = await chai.request(app)
           .head(`${basePath}/invalid`)
-          .set('Authorization', `Bearer ${config.M2M_READ_ACCESS_TOKEN}`)
         should.equal(response.status, 400)
         should.equal(_.isEmpty(response.body), true)
       })
     })
 
     describe('update API tests', () => {
+      beforeEach(() => {
+        postEventBusStub = sinon.stub(helper, 'postEvent').resolves([])
+      })
+
       it('Call update API successfully', async () => {
+        const entity = {}
+        for (let field of fields) {
+          entity[field] = 'testing2'
+        }
+
         const response = await chai.request(app)
           .put(`${basePath}/${id}`)
           .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
-          .send({ name: 'testing2' })
+          .send(entity)
         should.equal(response.status, 200)
         should.equal(response.body.id, id)
-        should.equal(response.body.name, 'testing2')
+        should.equal(postEventBusStub.callCount, 1)
+
+        for (let field of fields) {
+          should.equal(response.body[field], 'testing2')
+        }
       })
 
       it('update API - name already used', async () => {
+        const entity = _.cloneDeep(validationTestsEntity)
+        for (const field of indexedFields) {
+          entity[field] = 'a test4 b'
+        }
+
         const response = await chai.request(app)
           .put(`${basePath}/${id}`)
           .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
-          .send({ name: 'a test4 b' })
+          .send(entity)
         should.equal(response.status, 409)
-        should.equal(response.body.message, `${modelName} with name: a test4 b already exists`)
+        expect(response.body.message).to.have.string(`already exists`)
+        should.equal(postEventBusStub.callCount, 0)
       })
 
       it('update API - forbidden', async () => {
         const response = await chai.request(app)
           .put(`${basePath}/${id}`)
           .set('Authorization', `Bearer ${config.COPILOT_TOKEN}`)
-          .send({ name: 'testing2' })
+          .send(validationTestsEntity)
         should.equal(response.status, 403)
         should.equal(response.body.message, 'You are not allowed to perform this action!')
+        should.equal(postEventBusStub.callCount, 0)
       })
 
       it('update API - not found', async () => {
         const response = await chai.request(app)
           .put(`${basePath}/${notFoundId}`)
           .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
-          .send({ name: 'testing2' })
+          .send(validationTestsEntity)
         should.equal(response.status, 404)
         should.equal(response.body.message, `${modelName} with id: ${notFoundId} doesn't exist`)
+        should.equal(postEventBusStub.callCount, 0)
       })
 
       it('update API - invalid id', async () => {
         const response = await chai.request(app)
           .put(`${basePath}/invalid`)
           .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
-          .send({ name: 'testing2' })
+          .send(validationTestsEntity)
         should.equal(response.status, 400)
         should.equal(response.body.message, '"id" must be a valid GUID')
+        should.equal(postEventBusStub.callCount, 0)
       })
 
-      it('update API - null name', async () => {
-        const response = await chai.request(app)
-          .put(`${basePath}/${id}`)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
-          .send({ name: null })
-        should.equal(response.status, 400)
-        should.equal(response.body.message, '"name" must be a string')
-      })
-
-      it('update API - invalid name', async () => {
-        const response = await chai.request(app)
-          .put(`${basePath}/${id}`)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
-          .send({ name: { invalid: 123 } })
-        should.equal(response.status, 400)
-        should.equal(response.body.message, '"name" must be a string')
-      })
-
-      it('update API - empty name', async () => {
-        const response = await chai.request(app)
-          .put(`${basePath}/${id}`)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
-          .send({ name: '' })
-        should.equal(response.status, 400)
-        should.equal(response.body.message, '"name" is not allowed to be empty')
-      })
+      for (let fieldParam of fields) {
+        it(`update API - invalid ${fieldParam}`, async () => {
+          const response = await chai.request(app)
+            .put(`${basePath}/${id}`)
+            .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
+            .send(_.set(_.cloneDeep(validationTestsEntity), fieldParam, { invalid: 'x' }))
+          should.equal(response.status, 400)
+          should.equal(response.body.message, `"${fieldParam}" must be a string`)
+          should.equal(postEventBusStub.callCount, 0)
+        })
+      }
     })
 
     describe('partially update API tests', () => {
-      it('Call partially update API successfully 1', async () => {
-        const response = await chai.request(app)
-          .patch(`${basePath}/${id}`)
-          .set('Authorization', `Bearer ${config.M2M_FULL_ACCESS_TOKEN}`)
-          .send({ name: 'testing3' })
-        should.equal(response.status, 200)
-        should.equal(response.body.id, id)
-        should.equal(response.body.name, 'testing3')
+      beforeEach(() => {
+        postEventBusStub = sinon.stub(helper, 'postEvent').resolves([])
       })
 
-      it('Call partially update API successfully 2', async () => {
-        const response = await chai.request(app)
-          .patch(`${basePath}/${id}`)
-          .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
-          .send({})
-        should.equal(response.status, 200)
-        should.equal(response.body.id, id)
-        should.equal(response.body.name, 'testing3')
-      })
+      for (let fieldParam of fields) {
+        it(`Call partially update ${fieldParam} API successfully`, async () => {
+          const response = await chai.request(app)
+            .patch(`${basePath}/${id}`)
+            .set('Authorization', `Bearer ${config.M2M_FULL_ACCESS_TOKEN}`)
+            .send({ [fieldParam]: 'testing3' })
+          should.equal(response.status, 200)
+          should.equal(response.body.id, id)
+          should.equal(response.body[fieldParam], 'testing3')
+          should.equal(postEventBusStub.callCount, 1)
+        })
+
+        it(`partially update API - invalid ${fieldParam}`, async () => {
+          const response = await chai.request(app)
+            .patch(`${basePath}/${id}`)
+            .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
+            .send({ [fieldParam]: { invalid: 123 } })
+          should.equal(response.status, 400)
+          should.equal(response.body.message, `"${fieldParam}" must be a string`)
+          should.equal(postEventBusStub.callCount, 0)
+        })
+      }
 
       it('partially update API - name already used', async () => {
+        let entity = validationTestsEntity
+        for (const field of fields) {
+          entity = _.set(_.cloneDeep(entity), field, 'a test5 b')
+        }
+
         const response = await chai.request(app)
           .patch(`${basePath}/${id}`)
           .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
-          .send({ name: 'a test5 b' })
+          .send(entity)
         should.equal(response.status, 409)
-        should.equal(response.body.message, `${modelName} with name: a test5 b already exists`)
+        expect(response.body.message).to.have.string(`already exists`)
+        should.equal(postEventBusStub.callCount, 0)
       })
 
       it('partially update API - forbidden', async () => {
         const response = await chai.request(app)
           .patch(`${basePath}/${id}`)
           .set('Authorization', `Bearer ${config.M2M_READ_ACCESS_TOKEN}`)
-          .send({ name: 'testing2' })
+          .send(_.cloneDeep(validationTestsEntity))
         should.equal(response.status, 403)
         should.equal(response.body.message, 'You are not allowed to perform this action!')
       })
@@ -531,7 +581,7 @@ function generateLookupE2ETests (basePath, modelName) {
         const response = await chai.request(app)
           .patch(`${basePath}/${notFoundId}`)
           .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
-          .send({ name: 'testing2' })
+          .send(_.cloneDeep(validationTestsEntity))
         should.equal(response.status, 404)
         should.equal(response.body.message, `${modelName} with id: ${notFoundId} doesn't exist`)
       })
@@ -540,46 +590,24 @@ function generateLookupE2ETests (basePath, modelName) {
         const response = await chai.request(app)
           .patch(`${basePath}/invalid`)
           .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
-          .send({ name: 'testing2' })
+          .send(_.cloneDeep(validationTestsEntity))
         should.equal(response.status, 400)
         should.equal(response.body.message, '"id" must be a valid GUID')
-      })
-
-      it('partially update API - null name', async () => {
-        const response = await chai.request(app)
-          .patch(`${basePath}/${id}`)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
-          .send({ name: null })
-        should.equal(response.status, 400)
-        should.equal(response.body.message, '"name" must be a string')
-      })
-
-      it('partially update API - invalid name', async () => {
-        const response = await chai.request(app)
-          .patch(`${basePath}/${id}`)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
-          .send({ name: { invalid: 123 } })
-        should.equal(response.status, 400)
-        should.equal(response.body.message, '"name" must be a string')
-      })
-
-      it('partially update API - empty name', async () => {
-        const response = await chai.request(app)
-          .patch(`${basePath}/${id}`)
-          .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
-          .send({ name: '' })
-        should.equal(response.status, 400)
-        should.equal(response.body.message, '"name" is not allowed to be empty')
       })
     })
 
     describe('remove API tests', () => {
+      beforeEach(() => {
+        postEventBusStub = sinon.stub(helper, 'postEvent').resolves([])
+      })
+
       it('remove API - forbidden', async () => {
         const response = await chai.request(app)
           .delete(`${basePath}/${id}`)
           .set('Authorization', `Bearer ${config.USER_TOKEN}`)
         should.equal(response.status, 403)
         should.equal(response.body.message, 'You are not allowed to perform this action!')
+        should.equal(postEventBusStub.callCount, 0)
       })
 
       it('Call remove API successfully', async () => {
@@ -588,6 +616,7 @@ function generateLookupE2ETests (basePath, modelName) {
           .set('Authorization', `Bearer ${config.ADMIN_TOKEN}`)
         should.equal(response.status, 204)
         should.equal(_.isEmpty(response.body), true)
+        should.equal(postEventBusStub.callCount, 1)
       })
 
       it('remove API - not found', async () => {
@@ -596,6 +625,7 @@ function generateLookupE2ETests (basePath, modelName) {
           .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
         should.equal(response.status, 404)
         should.equal(response.body.message, `${modelName} with id: ${id} doesn't exist`)
+        should.equal(postEventBusStub.callCount, 0)
       })
 
       it('remove API - invalid id', async () => {
@@ -604,8 +634,141 @@ function generateLookupE2ETests (basePath, modelName) {
           .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
         should.equal(response.status, 400)
         should.equal(response.body.message, '"id" must be a valid GUID')
+        should.equal(postEventBusStub.callCount, 0)
+      })
+
+      it('remove API - Wrong url', async () => {
+        const response = await chai.request(app)
+          .delete(`${basePath}`)
+          .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
+        should.equal(response.status, 404)
       })
     })
+
+    if (modelName === config.AMAZON.DYNAMODB_DEVICE_TABLE) {
+      describe('get device types tests', () => {
+        it('Call get device types from ES successfully', async () => {
+          const response = await chai.request(app)
+            .get(`${basePath}/types`)
+          should.equal(response.status, 200)
+          const result = response.body
+          should.equal(result.length, 5)
+          for (let i = 1; i <= 5; i += 1) {
+            should.equal(_.includes(result, `a test${i} b`), true)
+          }
+        })
+
+        describe('get device types from Database tests', () => {
+          beforeEach(() => {
+            sinon.stub(esClient, 'search').rejects(new Error('error'))
+          })
+
+          it('Call get device types from DB successfully', async () => {
+            const response = await chai.request(app)
+              .get(`${basePath}/types`)
+            should.equal(response.status, 200)
+            const result = response.body
+            should.equal(result.length, 5)
+            for (let i = 1; i <= 5; i += 1) {
+              should.equal(_.includes(result, `a test${i} b`), true)
+            }
+          })
+        })
+      })
+
+      describe('get device manufacturers tests', () => {
+        it('Call get device manufacturers from ES successfully 1', async () => {
+          const response = await chai.request(app)
+            .get(`${basePath}/manufacturers`)
+            .query({ type: 'a' })
+          should.equal(response.status, 200)
+          const result = response.body
+          should.equal(result.length, 5)
+          for (let i = 1; i <= 5; i += 1) {
+            should.equal(_.includes(result, `a test${i} b`), true)
+          }
+        })
+
+        it('Call get device manufacturers from ES successfully 2', async () => {
+          const response = await chai.request(app)
+            .get(`${basePath}/manufacturers`)
+            .query({ type: 'A test3' })
+          should.equal(response.status, 200)
+          const result = response.body
+          should.equal(result.length, 1)
+          should.equal(result[0], 'a test3 b')
+        })
+
+        it('Call get device manufacturers from ES successfully 3', async () => {
+          const response = await chai.request(app)
+            .get(`${basePath}/manufacturers`)
+            .query({ type: 'xyz' })
+          should.equal(response.status, 200)
+          const result = response.body
+          should.equal(result.length, 0)
+        })
+
+        describe('get device manufacturers from Database tests', () => {
+          beforeEach(() => {
+            sinon.stub(esClient, 'search').rejects(new Error('error'))
+          })
+
+          it('Call get device manufacturers from DB successfully 1', async () => {
+            const response = await chai.request(app)
+              .get(`${basePath}/manufacturers`)
+              .query({ type: 'b' })
+            should.equal(response.status, 200)
+            const result = response.body
+            should.equal(result.length, 5)
+            for (let i = 1; i <= 5; i += 1) {
+              should.equal(_.includes(result, `a test${i} b`), true)
+            }
+          })
+
+          it('Call get device manufacturers from DB successfully 2', async () => {
+            const response = await chai.request(app)
+              .get(`${basePath}/manufacturers`)
+              .query({ type: 'test3' })
+            should.equal(response.status, 200)
+            const result = response.body
+            should.equal(result.length, 1)
+            should.equal(result[0], 'a test3 b')
+          })
+
+          it('Call get device manufacturers from DB successfully 3', async () => {
+            const response = await chai.request(app)
+              .get(`${basePath}/manufacturers`)
+              .query({ type: 'abc' })
+            should.equal(response.status, 200)
+            const result = response.body
+            should.equal(result.length, 0)
+          })
+        })
+
+        it('get device manufacturers - missing type', async () => {
+          const response = await chai.request(app)
+            .get(`${basePath}/manufacturers`)
+          should.equal(response.status, 400)
+          should.equal(response.body.message, '"type" is required')
+        })
+
+        it('get device manufacturers - empty type', async () => {
+          const response = await chai.request(app)
+            .get(`${basePath}/manufacturers`)
+            .query({ type: '' })
+          should.equal(response.status, 400)
+          should.equal(response.body.message, '"type" is not allowed to be empty')
+        })
+
+        it('get device manufacturers - unexpected field', async () => {
+          const response = await chai.request(app)
+            .get(`${basePath}/manufacturers`)
+            .query({ type: 'a', other: 'b' })
+          should.equal(response.status, 400)
+          should.equal(response.body.message, '"other" is not allowed')
+        })
+      })
+    }
   })
 }
 

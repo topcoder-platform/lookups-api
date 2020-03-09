@@ -41,20 +41,438 @@ produces:
 consumes:
   - application/json
 paths:
+  '/lookups/devices':
+    get:
+      tags:
+        - Device
+      description: |
+        List devices.
+      parameters:
+        - $ref: '#/parameters/page'
+        - $ref: '#/parameters/perPage'
+        - name: type
+          in: query
+          description: Filter by type, case insensitive, partial match is used
+          required: false
+          type: string
+        - name: manufacturer
+          in: query
+          description: Filter by manufacturer, case insensitive, partial match is used
+          required: false
+          type: string
+        - name: model
+          in: query
+          description: Filter by model, case insensitive, partial match is used
+          required: false
+          type: string
+        - name: operatingSystem
+          in: query
+          description: Filter by operatingSystem, case insensitive, partial match is used
+          required: false
+          type: string
+        - name: operatingSystemVersion
+          in: query
+          description: Filter by operatingSystemVersion, case insensitive, partial match is used
+          required: false
+          type: string
+
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Device'
+          headers:
+            X-Next-Page:
+              type: integer
+              description: The index of the next page
+            X-Page:
+              type: integer
+              description: The index of the current page (starting at 1)
+            X-Per-Page:
+              type: integer
+              description: The number of items to list per page
+            X-Prev-Page:
+              type: integer
+              description: The index of the previous page
+            X-Total:
+              type: integer
+              description: The total number of items
+            X-Total-Pages:
+              type: integer
+              description: The total number of pages
+            Link:
+              type: string
+              description: Pagination link header.
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    head:
+      tags:
+        - Device
+      description: |
+        List devices head.
+      parameters:
+        - $ref: '#/parameters/page'
+        - $ref: '#/parameters/perPage'
+        - name: type
+          in: query
+          description: Filter by type, case insensitive, partial match is used
+          required: false
+          type: string
+        - name: manufacturer
+          in: query
+          description: Filter by manufacturer, case insensitive, partial match is used
+          required: false
+          type: string
+        - name: model
+          in: query
+          description: Filter by model, case insensitive, partial match is used
+          required: false
+          type: string
+        - name: operatingSystem
+          in: query
+          description: Filter by operatingSystem, case insensitive, partial match is used
+          required: false
+          type: string
+        - name: operatingSystemVersion
+          in: query
+          description: Filter by operatingSystemVersion, case insensitive, partial match is used
+          required: false
+          type: string
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Next-Page:
+              type: integer
+              description: The index of the next page
+            X-Page:
+              type: integer
+              description: The index of the current page (starting at 1)
+            X-Per-Page:
+              type: integer
+              description: The number of items to list per page
+            X-Prev-Page:
+              type: integer
+              description: The index of the previous page
+            X-Total:
+              type: integer
+              description: The total number of items
+            X-Total-Pages:
+              type: integer
+              description: The total number of pages
+            Link:
+              type: string
+              description: Pagination link header.
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    post:
+      tags:
+        - Device
+      description: |
+        Create a new device.
+      security:
+        - bearer: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/DeviceData'
+      responses:
+        '201':
+          description: Created - The request was successful and the resource is returned.
+          schema:
+            $ref: '#/definitions/Device'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '409':
+          description: >
+            Conflict. The name is already defined.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+  '/lookups/devices/:id':
+    get:
+      tags:
+        - Device
+      description: Retrieve the device by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of device to retrieve
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Device'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: Device not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    head:
+      tags:
+        - Device
+      description: Retrieve the device head by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of device to retrieve
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: Device not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    put:
+      tags:
+        - Device
+      description: Update the device with the specified id.
+      security:
+        - bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of device to update
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/DeviceData'
+      responses:
+        '200':
+          description: Updated - The request was successful and the resource is returned.
+          schema:
+            $ref: '#/definitions/Device'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: Device not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '409':
+          description: Conflict. Other device has already used the same name.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    patch:
+      tags:
+        - Device
+      description: >
+        Partially update the device with specified id.  Only the fields
+        that are provided will be updated.
+      security:
+        - bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of device to update
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/DeviceData'
+      responses:
+        '200':
+          description: Updated - The request was successful and the resource is returned.
+          schema:
+            $ref: '#/definitions/Device'
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: Device not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '409':
+          description: >
+            Conflict. Other device has already used the same name.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    delete:
+      tags:
+        - Device
+      description: Delete device.
+      security:
+        - bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: UUID
+          description: The id of device to delete
+      responses:
+        '204':
+          description: Deleted successful.
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '401':
+          description: Unauthorized. Fail to authenticate the requester.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '403':
+          description: >
+            Forbidden.  The requester does not have the correct permission to perform the operation.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '404':
+          description: Device not found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+  '/lookups/devices/types':
+    get:
+      tags:
+        - Device
+      description: |
+        List distinct device types.
+
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              type: string
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+  '/lookups/devices/manufacturers':
+    get:
+      tags:
+        - Device
+      description: |
+        List distinct device manufacturers.
+      parameters:
+        - name: type
+          in: query
+          description: Filter by device type, case insensitive, partial match is used
+          required: true
+          type: string
+
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              type: string
+        '400':
+          description: Bad request.  Request parameters were invalid.
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
   '/lookups/countries':
     get:
       tags:
         - Country
       description: |
         List countries.
-      security:
-        - bearer: []
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
         - name: name
           in: query
           description: Filter by name, case insensitive, partial match is used
+          required: false
+          type: string
+        - name: countryCode
+          in: query
+          description: Filter by countryCode, case insensitive, partial match is used
           required: false
           type: string
       responses:
@@ -90,14 +508,6 @@ paths:
           description: Bad request.  Request parameters were invalid.
           schema:
             $ref: '#/definitions/ErrorModel'
-        '401':
-          description: Unauthorized. Fail to authenticate the requester.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: Forbidden.  The requester does not have the correct permission to perform the operation.
-          schema:
-            $ref: '#/definitions/ErrorModel'
         '500':
           description: Server error
           schema:
@@ -107,14 +517,17 @@ paths:
         - Country
       description: |
         List countries head.
-      security:
-        - bearer: []
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
         - name: name
           in: query
           description: Filter by name, case insensitive, partial match is used
+          required: false
+          type: string
+        - name: countryCode
+          in: query
+          description: Filter by countryCode, case insensitive, partial match is used
           required: false
           type: string
       responses:
@@ -144,14 +557,6 @@ paths:
               description: Pagination link header.
         '400':
           description: Bad request.  Request parameters were invalid.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
-          description: Unauthorized. Fail to authenticate the requester.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: Forbidden.  The requester does not have the correct permission to perform the operation.
           schema:
             $ref: '#/definitions/ErrorModel'
         '500':
@@ -203,8 +608,6 @@ paths:
       tags:
         - Country
       description: Retrieve the country by id
-      security:
-        - bearer: []
       parameters:
         - name: id
           in: path
@@ -221,15 +624,6 @@ paths:
           description: Bad request.  Request parameters were invalid.
           schema:
             $ref: '#/definitions/ErrorModel'
-        '401':
-          description: Unauthorized. Fail to authenticate the requester.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: >
-            Forbidden.  The requester does not have the correct permission to perform the operation.
-          schema:
-            $ref: '#/definitions/ErrorModel'
         '404':
           description: Country not found
           schema:
@@ -242,8 +636,6 @@ paths:
       tags:
         - Country
       description: Retrieve the country head by id
-      security:
-        - bearer: []
       parameters:
         - name: id
           in: path
@@ -256,15 +648,6 @@ paths:
           description: OK
         '400':
           description: Bad request.  Request parameters were invalid.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
-          description: Unauthorized. Fail to authenticate the requester.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: >
-            Forbidden.  The requester does not have the correct permission to perform the operation.
           schema:
             $ref: '#/definitions/ErrorModel'
         '404':
@@ -417,8 +800,6 @@ paths:
         - Educational Institution
       description: |
         List educational institutions.
-      security:
-        - bearer: []
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
@@ -460,14 +841,6 @@ paths:
           description: Bad request.  Request parameters were invalid.
           schema:
             $ref: '#/definitions/ErrorModel'
-        '401':
-          description: Unauthorized. Fail to authenticate the requester.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: Forbidden.  The requester does not have the correct permission to perform the operation.
-          schema:
-            $ref: '#/definitions/ErrorModel'
         '500':
           description: Server error
           schema:
@@ -477,8 +850,6 @@ paths:
         - Educational Institution
       description: |
         List educational institutions head.
-      security:
-        - bearer: []
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
@@ -514,14 +885,6 @@ paths:
               description: Pagination link header.
         '400':
           description: Bad request.  Request parameters were invalid.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
-          description: Unauthorized. Fail to authenticate the requester.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: Forbidden.  The requester does not have the correct permission to perform the operation.
           schema:
             $ref: '#/definitions/ErrorModel'
         '500':
@@ -573,8 +936,6 @@ paths:
       tags:
         - Educational Institution
       description: Retrieve the educational institution by id
-      security:
-        - bearer: []
       parameters:
         - name: id
           in: path
@@ -591,15 +952,6 @@ paths:
           description: Bad request.  Request parameters were invalid.
           schema:
             $ref: '#/definitions/ErrorModel'
-        '401':
-          description: Unauthorized. Fail to authenticate the requester.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: >
-            Forbidden.  The requester does not have the correct permission to perform the operation.
-          schema:
-            $ref: '#/definitions/ErrorModel'
         '404':
           description: educational institution not found
           schema:
@@ -612,8 +964,6 @@ paths:
       tags:
         - Educational Institution
       description: Retrieve the educational institution head by id
-      security:
-        - bearer: []
       parameters:
         - name: id
           in: path
@@ -626,15 +976,6 @@ paths:
           description: OK
         '400':
           description: Bad request.  Request parameters were invalid.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '401':
-          description: Unauthorized. Fail to authenticate the requester.
-          schema:
-            $ref: '#/definitions/ErrorModel'
-        '403':
-          description: >
-            Forbidden.  The requester does not have the correct permission to perform the operation.
           schema:
             $ref: '#/definitions/ErrorModel'
         '404':
@@ -826,6 +1167,10 @@ definitions:
         format: UUID
       name:
         type: string
+      countryFlag:
+        type: string
+      countryCode:
+        type: string
     required:
       - id
       - name
@@ -833,6 +1178,10 @@ definitions:
     type: object
     properties:
       name:
+        type: string
+      countryFlag:
+        type: string
+      countryCode:
         type: string
   EducationalInstitution:
     type: object
@@ -856,3 +1205,40 @@ definitions:
       message:
         type: string
         description: the error message
+  Device:
+    type: object
+    properties:
+      id:
+        type: string
+        format: UUID
+      type:
+        type: string
+      manufacturer:
+        type: string
+      model:
+        type: string
+      operatingSystem:
+        type: string
+      operatingSystemVersion:
+        type: string
+
+    required:
+      - id
+      - type
+      - manufacturer
+      - model
+      - operatingSystem
+      - operatingSystemVersion
+  DeviceData:
+    type: object
+    properties:
+      type:
+        type: string
+      manufacturer:
+        type: string
+      model:
+        type: string
+      operatingSystem:
+        type: string
+      operatingSystemVersion:
+        type: string

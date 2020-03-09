@@ -24,15 +24,21 @@ async function listES (criteria) {
     size: criteria.perPage,
     from: (criteria.page - 1) * criteria.perPage, // Es Index starts from 0
     body: {
-      sort: [{ name: { order: 'asc' } }]
-    }
-  }
-  if (criteria.name) {
-    esQuery.body.query = {
-      bool: {
-        filter: [{ match_phrase: { name: criteria.name } }]
+      sort: [{ name: { order: 'asc' } }],
+      query: {
+        bool: {
+          must: []
+        }
       }
     }
+  }
+  // filtering for name
+  if (criteria.name) {
+    esQuery.body.query.bool.must.push({
+      term: {
+        name: criteria.name
+      }
+    })
   }
 
   // Search with constructed query
@@ -53,22 +59,26 @@ async function listES (criteria) {
  */
 async function list (criteria) {
   // first try to get from ES
+  let result
   try {
-    return await listES(criteria)
+    result = await listES(criteria)
   } catch (e) {
     // log and ignore
     logger.logFullError(e)
+  }
+  if (result && result.result.length > 0) {
+    return result
   }
 
   // then try to get from DB
   let options
   if (criteria.name) {
     options = {
-      name: { contains: criteria.name }
+      name: { eq: criteria.name }
     }
   }
   // ignore pagination, scan all matched records
-  const result = await helper.scan(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, options)
+  result = await helper.scan(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, options)
   // return fromDB:true to indicate it is got from db,
   // and response headers ('X-Total', 'X-Page', etc.) are not set in this case
   return { fromDB: true, result }

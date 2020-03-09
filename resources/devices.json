@@ -1,0 +1,16 @@
+[
+    {
+        "type": "Desktop",
+        "manufacturer": "Apple",
+        "model": "Macbook Pro",
+        "operatingSystem": "OSX",
+        "operatingSystemVersion": "10.14"
+    },
+    {
+        "type": "Mobile",
+        "manufacturer": "Samsung",
+        "model": "Note8",
+        "operatingSystem": "Android",
+        "operatingSystemVersion": "10.x"
+    }
+]

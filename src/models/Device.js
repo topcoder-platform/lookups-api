@@ -1,5 +1,5 @@
 /**
- * This defines Country model.
+ * This defines Device model.
  */
 const config = require('config')
 const dynamoose = require('dynamoose')
@@ -12,15 +12,23 @@ const schema = new Schema({
     hashKey: true,
     required: true
   },
-  name: {
+  type: {
     type: String,
     required: true
   },
-  countryFlag: {
+  manufacturer: {
     type: String,
     required: true
   },
-  countryCode: {
+  model: {
+    type: String,
+    required: true
+  },
+  operatingSystem: {
+    type: String,
+    required: true
+  },
+  operatingSystemVersion: {
     type: String,
     required: true
   }

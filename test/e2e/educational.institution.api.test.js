@@ -10,4 +10,7 @@ const config = require('config')
 const e2eTestHelper = require('./e2eTestHelper')
 
 e2eTestHelper.generateLookupE2ETests(`${config.API_VERSION}/lookups/educationalInstitutions`,
-  config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE)
+  config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE,
+  ['name'],
+  ['name'],
+  ['name'])

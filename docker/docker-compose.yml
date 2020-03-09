@@ -1,0 +1,7 @@
+version: '3'
+services:
+  lookups-api:
+    image: lookups-api:latest
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile

@@ -10,17 +10,13 @@ module.exports = {
   '/lookups/countries': {
     get: {
       controller: 'CountryController',
-      method: 'list',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadLookup, constants.Scopes.AllLookup]
+      method: 'list'
+      // any role / scope is allowed
     },
     head: {
       controller: 'CountryController',
-      method: 'listHead',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadLookup, constants.Scopes.AllLookup]
+      method: 'listHead'
+      // any role / scope is allowed
     },
     post: {
       controller: 'CountryController',
@@ -33,17 +29,13 @@ module.exports = {
   '/lookups/countries/:id': {
     get: {
       controller: 'CountryController',
-      method: 'getEntity',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadLookup, constants.Scopes.AllLookup]
+      method: 'getEntity'
+      // any role / scope is allowed
     },
     head: {
       controller: 'CountryController',
-      method: 'getEntityHead',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadLookup, constants.Scopes.AllLookup]
+      method: 'getEntityHead'
+      // any role / scope is allowed
     },
     put: {
       controller: 'CountryController',
@@ -71,17 +63,13 @@ module.exports = {
   '/lookups/educationalInstitutions': {
     get: {
       controller: 'EducationalInstitutionController',
-      method: 'list',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadLookup, constants.Scopes.AllLookup]
+      method: 'list'
+      // any role / scope is allowed
     },
     head: {
       controller: 'EducationalInstitutionController',
-      method: 'listHead',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadLookup, constants.Scopes.AllLookup]
+      method: 'listHead'
+      // any role / scope is allowed
     },
     post: {
       controller: 'EducationalInstitutionController',
@@ -94,17 +82,13 @@ module.exports = {
   '/lookups/educationalInstitutions/:id': {
     get: {
       controller: 'EducationalInstitutionController',
-      method: 'getEntity',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadLookup, constants.Scopes.AllLookup]
+      method: 'getEntity'
+      // any role / scope is allowed
     },
     head: {
       controller: 'EducationalInstitutionController',
-      method: 'getEntityHead',
-      auth: 'jwt',
-      // any role is allowed
-      scopes: [constants.Scopes.ReadLookup, constants.Scopes.AllLookup]
+      method: 'getEntityHead'
+      // any role / scope is allowed
     },
     put: {
       controller: 'EducationalInstitutionController',
@@ -128,6 +112,74 @@ module.exports = {
       scopes: [constants.Scopes.DeleteLookup, constants.Scopes.AllLookup]
     }
   },
+
+  '/lookups/devices': {
+    get: {
+      controller: 'DeviceController',
+      method: 'list'
+      // any role / scope is allowed
+    },
+    head: {
+      controller: 'DeviceController',
+      method: 'listHead'
+      // any role / scope is allowed
+    },
+    post: {
+      controller: 'DeviceController',
+      method: 'create',
+      auth: 'jwt',
+      access: [constants.UserRoles.Admin],
+      scopes: [constants.Scopes.CreateLookup, constants.Scopes.AllLookup]
+    }
+  },
+  '/lookups/devices/types': {
+    get: {
+      controller: 'DeviceController',
+      method: 'getTypes'
+      // any role / scope is allowed
+    }
+  },
+  '/lookups/devices/manufacturers': {
+    get: {
+      controller: 'DeviceController',
+      method: 'getManufacturers'
+      // any role / scope is allowed
+    }
+  },
+  '/lookups/devices/:id': {
+    get: {
+      controller: 'DeviceController',
+      method: 'getEntity'
+      // any role / scope is allowed
+    },
+    head: {
+      controller: 'DeviceController',
+      method: 'getEntityHead'
+      // any role / scope is allowed
+    },
+    put: {
+      controller: 'DeviceController',
+      method: 'update',
+      auth: 'jwt',
+      access: [constants.UserRoles.Admin],
+      scopes: [constants.Scopes.UpdateLookup, constants.Scopes.AllLookup]
+    },
+    patch: {
+      controller: 'DeviceController',
+      method: 'partiallyUpdate',
+      auth: 'jwt',
+      access: [constants.UserRoles.Admin],
+      scopes: [constants.Scopes.UpdateLookup, constants.Scopes.AllLookup]
+    },
+    delete: {
+      controller: 'DeviceController',
+      method: 'remove',
+      auth: 'jwt',
+      access: [constants.UserRoles.Admin],
+      scopes: [constants.Scopes.DeleteLookup, constants.Scopes.AllLookup]
+    }
+  },
+
   '/health': {
     get: {
       controller: 'HealthCheckController',
