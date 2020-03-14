@@ -47,6 +47,12 @@ Configuration for the application is at `config/default.js` and `config/producti
 - LOOKUP_CREATE_TOPIC: the lookup create Kafka topic, default value is 'lookup.notification.create',
 - LOOKUP_UPDATE_TOPIC: the lookup update Kafka topic, default value is 'lookup.notification.update',
 - LOOKUP_DELETE_TOPIC: the lookup delete Kafka topic, default value is 'lookup.notification.delete'
+- MIGRATE_DB.AWS_ACCESS_KEY_ID: The Amazon certificate key to use when connecting to migrate db. For local dynamodb you can set fake value.
+- MIGRATE_DB.AWS_SECRET_ACCESS_KEY: The Amazon certificate access key to use when connecting to migrate db. For local dynamodb you can set fake value.
+- MIGRATE_DB.AWS_REGION: The Amazon region to use when connecting to migrate db. For local dynamodb you can set fake value.
+- MIGRATE_DB.IS_LOCAL_DB: Use local or AWS Amazon DynamoDB to migrate.
+- MIGRATE_DB.DYNAMODB_URL: The local url, if using local Amazon DynamoDB to migrate.
+- MIGRATE_DB.BATCH_COUNT: The batch count of record to migrate.
 
 Test configuration is at `config/test.js`. You don't need to change them. The following test parameters can be set in config file or in env variables:
 
@@ -101,6 +107,12 @@ If you want to use docker of local Elasticsearch:
 
 - you may go to `es-docker` folder, and run `docker-compose up` to start local Elasticsearch
 - local Elasticsearch is running at `http://localhost:9200`
+
+## Migrate Data
+
+- Configurate MIGRATE_DB
+- To migreate data from migrateDB `npm run migrate-data`
+    > **Example:** `npm run migrage-data`
 
 ## Local Deployment
 
