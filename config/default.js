@@ -25,6 +25,15 @@ module.exports = {
     DYNAMODB_DEVICE_TABLE: process.env.DYNAMODB_DEVICE_TABLE || 'devices'
   },
 
+  MIGRATE_DB: {
+    AWS_ACCESS_KEY_ID: process.env.MIGRATE_AWS_ACCESS_KEY_ID || 'FAKE_ACCESS_KEY',
+    AWS_SECRET_ACCESS_KEY: process.env.MIGRATE_AWS_SECRET_ACCESS_KEY || 'FAKE_SECRET_ACCESS_KEY',
+    AWS_REGION: process.env.MIGRATE_AWS_REGION || 'us-east-1',
+    IS_LOCAL_DB: process.env.MIGRATE_LOCAL_DB ? process.env.MIGRATE_LOCAL_DB === 'true' : true,
+    DYNAMODB_URL: process.env.MIGRATE_DYNAMODB_URL || 'http://localhost:8100', // Only needed if MIGRATE_LOCAL_DB is 'true'
+    BATCH_COUNT: process.env.MIGRATE_BATCH_COUNT || 1000
+  },
+
   ES: {
     // above AWS_REGION is used if we use AWS ES
     HOST: process.env.ES_HOST || 'localhost:9200',
