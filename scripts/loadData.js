@@ -26,7 +26,14 @@ const loadData = async (lookupName, lookupFilePath) => {
   for (const entity of entities) {
     try {
       // create record in db
-      entity.id = uuid()
+      if (!entity.hasOwnProperty('id')) {
+        entity.id = uuid()
+      }
+      if (getTableName === 'devices') {
+        if (!entity.operatingSystemVersion) {
+          entity.operatingSystemVersion = 'ANY'
+        }
+      }
       const res = await servicesHelper.create(getTableName, entity)
 
       // create record in es

@@ -26,11 +26,11 @@ const schema = new Schema({
   },
   operatingSystem: {
     type: String,
-    required: true
+    required: false
   },
   operatingSystemVersion: {
     type: String,
-    required: true
+    required: false
   }
 },
 {
