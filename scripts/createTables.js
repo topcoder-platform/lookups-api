@@ -12,11 +12,11 @@ logger.info('Create DynamoDB tables.')
 const createTables = async () => {
   const names = [
     config.AMAZON.DYNAMODB_COUNTRY_TABLE,
-    'test_' + config.AMAZON.DYNAMODB_COUNTRY_TABLE,
+    // 'test_' + config.AMAZON.DYNAMODB_COUNTRY_TABLE,
     config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE,
-    'test_' + config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE,
-    config.AMAZON.DYNAMODB_DEVICE_TABLE,
-    'test_' + config.AMAZON.DYNAMODB_DEVICE_TABLE
+    // 'test_' + config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE,
+    config.AMAZON.DYNAMODB_DEVICE_TABLE
+    // 'test_' + config.AMAZON.DYNAMODB_DEVICE_TABLE
   ]
   for (const name of names) {
     logger.info(`Create table: ${name}`)

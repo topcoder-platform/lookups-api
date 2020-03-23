@@ -195,7 +195,7 @@ create.schema = {
     manufacturer: Joi.string().required(),
     model: Joi.string().required(),
     operatingSystem: Joi.string().required(),
-    operatingSystemVersion: Joi.string().allow('', null).empty(['', null]).default('ZZZZ')
+    operatingSystemVersion: Joi.string().allow('', null).empty(['', null]).default('ANY')
   }).required()
 }
 
@@ -263,7 +263,7 @@ update.schema = {
     manufacturer: Joi.string().required(),
     model: Joi.string().required(),
     operatingSystem: Joi.string().required(),
-    operatingSystemVersion: Joi.string().allow('', null).empty(['', null]).default('ZZZZ')
+    operatingSystemVersion: Joi.string().allow('', null).empty(['', null]).default('ANY')
   }).required()
 }
 
