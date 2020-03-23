@@ -26,10 +26,10 @@ const loadData = async (lookupName, lookupFilePath) => {
   for (const entity of entities) {
     try {
       // create record in db
-      if (!entity.hasOwnProperty("id")) {
+      if (!entity.hasOwnProperty('id')) {
         entity.id = uuid()
       }
-      if (getTableName === "devices") {
+      if (getTableName === 'devices') {
         if (!entity.operatingSystemVersion) {
           entity.operatingSystemVersion = 'ANY'
         }
