@@ -9,7 +9,7 @@ require('../app-bootstrap')
 const logger = require('../src/common/logger')
 
 const scriptHelper = require('./helpers')
-const servicesHelper = require('../src/common/helper')
+const helper = require('../src/common/helper')
 
 const migrateConfig = {
   accessKeyId: config.MIGRATE_DB.AWS_ACCESS_KEY_ID,
@@ -20,6 +20,11 @@ if (config.MIGRATE_DB.IS_LOCAL_DB) {
   migrateConfig.endpoint = config.MIGRATE_DB.DYNAMODB_URL
 }
 const dbInstance = new AWS.DynamoDB(migrateConfig)
+
+var esClient
+(async function () {
+  esClient = await helper.getESClient()
+})()
 
 /**
  * Migrate data from the development db to the production db and es.
@@ -43,10 +48,10 @@ const migrateData = async (lookupName) => {
       const entity = _.mapValues(item, v => v.S)
       try {
         // create record in db
-        const res = await servicesHelper.create(getTableName, entity)
+        const res = await helper.create(getTableName, entity)
 
         // create record in es
-        await servicesHelper.getESClient().create({
+        await esClient.create({
           index: esIndex,
           type: esType,
           id: res.id,

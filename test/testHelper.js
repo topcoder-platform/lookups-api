@@ -8,6 +8,11 @@ const deviceService = require('../src/services/DeviceService')
 const educationalInstitutionService = require('../src/services/EducationalInstitutionService')
 const sinon = require('sinon')
 
+var esClient
+(async function () {
+  esClient = await helper.getESClient()
+})()
+
 /**
  * Clear data in the specified table in the database
  *
@@ -28,7 +33,7 @@ async function insertEducationalInstitutionsTestData () {
   sinon.stub(helper, 'postEvent').resolves([])
   for (let i = 1; i <= 5; i += 1) {
     const res = await educationalInstitutionService.create({ name: `a test${i} b` })
-    await helper.getESClient().create({
+    await esClient.create({
       index: config.ES.EDUCATIONAL_INSTITUTION_INDEX,
       type: config.ES.EDUCATIONAL_INSTITUTION_TYPE,
       id: res.id,
@@ -50,7 +55,7 @@ async function insertCountryTestData () {
       countryFlag: `a test${i} b`,
       countryCode: `a test${i} b`
     })
-    await helper.getESClient().create({
+    await esClient.create({
       index: config.ES.COUNTRY_INDEX,
       type: config.ES.COUNTRY_TYPE,
       id: res.id,
@@ -74,7 +79,7 @@ async function insertDeviceTestData () {
       operatingSystem: `a test${i} b`,
       operatingSystemVersion: `a test${i} b`
     })
-    await helper.getESClient().create({
+    await esClient.create({
       index: config.ES.DEVICE_INDEX,
       type: config.ES.DEVICE_TYPE,
       id: res.id,
