@@ -9,7 +9,10 @@ const helper = require('../common/helper')
 const logger = require('../common/logger')
 const { Resources } = require('../../app-constants')
 
-const esClient = helper.getESClient()
+var esClient
+(async function () {
+  esClient = await helper.getESClient()
+})()
 
 /**
  * List countries in Elasticsearch.

@@ -6,6 +6,11 @@ const helper = require('../common/helper')
 const logger = require('../common/logger')
 const errors = require('../common/errors')
 
+var esClient
+(async function () {
+  esClient = await helper.getESClient()
+})()
+
 /**
  * Check health.
  * @returns {Object} the health check result
@@ -13,7 +18,7 @@ const errors = require('../common/errors')
 async function check () {
   // check ES connection
   try {
-    await helper.getESClient().ping({ requestTimeout: 10000 })
+    await esClient.ping({ requestTimeout: 10000 })
   } catch (e) {
     throw new errors.ServiceUnavailableError(`Elasticsearch is unavailable, ${e.message}`)
   }

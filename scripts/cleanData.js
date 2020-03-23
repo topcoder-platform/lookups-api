@@ -6,9 +6,12 @@ require('../app-bootstrap')
 const logger = require('../src/common/logger')
 
 const scriptHelper = require('./helpers')
-const servicesHelper = require('../src/common/helper')
+const helper = require('../src/common/helper')
 
-const esClient = servicesHelper.getESClient()
+var esClient
+(async function () {
+  esClient = await helper.getESClient()
+})()
 
 /**
  * Remove all data in the table based on lookupName
@@ -16,7 +19,7 @@ const esClient = servicesHelper.getESClient()
  */
 const cleanData = async (lookupName) => {
   const [getTableName, esIndex, esType] = await scriptHelper.getLookupKey(lookupName)
-  const records = await servicesHelper.scan(getTableName)
+  const records = await helper.scan(getTableName)
   for (const record of records) {
     try {
       await record.delete()

@@ -85,13 +85,13 @@ logger.decorateWithLogging = (service) => {
     const params = method.params || getParams(method)
     service[name] = async function () {
       logger.debug(`ENTER ${name}`)
-      logger.debug('input arguments')
+      // logger.debug('input arguments')
       const args = Array.prototype.slice.call(arguments)
-      logger.debug(util.inspect(_sanitizeObject(_combineObject(params, args))))
+      // logger.debug(util.inspect(_sanitizeObject(_combineObject(params, args))))
       try {
         const result = await method.apply(this, arguments)
         logger.debug(`EXIT ${name}`)
-        logger.debug('output arguments')
+        // logger.debug('output arguments')
         if (result !== null && result !== undefined) {
           logger.debug(util.inspect(_sanitizeObject(result)))
         }

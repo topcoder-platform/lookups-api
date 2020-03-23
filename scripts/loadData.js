@@ -8,7 +8,13 @@ const logger = require('../src/common/logger')
 const fs = require('fs')
 const uuid = require('uuid/v4')
 const scriptHelper = require('./helpers')
-const servicesHelper = require('../src/common/helper')
+const helper = require('../src/common/helper')
+
+var esClient
+(async function () {
+  esClient = await helper.getESClient()
+})()
+
 /**
  * Add data from the given file to the db and es.
  *
@@ -34,10 +40,10 @@ const loadData = async (lookupName, lookupFilePath) => {
           entity.operatingSystemVersion = 'ANY'
         }
       }
-      const res = await servicesHelper.create(getTableName, entity)
+      const res = await helper.create(getTableName, entity)
 
       // create record in es
-      await servicesHelper.getESClient().create({
+      await esClient.create({
         index: esIndex,
         type: esType,
         id: res.id,
