@@ -113,7 +113,7 @@ async function getManufacturers (req, res) {
  * @param {Object} res the response
  */
 async function getDeviceModels (req, res) {
-  const result = await service.getDeviceModels()
+  const result = await service.getDeviceModels(req.query)
   res.send(result)
 }
 

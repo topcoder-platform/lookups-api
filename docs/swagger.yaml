@@ -462,6 +462,12 @@ paths:
         - Device
       description: |
         List distinct device models.
+      parameters:
+        - name: type
+          in: query
+          description: Filter by device type, case insensitive, partial match is used
+          required: false
+          type: string
 
       responses:
         '200':
