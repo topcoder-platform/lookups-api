@@ -1,9 +1,11 @@
 [
     {
-        "name": "Educational Insitution 1"
+        "name": "Educational Insitution 1",
+        "isDeleted": false
     },
     {
-        "name": "Educational Insitution 2"
+        "name": "Educational Insitution 2",
+        "isDeleted": false
     }
 ]
 

@@ -4,13 +4,15 @@
         "manufacturer": "Apple",
         "model": "Macbook Pro",
         "operatingSystem": "OSX",
-        "operatingSystemVersion": "10.14"
+        "operatingSystemVersion": "10.14",
+        "isDeleted": false
     },
     {
         "type": "Mobile",
         "manufacturer": "Samsung",
         "model": "Note8",
         "operatingSystem": "Android",
-        "operatingSystemVersion": "10.x"
+        "operatingSystemVersion": "10.x",
+        "isDeleted": false
     }
 ]

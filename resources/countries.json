@@ -2,12 +2,14 @@
     {
         "name": "Italy",
         "countryFlag": "Italy Flag",
-        "countryCode": "005"
+        "countryCode": "005",
+        "isDeleted": false
     },
     {
         "name": "England",
         "countryFlag": "England Flag",
-        "countryCode": "007"
+        "countryCode": "007",
+        "isDeleted": false
     }
 ]
 
