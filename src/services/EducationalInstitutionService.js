@@ -198,10 +198,10 @@ update.schema = {
  * Remove educational institution.
  * @param {String} id the educational institution id to remove
  */
-async function remove (id) {
+async function remove (id, destroy) {
   // remove data in DB
   const ei = await helper.getById(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, id)
-  await helper.remove(ei)
+  await helper.remove(ei, destroy)
 
   // Send Kafka message using bus api
   await helper.postEvent(config.LOOKUP_DELETE_TOPIC, { resource: Resources.EducationalInstitution, id })

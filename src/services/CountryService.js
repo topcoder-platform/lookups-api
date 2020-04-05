@@ -218,10 +218,10 @@ update.schema = {
  * Remove country.
  * @param {String} id the country id to remove
  */
-async function remove (id) {
+async function remove (id, destroy) {
   // remove data in DB
   const country = await helper.getById(config.AMAZON.DYNAMODB_COUNTRY_TABLE, id)
-  await helper.remove(country)
+  await helper.remove(country, destroy)
 
   // Send Kafka message using bus api
   await helper.postEvent(config.LOOKUP_DELETE_TOPIC, { resource: Resources.Country, id })

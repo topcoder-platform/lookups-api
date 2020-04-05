@@ -139,6 +139,7 @@ async function getById (modelName, id) {
  * @returns created entity
  */
 async function create (modelName, data) {
+  data.isDeleted = false
   return new Promise((resolve, reject) => {
     const dbItem = new models[modelName](data)
     dbItem.save((err) => {
@@ -172,11 +173,19 @@ async function update (dbItem, data) {
   })
 }
 
+async function remove (dbItem, destroy) {
+  if (destroy) {
+    return deleteItem(dbItem)
+  } else {
+    return update(dbItem, { isDeleted: true })
+  }
+}
+
 /**
- * Remove item in database
+ * Delete item in database
  * @param {Object} dbItem The Dynamo database item to remove
  */
-async function remove (dbItem) {
+async function deleteItem (dbItem) {
   return new Promise((resolve, reject) => {
     dbItem.delete((err) => {
       if (err) {

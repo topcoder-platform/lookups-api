@@ -274,10 +274,10 @@ update.schema = {
  * Remove device.
  * @param {String} id the device id to remove
  */
-async function remove (id) {
+async function remove (id, destroy) {
   // remove data in DB
   const device = await helper.getById(config.AMAZON.DYNAMODB_DEVICE_TABLE, id)
-  await helper.remove(device)
+  await helper.remove(device, destroy)
 
   // Send Kafka message using bus api
   await helper.postEvent(config.LOOKUP_DELETE_TOPIC, { resource: Resources.Device, id })

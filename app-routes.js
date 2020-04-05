@@ -97,6 +97,18 @@ module.exports = (app) => {
         })
       }
 
+      actions.push((req, res, next) => {
+        if (verb === 'delete') {
+          let destroy = _.get(req, 'query.destroy', false)
+          if (destroy === 'true') {
+            destroy = true
+          } else {
+            destroy = false
+          }
+          req.query.destroy = destroy
+        }
+        next()
+      })
       actions.push(method)
       app[verb](`${config.API_VERSION}${path}`, helper.autoWrapExpress(actions))
     })

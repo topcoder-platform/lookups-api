@@ -83,7 +83,7 @@ async function partiallyUpdate (req, res) {
  * @param {Object} res the response
  */
 async function remove (req, res) {
-  await service.remove(req.params.id)
+  await service.remove(req.params.id, req.query.destroy)
   res.status(HttpStatus.NO_CONTENT).end()
 }
 
