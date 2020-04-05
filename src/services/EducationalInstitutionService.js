@@ -44,6 +44,14 @@ async function listES (criteria) {
     })
   }
 
+  if (!_.isNil(criteria.isDeleted)) {
+    esQuery.body.query.bool.must.push({
+      term: {
+        isDeleted: criteria.isDeleted
+      }
+    })
+  }
+
   // Search with constructed query
   const docs = await esClient.search(esQuery)
   // Extract data from hits
