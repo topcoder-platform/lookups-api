@@ -155,7 +155,9 @@ async function getById (modelName, id) {
  * @returns created entity
  */
 async function create (modelName, data) {
-  data.isDeleted = false
+  if (_.isNil(data.isDeleted)) {
+    data.isDeleted = false
+  }
   return new Promise((resolve, reject) => {
     const dbItem = new models[modelName](data)
     dbItem.save((err) => {
@@ -321,6 +323,7 @@ async function getEntity (modelName, id, excludeSoftDeleted) {
  * @param {Array} fields the indexed fields
  */
 async function createESIndex (indexName, typeName, fields) {
+  fields.push('isDeleted')
   const client = getESClient()
   // delete index if present
   try {
