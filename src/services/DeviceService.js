@@ -145,7 +145,8 @@ list.schema = {
     manufacturer: Joi.string(),
     model: Joi.string(),
     operatingSystem: Joi.string(),
-    operatingSystemVersion: Joi.string()
+    operatingSystemVersion: Joi.string(),
+    isDeleted: Joi.boolean()
   })
 }
 
@@ -159,7 +160,8 @@ async function getEntity (id, excludeSoftDeleted) {
 }
 
 getEntity.schema = {
-  id: Joi.id()
+  id: Joi.id(),
+  excludeSoftDeleted: Joi.boolean()
 }
 
 /**
@@ -274,7 +276,8 @@ async function remove (id, destroy) {
 }
 
 remove.schema = {
-  id: Joi.id()
+  id: Joi.id(),
+  destroy: Joi.boolean()
 }
 
 /**

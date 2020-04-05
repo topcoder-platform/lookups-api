@@ -92,7 +92,8 @@ list.schema = {
   criteria: Joi.object().keys({
     page: Joi.page(),
     perPage: Joi.perPage(),
-    name: Joi.string()
+    name: Joi.string(),
+    isDeleted: Joi.boolean()
   })
 }
 
@@ -106,7 +107,8 @@ async function getEntity (id, excludeSoftDeleted) {
 }
 
 getEntity.schema = {
-  id: Joi.id()
+  id: Joi.id(),
+  excludeSoftDeleted: Joi.boolean()
 }
 
 /**
@@ -196,7 +198,8 @@ async function remove (id, destroy) {
 }
 
 remove.schema = {
-  id: Joi.id()
+  id: Joi.id(),
+  destroy: Joi.boolean()
 }
 
 module.exports = {
