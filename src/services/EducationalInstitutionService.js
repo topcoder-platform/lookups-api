@@ -74,11 +74,12 @@ async function list (criteria) {
   }
 
   // then try to get from DB
-  let options
+  const options = {}
   if (criteria.name) {
-    options = {
-      name: { eq: criteria.name }
-    }
+    options.name = { eq: criteria.name }
+  }
+  if (!_.isNil(criteria.isDeleted)) {
+    options.isDeleted = { eq: criteria.isDeleted }
   }
   // ignore pagination, scan all matched records
   result = await helper.scan(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, options)

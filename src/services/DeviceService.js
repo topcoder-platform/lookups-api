@@ -127,6 +127,9 @@ async function list (criteria) {
   if (criteria.operatingSystemVersion) {
     options.operatingSystemVersion = { eq: criteria.operatingSystemVersion }
   }
+  if (!_.isNil(criteria.isDeleted)) {
+    options.isDeleted = { eq: criteria.isDeleted }
+  }
   // ignore pagination, scan all matched records
   result = await helper.scan(config.AMAZON.DYNAMODB_DEVICE_TABLE, options)
   // return fromDB:true to indicate it is got from db,

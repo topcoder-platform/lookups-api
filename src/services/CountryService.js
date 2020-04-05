@@ -89,6 +89,9 @@ async function list (criteria) {
   if (criteria.countryCode) {
     options.countryCode = { eq: criteria.countryCode }
   }
+  if (!_.isNil(criteria.isDeleted)) {
+    options.isDeleted = { eq: criteria.isDeleted }
+  }
   // ignore pagination, scan all matched records
   result = await helper.scan(config.AMAZON.DYNAMODB_COUNTRY_TABLE, options)
   // return fromDB:true to indicate it is got from db,
