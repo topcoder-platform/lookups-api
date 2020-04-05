@@ -5,6 +5,10 @@
     },
     {
         "name": "Educational Insitution 2",
+        "isDeleted": true
+    },
+    {
+        "name": "Educational Insitution 3",
         "isDeleted": false
     }
 ]

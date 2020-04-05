@@ -6,6 +6,12 @@
         "isDeleted": false
     },
     {
+        "name": "Spain",
+        "countryFlag": "Spain Flag",
+        "countryCode": "004",
+        "isDeleted": true
+    },
+    {
         "name": "England",
         "countryFlag": "England Flag",
         "countryCode": "007",

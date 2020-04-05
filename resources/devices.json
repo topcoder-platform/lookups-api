@@ -9,6 +9,14 @@
     },
     {
         "type": "Mobile",
+        "manufacturer": "Apple",
+        "model": "iPhone XS",
+        "operatingSystem": "iOS",
+        "operatingSystemVersion": "10.14",
+        "isDeleted": true
+    },
+    {
+        "type": "Mobile",
         "manufacturer": "Samsung",
         "model": "Note8",
         "operatingSystem": "Android",
