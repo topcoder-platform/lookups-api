@@ -50,6 +50,7 @@ paths:
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: type
           in: query
           description: Filter by type, case insensitive, partial match is used
@@ -121,6 +122,7 @@ paths:
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: type
           in: query
           description: Filter by type, case insensitive, partial match is used
@@ -225,6 +227,7 @@ paths:
         - Device
       description: Retrieve the device by id
       parameters:
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: id
           in: path
           required: true
@@ -253,6 +256,7 @@ paths:
         - Device
       description: Retrieve the device head by id
       parameters:
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: id
           in: path
           required: true
@@ -380,6 +384,7 @@ paths:
       security:
         - bearer: []
       parameters:
+        - $ref: '#/parameters/destroy'
         - name: id
           in: path
           required: true
@@ -465,6 +470,7 @@ paths:
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: name
           in: query
           description: Filter by name, case insensitive, partial match is used
@@ -520,6 +526,7 @@ paths:
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: name
           in: query
           description: Filter by name, case insensitive, partial match is used
@@ -609,6 +616,7 @@ paths:
         - Country
       description: Retrieve the country by id
       parameters:
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: id
           in: path
           required: true
@@ -637,6 +645,7 @@ paths:
         - Country
       description: Retrieve the country head by id
       parameters:
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: id
           in: path
           required: true
@@ -764,6 +773,7 @@ paths:
       security:
         - bearer: []
       parameters:
+        - $ref: '#/parameters/destroy'
         - name: id
           in: path
           required: true
@@ -803,6 +813,7 @@ paths:
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: name
           in: query
           description: Filter by name, case insensitive, partial match is used
@@ -853,6 +864,7 @@ paths:
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: name
           in: query
           description: Filter by name, case insensitive, partial match is used
@@ -937,6 +949,7 @@ paths:
         - Educational Institution
       description: Retrieve the educational institution by id
       parameters:
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: id
           in: path
           required: true
@@ -965,6 +978,7 @@ paths:
         - Educational Institution
       description: Retrieve the educational institution head by id
       parameters:
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: id
           in: path
           required: true
@@ -1092,6 +1106,7 @@ paths:
       security:
         - bearer: []
       parameters:
+        - $ref: '#/parameters/destroy'
         - name: id
           in: path
           required: true
@@ -1158,6 +1173,18 @@ parameters:
     type: integer
     default: 20
     maximum: 100
+  includeSoftDeleted:
+    name: includeSoftDeleted
+    in: query
+    description: Whether or not to include soft deleted items in response. (Only with Admin token)
+    type: boolean
+    default: false
+  destroy:
+    name: destroy
+    in: query
+    description: If false, soft delete the entity, else hard delete. (Only with Admin token)
+    type: boolean
+    default: false
 definitions:
   Country:
     type: object
