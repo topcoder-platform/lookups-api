@@ -108,6 +108,7 @@ module.exports = (app) => {
           req.query.isDeleted = false
           req.excludeSoftDeleted = true
         }
+        delete req.query.includeSoftDeleted
         next()
       })
 
