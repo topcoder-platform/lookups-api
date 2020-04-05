@@ -99,8 +99,8 @@ module.exports = (app) => {
       }
 
       actions.push((req, res, next) => {
-        const includeSoftDeleted = req.authUser &&
-          req.query.includeSoftDeleted === 'true' &&
+        const includeSoftDeleted = req.authUser && req.authUser.roles &&
+        req.query.includeSoftDeleted === 'true' &&
           checkIfExists([constants.UserRoles.Admin], req.authUser.roles)
 
         if (!includeSoftDeleted) {
