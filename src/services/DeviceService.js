@@ -351,6 +351,20 @@ getManufacturers.schema = {
   }).required()
 }
 
+/**
+ * Get distinct device models.
+ * @returns {Array} the distinct device models
+ */
+async function getDeviceModels () {
+  const result = []
+  await iterateDevices({}, (device) => {
+    if (!_.includes(result, device.model)) {
+      result.push(device.model)
+    }
+  })
+  return result
+}
+
 module.exports = {
   list,
   getEntity,
@@ -359,7 +373,8 @@ module.exports = {
   update,
   remove,
   getTypes,
-  getManufacturers
+  getManufacturers,
+  getDeviceModels
 }
 
 logger.buildService(module.exports)

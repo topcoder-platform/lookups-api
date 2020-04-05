@@ -146,6 +146,13 @@ module.exports = {
       // any role / scope is allowed
     }
   },
+  '/lookups/devices/models': {
+    get: {
+      controller: 'DeviceController',
+      method: 'getDeviceModels'
+      // any role / scope is allowed
+    }
+  },
   '/lookups/devices/:id': {
     get: {
       controller: 'DeviceController',

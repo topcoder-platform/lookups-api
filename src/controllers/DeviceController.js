@@ -107,6 +107,16 @@ async function getManufacturers (req, res) {
   res.send(result)
 }
 
+/**
+ * Get distinct device models
+ * @param {Object} req the request
+ * @param {Object} res the response
+ */
+async function getDeviceModels (req, res) {
+  const result = await service.getDeviceModels()
+  res.send(result)
+}
+
 module.exports = {
   list,
   listHead,
@@ -117,5 +127,6 @@ module.exports = {
   partiallyUpdate,
   remove,
   getTypes,
-  getManufacturers
+  getManufacturers,
+  getDeviceModels
 }
