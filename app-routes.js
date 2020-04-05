@@ -7,6 +7,7 @@ const HttpStatus = require('http-status-codes')
 const helper = require('./src/common/helper')
 const errors = require('./src/common/errors')
 const routes = require('./src/routes')
+const constants = require('./app-constants')
 const authenticator = require('tc-core-library-js').middleware.jwtAuthenticator
 
 /**
@@ -61,12 +62,12 @@ module.exports = (app) => {
         next()
       })
 
+      actions.push((req, res, next) => {
+        authenticator(_.pick(config, ['AUTH_SECRET', 'VALID_ISSUERS']))(req, res, next)
+      })
+
       // Authentication and Authorization
       if (def.auth === 'jwt') {
-        actions.push((req, res, next) => {
-          authenticator(_.pick(config, ['AUTH_SECRET', 'VALID_ISSUERS']))(req, res, next)
-        })
-
         actions.push((req, res, next) => {
           if (!req.authUser) {
             return next(new errors.UnauthorizedError('Action is not allowed for invalid token'))
@@ -96,6 +97,18 @@ module.exports = (app) => {
           }
         })
       }
+
+      actions.push((req, res, next) => {
+        const includeSoftDeleted = req.authUser &&
+          req.query.includeSoftDeleted === 'true' &&
+          checkIfExists([constants.UserRoles.Admin], req.authUser.roles)
+
+        if (!includeSoftDeleted) {
+          // This will automatically handle scan calls
+          req.query.isDeleted = false
+        }
+        next()
+      })
 
       actions.push((req, res, next) => {
         if (verb === 'delete') {
