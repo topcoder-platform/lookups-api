@@ -43,7 +43,7 @@ async function create (req, res) {
  * @param {Object} res the response
  */
 async function getEntity (req, res) {
-  const result = await service.getEntity(req.params.id)
+  const result = await service.getEntity(req.params.id, req.excludeSoftDeleted)
   res.send(result)
 }
 
@@ -53,7 +53,7 @@ async function getEntity (req, res) {
  * @param {Object} res the response
  */
 async function getEntityHead (req, res) {
-  await service.getEntity(req.params.id)
+  await service.getEntity(req.params.id, req.excludeSoftDeleted)
   res.end()
 }
 

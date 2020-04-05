@@ -100,21 +100,8 @@ list.schema = {
  * @param {String} id the educational institution id
  * @returns {Object} the educational institution of given id
  */
-async function getEntity (id) {
-  // first try to get from ES
-  try {
-    return await esClient.getSource({
-      index: config.ES.EDUCATIONAL_INSTITUTION_INDEX,
-      type: config.ES.EDUCATIONAL_INSTITUTION_TYPE,
-      id
-    })
-  } catch (e) {
-    // log and ignore
-    logger.logFullError(e)
-  }
-
-  // then try to get from DB
-  return helper.getById(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, id)
+async function getEntity (id, excludeSoftDeleted) {
+  return helper.getEntity(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, id, excludeSoftDeleted)
 }
 
 getEntity.schema = {

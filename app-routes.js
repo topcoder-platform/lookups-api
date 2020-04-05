@@ -106,6 +106,7 @@ module.exports = (app) => {
         if (!includeSoftDeleted) {
           // This will automatically handle scan calls
           req.query.isDeleted = false
+          req.excludeSoftDeleted = true
         }
         next()
       })

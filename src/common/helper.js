@@ -25,6 +25,18 @@ AWS.config.update({
   region: config.AMAZON.AWS_REGION
 })
 
+const MODEL_TO_ES_INDEX_MAP = {
+  [config.AMAZON.DYNAMODB_DEVICE_TABLE]: config.ES.DEVICE_INDEX,
+  [config.AMAZON.DYNAMODB_COUNTRY_TABLE]: config.ES.COUNTRY_INDEX,
+  [config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE]: config.ES.EDUCATIONAL_INSTITUTION_INDEX
+}
+
+const MODEL_TO_ES_TYPE_MAP = {
+  [config.AMAZON.DYNAMODB_DEVICE_TABLE]: config.ES.DEVICE_TYPE,
+  [config.AMAZON.DYNAMODB_COUNTRY_TABLE]: config.ES.COUNTRY_TYPE,
+  [config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE]: config.ES.EDUCATIONAL_INSTITUTION_TYPE
+}
+
 /**
  * Wrap async function to standard express function
  * @param {Function} fn the async function
@@ -112,6 +124,10 @@ async function deleteTable (tableName) {
   })
 }
 
+function getNotFoundError (modelName, id) {
+  return new errors.NotFoundError(`${modelName} with id: ${id} doesn't exist`)
+}
+
 /**
  * Get Data by model id
  * @param {String} modelName The dynamoose model name
@@ -126,7 +142,7 @@ async function getById (modelName, id) {
       } else if (result.length > 0) {
         resolve(result[0])
       } else {
-        reject(new errors.NotFoundError(`${modelName} with id: ${id} doesn't exist`))
+        reject(getNotFoundError(modelName, id))
       }
     })
   })
@@ -272,6 +288,32 @@ function getESClient () {
   return esClient
 }
 
+async function getEntity (modelName, id, excludeSoftDeleted) {
+  let entity = null
+  // first try to get from ES
+  try {
+    const client = getESClient()
+    const sourceParams = {
+      index: MODEL_TO_ES_INDEX_MAP[modelName],
+      type: MODEL_TO_ES_TYPE_MAP[modelName],
+      id
+    }
+    entity = await client.getSource(sourceParams)
+  } catch (e) {
+    // log and ignore
+    logger.logFullError(e)
+  }
+
+  // then try to get from DB
+  if (!entity) {
+    entity = await getById(modelName, id)
+  }
+  if (excludeSoftDeleted && _.get(entity, 'isDeleted') === true) {
+    throw new errors.NotFoundError(getNotFoundError(modelName, id))
+  }
+  return entity
+}
+
 /**
  * Create Elasticsearch index, it will be deleted and re-created if present.
  * @param {String} indexName the ES index name
@@ -387,6 +429,7 @@ module.exports = {
   createTable,
   deleteTable,
   getById,
+  getEntity,
   create,
   update,
   remove,

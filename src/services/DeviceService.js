@@ -151,21 +151,8 @@ list.schema = {
  * @param {String} id the device id
  * @returns {Object} the device of given id
  */
-async function getEntity (id) {
-  // first try to get from ES
-  try {
-    return await esClient.getSource({
-      index: config.ES.DEVICE_INDEX,
-      type: config.ES.DEVICE_TYPE,
-      id
-    })
-  } catch (e) {
-    // log and ignore
-    logger.logFullError(e)
-  }
-
-  // then try to get from DB
-  return helper.getById(config.AMAZON.DYNAMODB_DEVICE_TABLE, id)
+async function getEntity (id, excludeSoftDeleted) {
+  return helper.getEntity(config.AMAZON.DYNAMODB_DEVICE_TABLE, id, excludeSoftDeleted)
 }
 
 getEntity.schema = {

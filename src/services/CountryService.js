@@ -111,21 +111,8 @@ list.schema = {
  * @param {String} id the country id
  * @returns {Object} the country of given id
  */
-async function getEntity (id) {
-  // first try to get from ES
-  try {
-    return await esClient.getSource({
-      index: config.ES.COUNTRY_INDEX,
-      type: config.ES.COUNTRY_TYPE,
-      id
-    })
-  } catch (e) {
-    // log and ignore
-    logger.logFullError(e)
-  }
-
-  // then try to get from DB
-  return helper.getById(config.AMAZON.DYNAMODB_COUNTRY_TABLE, id)
+async function getEntity (id, excludeSoftDeleted) {
+  return helper.getEntity(config.AMAZON.DYNAMODB_COUNTRY_TABLE, id, excludeSoftDeleted)
 }
 
 getEntity.schema = {
