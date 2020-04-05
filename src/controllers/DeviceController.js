@@ -12,6 +12,9 @@ const helper = require('../common/helper')
  */
 async function list (req, res) {
   const result = await service.list(req.query)
+  result.result.forEach(entity => {
+    delete entity.isDeleted
+  })
   helper.setResHeaders(req, res, result)
   res.send(result.result)
 }
@@ -34,6 +37,7 @@ async function listHead (req, res) {
  */
 async function create (req, res) {
   const result = await service.create(req.body)
+  delete result.isDeleted
   res.status(HttpStatus.CREATED).send(result)
 }
 
@@ -44,6 +48,7 @@ async function create (req, res) {
  */
 async function getEntity (req, res) {
   const result = await service.getEntity(req.params.id, req.excludeSoftDeleted)
+  delete result.isDeleted
   res.send(result)
 }
 
@@ -64,6 +69,7 @@ async function getEntityHead (req, res) {
  */
 async function update (req, res) {
   const result = await service.update(req.params.id, req.body)
+  delete result.isDeleted
   res.send(result)
 }
 
@@ -74,6 +80,7 @@ async function update (req, res) {
  */
 async function partiallyUpdate (req, res) {
   const result = await service.partiallyUpdate(req.params.id, req.body)
+  delete result.isDeleted
   res.send(result)
 }
 
