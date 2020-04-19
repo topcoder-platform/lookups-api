@@ -52,6 +52,14 @@ async function listES (criteria) {
     })
   }
 
+  if (!_.isNil(criteria.isDeleted)) {
+    esQuery.body.query.bool.must.push({
+      term: {
+        isDeleted: criteria.isDeleted
+      }
+    })
+  }
+
   // Search with constructed query
   const docs = await esClient.search(esQuery)
   // Extract data from hits
@@ -89,6 +97,9 @@ async function list (criteria) {
   if (criteria.countryCode) {
     options.countryCode = { eq: criteria.countryCode }
   }
+  if (!_.isNil(criteria.isDeleted)) {
+    options.isDeleted = { eq: criteria.isDeleted }
+  }
   // ignore pagination, scan all matched records
   result = await helper.scan(config.AMAZON.DYNAMODB_COUNTRY_TABLE, options)
   // return fromDB:true to indicate it is got from db,
@@ -102,7 +113,8 @@ list.schema = {
     perPage: Joi.perPage(),
     name: Joi.string(),
     countryFlag: Joi.string(),
-    countryCode: Joi.string()
+    countryCode: Joi.string(),
+    isDeleted: Joi.boolean()
   })
 }
 
@@ -111,25 +123,13 @@ list.schema = {
  * @param {String} id the country id
  * @returns {Object} the country of given id
  */
-async function getEntity (id) {
-  // first try to get from ES
-  try {
-    return await esClient.getSource({
-      index: config.ES.COUNTRY_INDEX,
-      type: config.ES.COUNTRY_TYPE,
-      id
-    })
-  } catch (e) {
-    // log and ignore
-    logger.logFullError(e)
-  }
-
-  // then try to get from DB
-  return helper.getById(config.AMAZON.DYNAMODB_COUNTRY_TABLE, id)
+async function getEntity (id, excludeSoftDeleted) {
+  return helper.getEntity(config.AMAZON.DYNAMODB_COUNTRY_TABLE, id, excludeSoftDeleted)
 }
 
 getEntity.schema = {
-  id: Joi.id()
+  id: Joi.id(),
+  excludeSoftDeleted: Joi.boolean()
 }
 
 /**
@@ -218,17 +218,18 @@ update.schema = {
  * Remove country.
  * @param {String} id the country id to remove
  */
-async function remove (id) {
+async function remove (id, destroy) {
   // remove data in DB
   const country = await helper.getById(config.AMAZON.DYNAMODB_COUNTRY_TABLE, id)
-  await helper.remove(country)
+  await helper.remove(country, destroy)
 
   // Send Kafka message using bus api
   await helper.postEvent(config.LOOKUP_DELETE_TOPIC, { resource: Resources.Country, id })
 }
 
 remove.schema = {
-  id: Joi.id()
+  id: Joi.id(),
+  destroy: Joi.boolean()
 }
 
 module.exports = {

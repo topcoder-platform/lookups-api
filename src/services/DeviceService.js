@@ -81,6 +81,14 @@ async function listES (criteria) {
     })
   }
 
+  if (!_.isNil(criteria.isDeleted)) {
+    esQuery.body.query.bool.must.push({
+      term: {
+        isDeleted: criteria.isDeleted
+      }
+    })
+  }
+
   // Search with constructed query
   const docs = await esClient.search(esQuery)
   // Extract data from hits
@@ -127,6 +135,9 @@ async function list (criteria) {
   if (criteria.operatingSystemVersion) {
     options.operatingSystemVersion = { eq: criteria.operatingSystemVersion }
   }
+  if (!_.isNil(criteria.isDeleted)) {
+    options.isDeleted = { eq: criteria.isDeleted }
+  }
   // ignore pagination, scan all matched records
   result = await helper.scan(config.AMAZON.DYNAMODB_DEVICE_TABLE, options)
   // return fromDB:true to indicate it is got from db,
@@ -142,7 +153,8 @@ list.schema = {
     manufacturer: Joi.string(),
     model: Joi.string(),
     operatingSystem: Joi.string(),
-    operatingSystemVersion: Joi.string()
+    operatingSystemVersion: Joi.string(),
+    isDeleted: Joi.boolean()
   })
 }
 
@@ -151,25 +163,13 @@ list.schema = {
  * @param {String} id the device id
  * @returns {Object} the device of given id
  */
-async function getEntity (id) {
-  // first try to get from ES
-  try {
-    return await esClient.getSource({
-      index: config.ES.DEVICE_INDEX,
-      type: config.ES.DEVICE_TYPE,
-      id
-    })
-  } catch (e) {
-    // log and ignore
-    logger.logFullError(e)
-  }
-
-  // then try to get from DB
-  return helper.getById(config.AMAZON.DYNAMODB_DEVICE_TABLE, id)
+async function getEntity (id, excludeSoftDeleted) {
+  return helper.getEntity(config.AMAZON.DYNAMODB_DEVICE_TABLE, id, excludeSoftDeleted)
 }
 
 getEntity.schema = {
-  id: Joi.id()
+  id: Joi.id(),
+  excludeSoftDeleted: Joi.boolean()
 }
 
 /**
@@ -274,17 +274,18 @@ update.schema = {
  * Remove device.
  * @param {String} id the device id to remove
  */
-async function remove (id) {
+async function remove (id, destroy) {
   // remove data in DB
   const device = await helper.getById(config.AMAZON.DYNAMODB_DEVICE_TABLE, id)
-  await helper.remove(device)
+  await helper.remove(device, destroy)
 
   // Send Kafka message using bus api
   await helper.postEvent(config.LOOKUP_DELETE_TOPIC, { resource: Resources.Device, id })
 }
 
 remove.schema = {
-  id: Joi.id()
+  id: Joi.id(),
+  destroy: Joi.boolean()
 }
 
 /**

@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "4802b022-4a66-43f5-b223-cbbcfd91ad9e",
+		"_postman_id": "95dabfdf-acad-402b-9a40-3457a4dcdcd7",
 		"name": "tc-lookup-api",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -196,7 +196,7 @@
 							"raw": ""
 						},
 						"url": {
-							"raw": "{{URL}}/lookups/countries?name=Testing",
+							"raw": "{{URL}}/lookups/countries",
 							"host": [
 								"{{URL}}"
 							],
@@ -207,7 +207,71 @@
 							"query": [
 								{
 									"key": "name",
-									"value": "Testing"
+									"value": "Testing",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "list countries (include soft deleted)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/countries?includeSoftDeleted=true",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"countries"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "Testing",
+									"disabled": true
+								},
+								{
+									"key": "includeSoftDeleted",
+									"value": "true"
 								}
 							]
 						}
@@ -320,6 +384,65 @@
 								"lookups",
 								"countries",
 								"{{COUNTRY_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get country (include soft deleted)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}?includeSoftDeleted=true",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"countries",
+								"{{COUNTRY_ID}}"
+							],
+							"query": [
+								{
+									"key": "includeSoftDeleted",
+									"value": "true"
+								}
 							]
 						}
 					},
@@ -877,6 +1000,62 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "delete country (destroy)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/countries/{{COUNTRY_ID}}?destroy=true",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"countries",
+								"{{COUNTRY_ID}}"
+							],
+							"query": [
+								{
+									"key": "destroy",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			],
 			"event": [
@@ -1122,6 +1301,64 @@
 								{
 									"key": "operatingSystemVersion",
 									"value": "11"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "list devices (inlcude soft deleted)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices?includeSoftDeleted=true",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices"
+							],
+							"query": [
+								{
+									"key": "includeSoftDeleted",
+									"value": "true"
 								}
 							]
 						}
@@ -1442,6 +1679,65 @@
 								"lookups",
 								"devices",
 								"{{DEVICE_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get devices (include soft deleted)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/{{DEVICE_ID}}?includeSoftDeleted=true",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"{{DEVICE_ID}}"
+							],
+							"query": [
+								{
+									"key": "includeSoftDeleted",
+									"value": "true"
+								}
 							]
 						}
 					},
@@ -2049,6 +2345,62 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "delete device (destroy)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/devices/{{DEVICE_ID}}?destroy=true",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"devices",
+								"{{DEVICE_ID}}"
+							],
+							"query": [
+								{
+									"key": "destroy",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			],
 			"event": [
@@ -2285,6 +2637,64 @@
 					"response": []
 				},
 				{
+					"name": "list educational institutions (include soft deleted)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/educationalInstitutions?includeSoftDeleted=true",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"educationalInstitutions"
+							],
+							"query": [
+								{
+									"key": "includeSoftDeleted",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "list educational institutions head",
 					"event": [
 						{
@@ -2390,6 +2800,65 @@
 								"lookups",
 								"educationalInstitutions",
 								"{{EDUCATIONAL_INSTITUTION_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get educational institution (include soft deleted)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/educationalInstitutions/{{EDUCATIONAL_INSTITUTION_ID}}?includeSoftDeleted=true",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"educationalInstitutions",
+								"{{EDUCATIONAL_INSTITUTION_ID}}"
+							],
+							"query": [
+								{
+									"key": "includeSoftDeleted",
+									"value": "true"
+								}
 							]
 						}
 					},
@@ -2593,6 +3062,62 @@
 								"lookups",
 								"educationalInstitutions",
 								"{{EDUCATIONAL_INSTITUTION_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete educational institution (destroy)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb283d16-ca1b-4b47-8e95-ed76324d2174",
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{M2M_UPDATE_ACCESS_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/lookups/educationalInstitutions/{{EDUCATIONAL_INSTITUTION_ID}}?destroy=true",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"lookups",
+								"educationalInstitutions",
+								"{{EDUCATIONAL_INSTITUTION_ID}}"
+							],
+							"query": [
+								{
+									"key": "destroy",
+									"value": "true"
+								}
 							]
 						}
 					},

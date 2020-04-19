@@ -44,6 +44,14 @@ async function listES (criteria) {
     })
   }
 
+  if (!_.isNil(criteria.isDeleted)) {
+    esQuery.body.query.bool.must.push({
+      term: {
+        isDeleted: criteria.isDeleted
+      }
+    })
+  }
+
   // Search with constructed query
   const docs = await esClient.search(esQuery)
   // Extract data from hits
@@ -74,11 +82,12 @@ async function list (criteria) {
   }
 
   // then try to get from DB
-  let options
+  const options = {}
   if (criteria.name) {
-    options = {
-      name: { eq: criteria.name }
-    }
+    options.name = { eq: criteria.name }
+  }
+  if (!_.isNil(criteria.isDeleted)) {
+    options.isDeleted = { eq: criteria.isDeleted }
   }
   // ignore pagination, scan all matched records
   result = await helper.scan(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, options)
@@ -91,7 +100,8 @@ list.schema = {
   criteria: Joi.object().keys({
     page: Joi.page(),
     perPage: Joi.perPage(),
-    name: Joi.string()
+    name: Joi.string(),
+    isDeleted: Joi.boolean()
   })
 }
 
@@ -100,25 +110,13 @@ list.schema = {
  * @param {String} id the educational institution id
  * @returns {Object} the educational institution of given id
  */
-async function getEntity (id) {
-  // first try to get from ES
-  try {
-    return await esClient.getSource({
-      index: config.ES.EDUCATIONAL_INSTITUTION_INDEX,
-      type: config.ES.EDUCATIONAL_INSTITUTION_TYPE,
-      id
-    })
-  } catch (e) {
-    // log and ignore
-    logger.logFullError(e)
-  }
-
-  // then try to get from DB
-  return helper.getById(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, id)
+async function getEntity (id, excludeSoftDeleted) {
+  return helper.getEntity(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, id, excludeSoftDeleted)
 }
 
 getEntity.schema = {
-  id: Joi.id()
+  id: Joi.id(),
+  excludeSoftDeleted: Joi.boolean()
 }
 
 /**
@@ -198,17 +196,18 @@ update.schema = {
  * Remove educational institution.
  * @param {String} id the educational institution id to remove
  */
-async function remove (id) {
+async function remove (id, destroy) {
   // remove data in DB
   const ei = await helper.getById(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, id)
-  await helper.remove(ei)
+  await helper.remove(ei, destroy)
 
   // Send Kafka message using bus api
   await helper.postEvent(config.LOOKUP_DELETE_TOPIC, { resource: Resources.EducationalInstitution, id })
 }
 
 remove.schema = {
-  id: Joi.id()
+  id: Joi.id(),
+  destroy: Joi.boolean()
 }
 
 module.exports = {
