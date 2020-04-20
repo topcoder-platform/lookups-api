@@ -121,11 +121,15 @@ async function list (criteria, authUser) {
   if (criteria.countryCode) {
     options.countryCode = { eq: criteria.countryCode }
   }
-  if (!_.isNil(criteria.includeSoftDeleted)) {
-    options.isDeleted = { eq: criteria.includeSoftDeleted }
+  if (!criteria.includeSoftDeleted) {
+    options.isDeleted = { ne: true }
   }
   // ignore pagination, scan all matched records
   result = await helper.scan(config.AMAZON.DYNAMODB_COUNTRY_TABLE, options)
+
+  if (!criteria.includeSoftDeleted) {
+    result = helper.sanitizeResult(result, true)
+  }
   // return fromDB:true to indicate it is got from db,
   // and response headers ('X-Total', 'X-Page', etc.) are not set in this case
   return { fromDB: true, result }

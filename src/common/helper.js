@@ -480,9 +480,15 @@ function isAdmin (authUser) {
 /**
  * Removes the attribute `isDeleted` from the result
  * @param {Object|Array} result The result data set
+ * @param {Boolean} fromDB Is the result from database
  */
-function sanitizeResult (result) {
-  if (_.isObject(result)) {
+function sanitizeResult (result, fromDB) {
+  if (fromDB) {
+    // Dynamoose returns the result as an array hash of the models type
+    result = JSON.parse(JSON.stringify(result))
+  }
+
+  if (_.isPlainObject(result)) {
     delete result.isDeleted
   } else if (_.isArray(result)) {
     for (let i = 0; i < result.length; i++) {
