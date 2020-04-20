@@ -23,6 +23,10 @@ const schema = new Schema({
   countryCode: {
     type: String,
     required: true
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false
   }
 },
 {

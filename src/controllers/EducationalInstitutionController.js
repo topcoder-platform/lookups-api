@@ -11,7 +11,7 @@ const helper = require('../common/helper')
  * @param {Object} res the response
  */
 async function list (req, res) {
-  const result = await service.list(req.query)
+  const result = await service.list(req.query, req.authUser)
   helper.setResHeaders(req, res, result)
   res.send(result.result)
 }
@@ -22,7 +22,7 @@ async function list (req, res) {
  * @param {Object} res the response
  */
 async function listHead (req, res) {
-  const result = await service.list(req.query)
+  const result = await service.list(req.query, req.authUser)
   helper.setResHeaders(req, res, result)
   res.end()
 }
@@ -43,7 +43,7 @@ async function create (req, res) {
  * @param {Object} res the response
  */
 async function getEntity (req, res) {
-  const result = await service.getEntity(req.params.id)
+  const result = await service.getEntity(req.params.id, req.query, req.authUser)
   res.send(result)
 }
 
@@ -53,7 +53,7 @@ async function getEntity (req, res) {
  * @param {Object} res the response
  */
 async function getEntityHead (req, res) {
-  await service.getEntity(req.params.id)
+  await service.getEntity(req.params.id, req.query, req.authUser)
   res.end()
 }
 
@@ -83,7 +83,7 @@ async function partiallyUpdate (req, res) {
  * @param {Object} res the response
  */
 async function remove (req, res) {
-  await service.remove(req.params.id)
+  await service.remove(req.params.id, req.query)
   res.status(HttpStatus.NO_CONTENT).end()
 }
 

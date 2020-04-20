@@ -8,8 +8,9 @@ const uuid = require('uuid/v4')
 const helper = require('../common/helper')
 const logger = require('../common/logger')
 const { Resources } = require('../../app-constants')
+const error = require('../common/errors')
 
-var esClient
+let esClient
 (async function () {
   esClient = await helper.getESClient()
 })()
@@ -17,9 +18,10 @@ var esClient
 /**
  * List devices in Elasticsearch.
  * @param {Object} criteria the search criteria
+ * @param {Boolean} isAdmin Is the user an admin
  * @returns {Object} the search result
  */
-async function listES (criteria) {
+async function listES (criteria, isAdmin) {
   // construct ES query
   const esQuery = {
     index: config.ES.DEVICE_INDEX,
@@ -33,7 +35,8 @@ async function listES (criteria) {
           must: []
         }
       }
-    }
+    },
+    _source_excludes: (isAdmin && !_.isNil(criteria.includeSoftDeleted)) ? [] : ['isDeleted']
   }
 
   // filtering for type
@@ -81,6 +84,23 @@ async function listES (criteria) {
     })
   }
 
+  // If user is not an admin or user has not specified
+  // whether they need soft deleted records, do not return
+  // soft deleted records
+  if (
+    !isAdmin ||
+    _.isNil(criteria.includeSoftDeleted) ||
+    (isAdmin && !criteria.includeSoftDeleted)) {
+    esQuery.body.query.bool.must.push({
+      bool: {
+        must_not: [{
+          term: {
+            isDeleted: true
+          }
+        }]
+      }
+    })
+  }
   // Search with constructed query
   const docs = await esClient.search(esQuery)
   // Extract data from hits
@@ -95,13 +115,24 @@ async function listES (criteria) {
 /**
  * List devices.
  * @param {Object} criteria the search criteria
+ * @param {Object} authUser the user making the request
  * @returns {Object} the search result
  */
-async function list (criteria) {
+async function list (criteria, authUser) {
   // first try to get from ES
   let result
+
+  const isAdmin = helper.isAdmin(authUser)
+
+  if (!_.isNil(criteria.includeSoftDeleted) && criteria.includeSoftDeleted) {
+    // Only admin can request for deleted records
+    if (!isAdmin) {
+      throw new error.ForbiddenError('You are not allowed to perform that action')
+    }
+  }
+
   try {
-    result = await listES(criteria)
+    result = await listES(criteria, isAdmin)
   } catch (e) {
     // log and ignore
     logger.logFullError(e)
@@ -127,8 +158,15 @@ async function list (criteria) {
   if (criteria.operatingSystemVersion) {
     options.operatingSystemVersion = { eq: criteria.operatingSystemVersion }
   }
+  if (!criteria.includeSoftDeleted) {
+    options.isDeleted = { ne: true }
+  }
   // ignore pagination, scan all matched records
   result = await helper.scan(config.AMAZON.DYNAMODB_DEVICE_TABLE, options)
+
+  if (!criteria.includeSoftDeleted) {
+    result = helper.sanitizeResult(result, true)
+  }
   // return fromDB:true to indicate it is got from db,
   // and response headers ('X-Total', 'X-Page', etc.) are not set in this case
   return { fromDB: true, result }
@@ -142,34 +180,29 @@ list.schema = {
     manufacturer: Joi.string(),
     model: Joi.string(),
     operatingSystem: Joi.string(),
-    operatingSystemVersion: Joi.string()
-  })
+    operatingSystemVersion: Joi.string(),
+    includeSoftDeleted: Joi.boolean()
+  }),
+  authUser: Joi.object()
 }
 
 /**
  * Get device entity by id.
  * @param {String} id the device id
+ * @param {Object} query The query params
+ * @param {Object} authUser The user making the request
  * @returns {Object} the device of given id
  */
-async function getEntity (id) {
-  // first try to get from ES
-  try {
-    return await esClient.getSource({
-      index: config.ES.DEVICE_INDEX,
-      type: config.ES.DEVICE_TYPE,
-      id
-    })
-  } catch (e) {
-    // log and ignore
-    logger.logFullError(e)
-  }
-
-  // then try to get from DB
-  return helper.getById(config.AMAZON.DYNAMODB_DEVICE_TABLE, id)
+async function getEntity (id, query, authUser) {
+  return helper.getEntity(config.AMAZON.DYNAMODB_DEVICE_TABLE, id, query, authUser)
 }
 
 getEntity.schema = {
-  id: Joi.id()
+  id: Joi.id(),
+  query: Joi.object().keys({
+    includeSoftDeleted: Joi.boolean()
+  }),
+  authUser: Joi.object()
 }
 
 /**
@@ -183,13 +216,14 @@ async function create (data) {
     [data.type, data.manufacturer, data.model, data.operatingSystem, data.operatingSystemVersion])
 
   data.id = uuid()
+  data.isDeleted = false
   // create record in db
   const res = await helper.create(config.AMAZON.DYNAMODB_DEVICE_TABLE, data)
 
   // Send Kafka message using bus api
   await helper.postEvent(config.LOOKUP_CREATE_TOPIC, _.assign({ resource: Resources.Device }, res))
 
-  return res
+  return helper.sanitizeResult(res)
 }
 
 create.schema = {
@@ -231,10 +265,10 @@ async function partiallyUpdate (id, data) {
     // Send Kafka message using bus api
     await helper.postEvent(config.LOOKUP_UPDATE_TOPIC, _.assign({ resource: Resources.Device, id }, data))
 
-    return res
+    return helper.sanitizeResult(res)
   } else {
     // data are not changed
-    return device
+    return helper.sanitizeResult(device)
   }
 }
 
@@ -273,18 +307,22 @@ update.schema = {
 /**
  * Remove device.
  * @param {String} id the device id to remove
+ * @param {Object} query the query param
  */
-async function remove (id) {
+async function remove (id, query) {
   // remove data in DB
   const device = await helper.getById(config.AMAZON.DYNAMODB_DEVICE_TABLE, id)
-  await helper.remove(device)
+  await helper.remove(device, query.destroy)
 
   // Send Kafka message using bus api
-  await helper.postEvent(config.LOOKUP_DELETE_TOPIC, { resource: Resources.Device, id })
+  await helper.postEvent(config.LOOKUP_DELETE_TOPIC, { resource: Resources.Device, id, isSoftDelete: !query.destroy })
 }
 
 remove.schema = {
-  id: Joi.id()
+  id: Joi.id(),
+  query: Joi.object().keys({
+    destroy: Joi.boolean()
+  })
 }
 
 /**
