@@ -1176,13 +1176,13 @@ parameters:
   includeSoftDeleted:
     name: includeSoftDeleted
     in: query
-    description: Whether or not to include soft deleted items in response. (Only with Admin token)
+    description: Include items that have been soft deleted (Only allowed for admin)
     type: boolean
     default: false
   destroy:
     name: destroy
     in: query
-    description: If false, soft delete the entity, else hard delete. (Only with Admin token)
+    description: Hard delete the item (Only allowed for admin)
     type: boolean
     default: false
 definitions:

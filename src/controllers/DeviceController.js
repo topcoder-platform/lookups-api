@@ -11,10 +11,7 @@ const helper = require('../common/helper')
  * @param {Object} res the response
  */
 async function list (req, res) {
-  const result = await service.list(req.query)
-  result.result.forEach(entity => {
-    delete entity.isDeleted
-  })
+  const result = await service.list(req.query, req.authUser)
   helper.setResHeaders(req, res, result)
   res.send(result.result)
 }
@@ -25,7 +22,7 @@ async function list (req, res) {
  * @param {Object} res the response
  */
 async function listHead (req, res) {
-  const result = await service.list(req.query)
+  const result = await service.list(req.query, req.authUser)
   helper.setResHeaders(req, res, result)
   res.end()
 }
@@ -37,7 +34,6 @@ async function listHead (req, res) {
  */
 async function create (req, res) {
   const result = await service.create(req.body)
-  delete result.isDeleted
   res.status(HttpStatus.CREATED).send(result)
 }
 
@@ -47,8 +43,7 @@ async function create (req, res) {
  * @param {Object} res the response
  */
 async function getEntity (req, res) {
-  const result = await service.getEntity(req.params.id, req.excludeSoftDeleted)
-  delete result.isDeleted
+  const result = await service.getEntity(req.params.id, req.query, req.authUser)
   res.send(result)
 }
 
@@ -58,7 +53,7 @@ async function getEntity (req, res) {
  * @param {Object} res the response
  */
 async function getEntityHead (req, res) {
-  await service.getEntity(req.params.id, req.excludeSoftDeleted)
+  await service.getEntity(req.params.id, req.query, req.authUser)
   res.end()
 }
 
@@ -69,7 +64,6 @@ async function getEntityHead (req, res) {
  */
 async function update (req, res) {
   const result = await service.update(req.params.id, req.body)
-  delete result.isDeleted
   res.send(result)
 }
 
@@ -80,7 +74,6 @@ async function update (req, res) {
  */
 async function partiallyUpdate (req, res) {
   const result = await service.partiallyUpdate(req.params.id, req.body)
-  delete result.isDeleted
   res.send(result)
 }
 
@@ -90,7 +83,7 @@ async function partiallyUpdate (req, res) {
  * @param {Object} res the response
  */
 async function remove (req, res) {
-  await service.remove(req.params.id, req.query.destroy)
+  await service.remove(req.params.id, req.query)
   res.status(HttpStatus.NO_CONTENT).end()
 }
 

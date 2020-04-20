@@ -8,8 +8,9 @@ const uuid = require('uuid/v4')
 const helper = require('../common/helper')
 const logger = require('../common/logger')
 const { Resources } = require('../../app-constants')
+const error = require('../common/errors')
 
-var esClient
+let esClient
 (async function () {
   esClient = await helper.getESClient()
 })()
@@ -17,9 +18,10 @@ var esClient
 /**
  * List educational institutions in Elasticsearch.
  * @param {Object} criteria the search criteria
+ * @param {Boolean} isAdmin Is the user an admin
  * @returns {Object} the search result
  */
-async function listES (criteria) {
+async function listES (criteria, isAdmin) {
   // construct ES query
   const esQuery = {
     index: config.ES.EDUCATIONAL_INSTITUTION_INDEX,
@@ -33,7 +35,8 @@ async function listES (criteria) {
           must: []
         }
       }
-    }
+    },
+    _source_excludes: (isAdmin && !_.isNil(criteria.includeSoftDeleted)) ? [] : ['isDeleted']
   }
   // filtering for name
   if (criteria.name) {
@@ -44,10 +47,20 @@ async function listES (criteria) {
     })
   }
 
-  if (!_.isNil(criteria.isDeleted)) {
+  // If user is not an admin or user has not specified
+  // whether they need soft deleted records, do not return
+  // soft deleted records
+  if (
+    !isAdmin ||
+    _.isNil(criteria.includeSoftDeleted) ||
+    (isAdmin && !criteria.includeSoftDeleted)) {
     esQuery.body.query.bool.must.push({
-      term: {
-        isDeleted: criteria.isDeleted
+      bool: {
+        must_not: [{
+          term: {
+            isDeleted: true
+          }
+        }]
       }
     })
   }
@@ -66,13 +79,24 @@ async function listES (criteria) {
 /**
  * List educational institutions.
  * @param {Object} criteria the search criteria
+ * @param {Object} authUser the user making the request
  * @returns {Object} the search result
  */
-async function list (criteria) {
+async function list (criteria, authUser) {
   // first try to get from ES
   let result
+
+  const isAdmin = helper.isAdmin(authUser)
+
+  if (!_.isNil(criteria.includeSoftDeleted) && criteria.includeSoftDeleted) {
+    // Only admin can request for deleted records
+    if (!isAdmin) {
+      throw new error.ForbiddenError('You are not allowed to perform that action')
+    }
+  }
+
   try {
-    result = await listES(criteria)
+    result = await listES(criteria, isAdmin)
   } catch (e) {
     // log and ignore
     logger.logFullError(e)
@@ -86,8 +110,8 @@ async function list (criteria) {
   if (criteria.name) {
     options.name = { eq: criteria.name }
   }
-  if (!_.isNil(criteria.isDeleted)) {
-    options.isDeleted = { eq: criteria.isDeleted }
+  if (!_.isNil(criteria.includeSoftDeleted)) {
+    options.isDeleted = { eq: criteria.includeSoftDeleted }
   }
   // ignore pagination, scan all matched records
   result = await helper.scan(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, options)
@@ -101,22 +125,28 @@ list.schema = {
     page: Joi.page(),
     perPage: Joi.perPage(),
     name: Joi.string(),
-    isDeleted: Joi.boolean()
-  })
+    includeSoftDeleted: Joi.boolean()
+  }),
+  authUser: Joi.object()
 }
 
 /**
  * Get educational institution entity by id.
  * @param {String} id the educational institution id
+ * @param {Object} query The query params
+ * @param {Object} authUser The user making the request
  * @returns {Object} the educational institution of given id
  */
-async function getEntity (id, excludeSoftDeleted) {
-  return helper.getEntity(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, id, excludeSoftDeleted)
+async function getEntity (id, query, authUser) {
+  return helper.getEntity(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, id, query, authUser)
 }
 
 getEntity.schema = {
   id: Joi.id(),
-  excludeSoftDeleted: Joi.boolean()
+  query: Joi.object().keys({
+    includeSoftDeleted: Joi.boolean()
+  }),
+  authUser: Joi.object()
 }
 
 /**
@@ -127,13 +157,14 @@ getEntity.schema = {
 async function create (data) {
   await helper.validateDuplicate(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, 'name', data.name)
   data.id = uuid()
+  data.isDeleted = false
   // create record in db
   const res = await helper.create(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, data)
 
   // Send Kafka message using bus api
   await helper.postEvent(config.LOOKUP_CREATE_TOPIC, _.assign({ resource: Resources.EducationalInstitution }, res))
 
-  return res
+  return helper.sanitizeResult(res)
 }
 
 create.schema = {
@@ -161,10 +192,10 @@ async function partiallyUpdate (id, data) {
     // Send Kafka message using bus api
     await helper.postEvent(config.LOOKUP_UPDATE_TOPIC, _.assign({ resource: Resources.EducationalInstitution, id }, data))
 
-    return res
+    return helper.sanitizeResult(res)
   } else {
     // data are not changed
-    return ei
+    return helper.sanitizeResult(ei)
   }
 }
 
@@ -195,19 +226,22 @@ update.schema = {
 /**
  * Remove educational institution.
  * @param {String} id the educational institution id to remove
+ * @param {Object} query the query param
  */
-async function remove (id, destroy) {
+async function remove (id, query) {
   // remove data in DB
   const ei = await helper.getById(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, id)
-  await helper.remove(ei, destroy)
+  await helper.remove(ei, query.destroy)
 
   // Send Kafka message using bus api
-  await helper.postEvent(config.LOOKUP_DELETE_TOPIC, { resource: Resources.EducationalInstitution, id })
+  await helper.postEvent(config.LOOKUP_DELETE_TOPIC, { resource: Resources.EducationalInstitution, id, isSoftDelete: !query.destroy })
 }
 
 remove.schema = {
   id: Joi.id(),
-  destroy: Joi.boolean()
+  query: Joi.object().keys({
+    destroy: Joi.boolean()
+  })
 }
 
 module.exports = {

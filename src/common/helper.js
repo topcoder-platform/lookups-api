@@ -155,9 +155,6 @@ async function getById (modelName, id) {
  * @returns created entity
  */
 async function create (modelName, data) {
-  if (_.isNil(data.isDeleted)) {
-    data.isDeleted = false
-  }
   return new Promise((resolve, reject) => {
     const dbItem = new models[modelName](data)
     dbItem.save((err) => {
@@ -290,30 +287,66 @@ function getESClient () {
   return esClient
 }
 
-async function getEntity (modelName, id, excludeSoftDeleted) {
-  let entity = null
+async function getEntity (modelName, id, query, authUser) {
+  let recordIsSoftDeleted = false
+  let result
   // first try to get from ES
+  const isAdminUser = isAdmin(authUser)
+
+  if (!_.isNil(query.includeSoftDeleted) && query.includeSoftDeleted) {
+    if (!isAdminUser) {
+      throw new errors.ForbiddenError('You are not allowed to perform that action')
+    }
+  }
+
   try {
-    const client = getESClient()
+    const client = await getESClient()
     const sourceParams = {
       index: MODEL_TO_ES_INDEX_MAP[modelName],
       type: MODEL_TO_ES_TYPE_MAP[modelName],
       id
     }
-    entity = await client.getSource(sourceParams)
+
+    result = await client.getSource(sourceParams)
+
+    if (
+      !isAdminUser ||
+      _.isNil(query.includeSoftDeleted) ||
+      (isAdmin && !query.includeSoftDeleted)) {
+      // We should not return the record if the record is soft deleted
+      if (result.isDeleted) {
+        recordIsSoftDeleted = true
+      }
+    } else if (!(isAdmin && !_.isNil(query.includeSoftDeleted))) {
+      delete result.isDeleted
+    }
   } catch (e) {
     // log and ignore
     logger.logFullError(e)
   }
 
+  if (recordIsSoftDeleted) {
+    throw new errors.NotFoundError(`${modelName} with id: ${id} doesn't exist`)
+  } else if (result) {
+    return result
+  }
+
+  result = await getById(modelName, id)
+
+  if (
+    !isAdminUser ||
+    _.isNil(query.includeSoftDeleted) ||
+    (isAdmin && !query.includeSoftDeleted)) {
+    // We should not return the record if the record is soft deleted
+    if (result.isDeleted) {
+      throw new errors.NotFoundError(`${modelName} with id: ${id} doesn't exist`)
+    }
+  } else if (!(isAdmin && !_.isNil(query.includeSoftDeleted))) {
+    delete result.isDeleted
+  }
+
   // then try to get from DB
-  if (!entity) {
-    entity = await getById(modelName, id)
-  }
-  if (excludeSoftDeleted && _.get(entity, 'isDeleted') === true) {
-    throw new errors.NotFoundError(getNotFoundError(modelName, id))
-  }
-  return entity
+  return result
 }
 
 /**
@@ -323,7 +356,6 @@ async function getEntity (modelName, id, excludeSoftDeleted) {
  * @param {Array} fields the indexed fields
  */
 async function createESIndex (indexName, typeName, fields) {
-  fields.push('isDeleted')
   const client = getESClient()
   // delete index if present
   try {
@@ -426,6 +458,41 @@ async function postEvent (topic, payload) {
   await busApiClient.postEvent(message)
 }
 
+/**
+ * Throws error if user is not admin
+ * @param {Object} authUser The user making the request
+ */
+function isAdmin (authUser) {
+  if (!authUser) {
+    return false
+  } else if (!authUser.scopes) {
+    // Not a machine user
+    const admin = _.filter(authUser.roles, role => role.toLowerCase() === 'Administrator'.toLowerCase())
+
+    if (admin.length === 0) {
+      return false
+    }
+  }
+
+  return true
+}
+
+/**
+ * Removes the attribute `isDeleted` from the result
+ * @param {Object|Array} result The result data set
+ */
+function sanitizeResult (result) {
+  if (_.isObject(result)) {
+    delete result.isDeleted
+  } else if (_.isArray(result)) {
+    for (let i = 0; i < result.length; i++) {
+      delete result[i].isDeleted
+    }
+  }
+
+  return result
+}
+
 module.exports = {
   wrapExpress,
   autoWrapExpress,
@@ -441,5 +508,7 @@ module.exports = {
   getESClient,
   createESIndex,
   setResHeaders,
-  postEvent
+  postEvent,
+  isAdmin,
+  sanitizeResult
 }

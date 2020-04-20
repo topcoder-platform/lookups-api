@@ -4,23 +4,20 @@
         "manufacturer": "Apple",
         "model": "Macbook Pro",
         "operatingSystem": "OSX",
-        "operatingSystemVersion": "10.14",
-        "isDeleted": false
+        "operatingSystemVersion": "10.14"
     },
     {
         "type": "Mobile",
         "manufacturer": "Apple",
         "model": "iPhone XS",
         "operatingSystem": "iOS",
-        "operatingSystemVersion": "10.14",
-        "isDeleted": true
+        "operatingSystemVersion": "10.14"
     },
     {
         "type": "Mobile",
         "manufacturer": "Samsung",
         "model": "Note8",
         "operatingSystem": "Android",
-        "operatingSystemVersion": "10.x",
-        "isDeleted": false
+        "operatingSystemVersion": "10.x"
     }
 ]
