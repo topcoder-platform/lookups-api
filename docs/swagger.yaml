@@ -461,6 +461,30 @@ paths:
           description: Server error
           schema:
             $ref: '#/definitions/ErrorModel'
+  '/lookups/devices/models':
+    get:
+      tags:
+        - Device
+      description: |
+        List distinct device models.
+      parameters:
+        - name: type
+          in: query
+          description: Filter by device type, case insensitive, partial match is used
+          required: false
+          type: string
+
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              type: string
+        '500':
+          description: Server error
+          schema:
+            $ref: '#/definitions/ErrorModel'
   '/lookups/countries':
     get:
       tags:
