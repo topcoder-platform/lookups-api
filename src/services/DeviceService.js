@@ -360,7 +360,7 @@ async function iterateDevices (criteria, deviceHandler) {
  */
 async function getTypes () {
   const result = []
-  await iterateDevices({}, (device) => {
+  await iterateDevices({ includeSoftDeleted: false }, (device) => {
     if (!_.includes(result, device.type)) {
       result.push(device.type)
     }
@@ -375,7 +375,7 @@ async function getTypes () {
  */
 async function getManufacturers (criteria) {
   const result = []
-  await iterateDevices(criteria, (device) => {
+  await iterateDevices(_.assignIn({ includeSoftDeleted: false }, criteria), (device) => {
     if (!_.includes(result, device.manufacturer)) {
       result.push(device.manufacturer)
     }
@@ -385,8 +385,8 @@ async function getManufacturers (criteria) {
 
 getManufacturers.schema = {
   criteria: Joi.object().keys({
-    type: Joi.string().required()
-  }).required()
+    type: Joi.string()
+  })
 }
 
 /**
@@ -396,7 +396,7 @@ getManufacturers.schema = {
  */
 async function getDeviceModels (criteria) {
   const result = []
-  await iterateDevices(criteria, (device) => {
+  await iterateDevices(_.assignIn({ includeSoftDeleted: false }, criteria), (device) => {
     if (!_.includes(result, device.model)) {
       result.push(device.model)
     }
@@ -406,7 +406,8 @@ async function getDeviceModels (criteria) {
 
 getDeviceModels.schema = {
   criteria: Joi.object().keys({
-    type: Joi.string()
+    type: Joi.string(),
+    manufacturer: Joi.string()
   })
 }
 
