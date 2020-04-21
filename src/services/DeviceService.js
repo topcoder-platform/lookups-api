@@ -139,6 +139,16 @@ async function list (criteria, authUser) {
   }
   if (result && result.result.length > 0) {
     return result
+  } else if (criteria.page) {
+    // Elastic search limits the number of records that can be fetched to 10,000
+    // More than that and we have to use scroll instead. At the time of writing this
+    // less than 10,000 records seems reasonable
+    if (criteria.page * criteria.perPage >= 10000) {
+      throw new error.BadRequestError('You cannot fetch more than 10,000 records at a time')
+    } else if (criteria.page * criteria.perPage > result.total) {
+      // There are no more records. Pagination exceeded
+      return result
+    }
   }
 
   // then try to get from DB
