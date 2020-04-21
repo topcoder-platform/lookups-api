@@ -389,6 +389,27 @@ getManufacturers.schema = {
   }).required()
 }
 
+/**
+ * Get distinct device models.
+ * @param {Object} criteria the search criteria
+ * @returns {Array} the distinct device models
+ */
+async function getDeviceModels (criteria) {
+  const result = []
+  await iterateDevices(criteria, (device) => {
+    if (!_.includes(result, device.model)) {
+      result.push(device.model)
+    }
+  })
+  return result
+}
+
+getDeviceModels.schema = {
+  criteria: Joi.object().keys({
+    type: Joi.string()
+  })
+}
+
 module.exports = {
   list,
   getEntity,
@@ -397,7 +418,8 @@ module.exports = {
   update,
   remove,
   getTypes,
-  getManufacturers
+  getManufacturers,
+  getDeviceModels
 }
 
 logger.buildService(module.exports)
