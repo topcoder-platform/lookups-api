@@ -53,27 +53,27 @@ paths:
         - $ref: '#/parameters/includeSoftDeleted'
         - name: type
           in: query
-          description: Filter by type, case insensitive, partial match is used
+          description: Filter by type, case sensitive, exact match is used
           required: false
           type: string
         - name: manufacturer
           in: query
-          description: Filter by manufacturer, case insensitive, partial match is used
+          description: Filter by manufacturer, case sensitive, exact match is used
           required: false
           type: string
         - name: model
           in: query
-          description: Filter by model, case insensitive, partial match is used
+          description: Filter by model, case sensitive, exact match is used
           required: false
           type: string
         - name: operatingSystem
           in: query
-          description: Filter by operatingSystem, case insensitive, partial match is used
+          description: Filter by operatingSystem, case sensitive, exact match is used
           required: false
           type: string
         - name: operatingSystemVersion
           in: query
-          description: Filter by operatingSystemVersion, case insensitive, partial match is used
+          description: Filter by operatingSystemVersion, case sensitive, exact match is used
           required: false
           type: string
 
@@ -125,27 +125,27 @@ paths:
         - $ref: '#/parameters/includeSoftDeleted'
         - name: type
           in: query
-          description: Filter by type, case insensitive, partial match is used
+          description: Filter by type, case sensitive, exact match is used
           required: false
           type: string
         - name: manufacturer
           in: query
-          description: Filter by manufacturer, case insensitive, partial match is used
+          description: Filter by manufacturer, case sensitive, exact match is used
           required: false
           type: string
         - name: model
           in: query
-          description: Filter by model, case insensitive, partial match is used
+          description: Filter by model, case sensitive, exact match is used
           required: false
           type: string
         - name: operatingSystem
           in: query
-          description: Filter by operatingSystem, case insensitive, partial match is used
+          description: Filter by operatingSystem, case sensitive, exact match is used
           required: false
           type: string
         - name: operatingSystemVersion
           in: query
-          description: Filter by operatingSystemVersion, case insensitive, partial match is used
+          description: Filter by operatingSystemVersion, case sensitive, exact match is used
           required: false
           type: string
       responses:
@@ -442,8 +442,8 @@ paths:
       parameters:
         - name: type
           in: query
-          description: Filter by device type, case insensitive, partial match is used
-          required: true
+          description: Filter by device type, case sensitive, exact match is used
+          required: false
           type: string
 
       responses:
@@ -453,10 +453,35 @@ paths:
             type: array
             items:
               type: string
-        '400':
-          description: Bad request.  Request parameters were invalid.
+        '500':
+          description: Server error
           schema:
             $ref: '#/definitions/ErrorModel'
+  '/lookups/devices/models':
+    get:
+      tags:
+        - Device
+      description: |
+        List distinct device models.
+      parameters:
+        - name: type
+          in: query
+          description: Filter by device type, case sensitive, exact match is used
+          required: false
+          type: string
+        - name: manufacturer
+          in: query
+          description: Filter by manufacturer, case sensitive, exact match is used
+          required: false
+          type: string
+
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              type: string
         '500':
           description: Server error
           schema:
@@ -473,12 +498,12 @@ paths:
         - $ref: '#/parameters/includeSoftDeleted'
         - name: name
           in: query
-          description: Filter by name, case insensitive, partial match is used
+          description: Filter by name, case sensitive, exact match is used
           required: false
           type: string
         - name: countryCode
           in: query
-          description: Filter by countryCode, case insensitive, partial match is used
+          description: Filter by countryCode, case sensitive, exact match is used
           required: false
           type: string
       responses:
@@ -529,12 +554,12 @@ paths:
         - $ref: '#/parameters/includeSoftDeleted'
         - name: name
           in: query
-          description: Filter by name, case insensitive, partial match is used
+          description: Filter by name, case sensitive, exact match is used
           required: false
           type: string
         - name: countryCode
           in: query
-          description: Filter by countryCode, case insensitive, partial match is used
+          description: Filter by countryCode, case sensitive, exact match is used
           required: false
           type: string
       responses:
@@ -816,7 +841,7 @@ paths:
         - $ref: '#/parameters/includeSoftDeleted'
         - name: name
           in: query
-          description: Filter by name, case insensitive, partial match is used
+          description: Filter by name, case sensitive, exact match is used
           required: false
           type: string
       responses:
@@ -867,7 +892,7 @@ paths:
         - $ref: '#/parameters/includeSoftDeleted'
         - name: name
           in: query
-          description: Filter by name, case insensitive, partial match is used
+          description: Filter by name, case sensitive, exact match is used
           required: false
           type: string
       responses:
