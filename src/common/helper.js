@@ -13,6 +13,16 @@ const busApi = require('tc-bus-api-wrapper')
 const busApiClient = busApi(_.pick(config, ['AUTH0_URL', 'AUTH0_AUDIENCE', 'TOKEN_CACHE_TIME', 'AUTH0_CLIENT_ID',
   'AUTH0_CLIENT_SECRET', 'BUSAPI_URL', 'KAFKA_ERROR_TOPIC']))
 
+const index = {
+  country: config.get('ES.COUNTRY_INDEX'),
+  device: config.get('ES.DEVICE_INDEX'),
+  educationalInstitution: config.get('ES.EDUCATIONAL_INSTITUTION_INDEX')
+}
+const type = {
+  country: config.get('ES.COUNTRY_TYPE'),
+  device: config.get('ES.DEVICE_TYPE'),
+  educationalInstitution: config.get('ES.EDUCATIONAL_INSTITUTION_TYPE')
+}
 // AWS DynamoDB instance
 let dbInstance
 
@@ -455,6 +465,7 @@ async function postEvent (topic, payload) {
     'mime-type': 'application/json',
     payload
   }
+  logger.info(`posting message to bus api  ${message}`)
   await busApiClient.postEvent(message)
 }
 
@@ -499,6 +510,25 @@ function sanitizeResult (result, fromDB) {
   return result
 }
 
+/**
+ * Send error event to Kafka
+ * @params {String} topic the topic name
+ * @params {Object} payload the payload
+ * @params {String} action for which operation error occurred
+ */
+async function publishError (topic, payload, action) {
+  _.set(payload, 'apiAction', action)
+  const message = {
+    topic,
+    originator: config.KAFKA_MESSAGE_ORIGINATOR,
+    timestamp: new Date().toISOString(),
+    'mime-type': 'application/json',
+    payload
+  }
+  logger.debug(`Publish error to Kafka topic ${topic}, ${JSON.stringify(message, null, 2)}`)
+  await busApiClient.postEvent(message)
+}
+
 module.exports = {
   wrapExpress,
   autoWrapExpress,
@@ -516,5 +546,8 @@ module.exports = {
   setResHeaders,
   postEvent,
   isAdmin,
-  sanitizeResult
+  sanitizeResult,
+  index,
+  type,
+  publishError
 }
