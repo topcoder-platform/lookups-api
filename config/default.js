@@ -58,5 +58,6 @@ module.exports = {
   KAFKA_MESSAGE_ORIGINATOR: process.env.KAFKA_MESSAGE_ORIGINATOR || 'lookups-api',
   LOOKUP_CREATE_TOPIC: process.env.LOOKUP_CREATE_TOPIC || 'lookup.notification.create',
   LOOKUP_UPDATE_TOPIC: process.env.LOOKUP_UPDATE_TOPIC || 'lookup.notification.update',
-  LOOKUP_DELETE_TOPIC: process.env.LOOKUP_DELETE_TOPIC || 'lookup.notification.delete'
+  LOOKUP_DELETE_TOPIC: process.env.LOOKUP_DELETE_TOPIC || 'lookup.notification.delete',
+  LOOKUP_ERROR_TOPIC: process.env.LOOKUP_ERROR_TOPIC || 'lookup.notification.error'
 }
