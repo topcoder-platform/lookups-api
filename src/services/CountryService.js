@@ -9,6 +9,10 @@ const helper = require('../common/helper')
 const logger = require('../common/logger')
 const { Resources } = require('../../app-constants')
 const error = require('../common/errors')
+const HttpStatus = require('http-status-codes')
+// ES index and type
+const index = helper.index
+const type = helper.type
 
 let esClient
 (async function () {
@@ -185,8 +189,45 @@ async function create (data) {
   await helper.validateDuplicate(config.AMAZON.DYNAMODB_COUNTRY_TABLE, 'name', data.name)
   data.id = uuid()
   data.isDeleted = false
-  // create record in db
-  const res = await helper.create(config.AMAZON.DYNAMODB_COUNTRY_TABLE, data)
+  let res
+  try {
+    await esClient.create({
+      index: index[Resources.Country],
+      type: type[Resources.Country],
+      id: data.id,
+      body: data,
+      refresh: 'true'
+    })
+  } catch (e) {
+    logger.info(`Elasticsearch operation failed:  ${e.message}`)
+    // Publish error
+    helper.publishError(config.LOOKUP_ERROR_TOPIC, { ...data }, 'country.create')
+    throw new error.TransactionFailureError(`Elasticsearch operation failed, ${e.message}`)
+  }
+
+  try {
+    // uncomment below line  to simulate DB error
+    // delete  data.name
+
+    // create record in db
+    res = await helper.create(config.AMAZON.DYNAMODB_COUNTRY_TABLE, data)
+  } catch (e) {
+    // ES Rollback
+    try {
+      await esClient.delete({
+        index: index[Resources.Country],
+        type: type[Resources.Country],
+        id: data.id,
+        refresh: 'true'
+      })
+    } catch (ee) {
+      logger.info(`ES Rollback operation failed:  ${ee.message}`)
+      throw new error.TransactionFailureError(`DynamoDB & ES Rollback operation failed, ${e.message}`)
+    }
+    logger.info(`DynamoDB operation failed:  ${e.message}`)
+    helper.publishError(config.LOOKUP_ERROR_TOPIC, { ...data }, 'country.create')
+    throw new error.TransactionFailureError(`DynamoDB operation failed, ${e.message}`)
+  }
 
   // Send Kafka message using bus api
   await helper.postEvent(config.LOOKUP_CREATE_TOPIC, _.assign({ resource: Resources.Country }, res))
@@ -210,24 +251,87 @@ create.schema = {
  */
 async function partiallyUpdate (id, data) {
   // get data in DB
-  const country = await helper.getById(config.AMAZON.DYNAMODB_COUNTRY_TABLE, id)
-  if ((data.name && country.name !== data.name) ||
-     (data.countryFlag && country.countryFlag !== data.countryFlag) ||
-     (data.countryCode && country.countryCode !== data.countryCode)) {
-    if (data.name && country.name !== data.name) {
-      // ensure name is not used already
-      await helper.validateDuplicate(config.AMAZON.DYNAMODB_COUNTRY_TABLE, 'name', data.name)
+  try {
+    const country = await helper.getById(config.AMAZON.DYNAMODB_COUNTRY_TABLE, id)
+    data.id = id
+    if ((data.name && country.name !== data.name) ||
+      (data.countryFlag && country.countryFlag !== data.countryFlag) ||
+      (data.countryCode && country.countryCode !== data.countryCode)) {
+      if (data.name && country.name !== data.name) {
+        // ensure name is not used already
+        await helper.validateDuplicate(config.AMAZON.DYNAMODB_COUNTRY_TABLE, 'name', data.name)
+      }
+      let res
+      let originalEsRecord = _.cloneDeep(country)
+      try {
+        await esClient.update({
+          index: index[Resources.Country],
+          type: type[Resources.Country],
+          id: id,
+          // body: { } for simulating update error, keep body blank
+          body: { doc: { ...data, id } },
+          refresh: 'true'
+        })
+      } catch (e) {
+        if (e.statusCode === HttpStatus.NOT_FOUND) {
+          // not found in ES, then create data in ES
+          try {
+            await esClient.create({
+              index: index[Resources.Country],
+              type: type[Resources.Country],
+              id: id,
+              body: data,
+              refresh: 'true'
+            })
+          } catch (ee) {
+            logger.info(`ES  operation failed:  ${ee.message}`)
+            helper.publishError(config.LOOKUP_ERROR_TOPIC, { ...data, id }, 'country.update')
+            throw new error.TransactionFailureError(`ES operation failed, ${e.message}`)
+          }
+        } else {
+          logger.info(`Elasticsearch operation failed:  ${e.message}`)
+          // publish to error topic
+          helper.publishError(config.LOOKUP_ERROR_TOPIC, { ...data, id }, 'country.update')
+          throw new error.TransactionFailureError(`Elasticsearch operation failed, ${e.message}`)
+        }
+      }
+
+      try {
+        // then update data in DB
+
+        // to simulate error uncomment below line
+        // data.isDeleted = 123
+        res = await helper.update(country, data)
+      } catch (e) {
+        // ES Rollback
+        try {
+          await esClient.update({
+            index: index[Resources.Country],
+            type: type[Resources.Country],
+            id: id,
+            body: { doc: { ...originalEsRecord } },
+            refresh: 'true'
+          })
+        } catch (ee) {
+          logger.info(`ES Rollback operation failed:  ${ee.message}`)
+          throw new error.TransactionFailureError(`DynamoDB & ES Rollback operation failed, ${e.message}`)
+        }
+        logger.info(`DynamoDB operation failed:  ${e.message}`)
+        helper.publishError(config.LOOKUP_ERROR_TOPIC, { ...data }, 'country.update')
+        throw new error.TransactionFailureError(`DynamoDB operation failed, ${e.message}`)
+      }
+
+      // Send Kafka message using bus api
+      await helper.postEvent(config.LOOKUP_UPDATE_TOPIC, _.assign({ resource: Resources.Country, id }, data))
+
+      return helper.sanitizeResult(res)
+    } else {
+      // data are not changed
+      return helper.sanitizeResult(country)
     }
-    // then update data in DB
-    const res = await helper.update(country, data)
-
-    // Send Kafka message using bus api
-    await helper.postEvent(config.LOOKUP_UPDATE_TOPIC, _.assign({ resource: Resources.Country, id }, data))
-
-    return helper.sanitizeResult(res)
-  } else {
-    // data are not changed
-    return helper.sanitizeResult(country)
+  } catch (ee) {
+    logger.info(`Error:  ${ee.message}`)
+    throw ee
   }
 }
 
@@ -265,12 +369,74 @@ update.schema = {
  * @param {Object} query the query param
  */
 async function remove (id, query) {
+  try {
   // remove data in DB
-  const country = await helper.getById(config.AMAZON.DYNAMODB_COUNTRY_TABLE, id)
-  await helper.remove(country, query.destroy)
+    const country = await helper.getById(config.AMAZON.DYNAMODB_COUNTRY_TABLE, id)
+    let originalObj = _.cloneDeep(country)
 
-  // Send Kafka message using bus api
-  await helper.postEvent(config.LOOKUP_DELETE_TOPIC, { resource: Resources.Country, id, isSoftDelete: !query.destroy })
+    try {
+      if (query.destroy) {
+        await esClient.delete({
+          index: index[Resources.Country],
+          type: type[Resources.Country],
+          id: id,
+          refresh: 'true'
+        })
+      } else {
+        originalObj.isDeleted = true
+        await esClient.update({
+          index: index[Resources.Country],
+          type: type[Resources.Country],
+          id: originalObj.id,
+          body: { doc: originalObj },
+          refresh: 'true'
+        })
+      }
+    } catch (e) {
+      logger.info(`Elasticsearch operation failed:  ${e.message}`)
+      helper.publishError(config.LOOKUP_ERROR_TOPIC, { id }, 'country.delete')
+      throw new error.TransactionFailureError(`Elasticsearch operation failed, ${e.message}`)
+    }
+
+    try {
+    // uncomment below line to simulate DB error and ES rollback
+    // delete country.id
+      await helper.remove(country, query.destroy)
+    } catch (e) {
+      try {
+        if (!query.destroy) {
+          originalObj.isDeleted = false
+          await esClient.update({
+            index: index[Resources.Country],
+            type: type[Resources.Country],
+            id: originalObj.id,
+            body: { doc: originalObj },
+            refresh: 'true'
+          })
+        } else {
+          // re-create record in ES
+          await esClient.create({
+            index: index[Resources.Country],
+            type: type[Resources.Country],
+            id: originalObj.id,
+            body: originalObj,
+            refresh: 'true'
+          })
+        }
+      } catch (ee) {
+        logger.info(`ES Rollback operation failed:  ${ee.message}`)
+        throw new error.TransactionFailureError(`DynamoDB & ES Rollback operation failed, ${e.message}`)
+      }
+      logger.info(`DynamoDB operation failed:  ${e.message}`)
+      helper.publishError(config.LOOKUP_ERROR_TOPIC, { id }, 'country.delete')
+      throw new error.TransactionFailureError(`DynamoDB operation failed, ${e.message}`)
+    }
+    // Send Kafka message using bus api
+    await helper.postEvent(config.LOOKUP_DELETE_TOPIC, { resource: Resources.Country, id, isSoftDelete: !query.destroy })
+  } catch (eer) {
+    logger.info(`Error:  ${eer.message}`)
+    throw eer
+  }
 }
 
 remove.schema = {
