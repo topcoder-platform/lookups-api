@@ -31,6 +31,10 @@ const schema = new Schema({
   operatingSystemVersion: {
     type: String,
     required: false
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false
   }
 },
 {

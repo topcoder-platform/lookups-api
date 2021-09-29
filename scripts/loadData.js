@@ -40,6 +40,7 @@ const loadData = async (lookupName, lookupFilePath) => {
           entity.operatingSystemVersion = 'ANY'
         }
       }
+      entity.isDeleted = false
       const res = await helper.create(getTableName, entity)
 
       // create record in es

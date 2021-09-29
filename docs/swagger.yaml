@@ -50,29 +50,30 @@ paths:
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: type
           in: query
-          description: Filter by type, case insensitive, partial match is used
+          description: Filter by type, case sensitive, exact match is used
           required: false
           type: string
         - name: manufacturer
           in: query
-          description: Filter by manufacturer, case insensitive, partial match is used
+          description: Filter by manufacturer, case sensitive, exact match is used
           required: false
           type: string
         - name: model
           in: query
-          description: Filter by model, case insensitive, partial match is used
+          description: Filter by model, case sensitive, exact match is used
           required: false
           type: string
         - name: operatingSystem
           in: query
-          description: Filter by operatingSystem, case insensitive, partial match is used
+          description: Filter by operatingSystem, case sensitive, exact match is used
           required: false
           type: string
         - name: operatingSystemVersion
           in: query
-          description: Filter by operatingSystemVersion, case insensitive, partial match is used
+          description: Filter by operatingSystemVersion, case sensitive, exact match is used
           required: false
           type: string
 
@@ -121,29 +122,30 @@ paths:
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: type
           in: query
-          description: Filter by type, case insensitive, partial match is used
+          description: Filter by type, case sensitive, exact match is used
           required: false
           type: string
         - name: manufacturer
           in: query
-          description: Filter by manufacturer, case insensitive, partial match is used
+          description: Filter by manufacturer, case sensitive, exact match is used
           required: false
           type: string
         - name: model
           in: query
-          description: Filter by model, case insensitive, partial match is used
+          description: Filter by model, case sensitive, exact match is used
           required: false
           type: string
         - name: operatingSystem
           in: query
-          description: Filter by operatingSystem, case insensitive, partial match is used
+          description: Filter by operatingSystem, case sensitive, exact match is used
           required: false
           type: string
         - name: operatingSystemVersion
           in: query
-          description: Filter by operatingSystemVersion, case insensitive, partial match is used
+          description: Filter by operatingSystemVersion, case sensitive, exact match is used
           required: false
           type: string
       responses:
@@ -225,6 +227,7 @@ paths:
         - Device
       description: Retrieve the device by id
       parameters:
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: id
           in: path
           required: true
@@ -253,6 +256,7 @@ paths:
         - Device
       description: Retrieve the device head by id
       parameters:
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: id
           in: path
           required: true
@@ -380,6 +384,7 @@ paths:
       security:
         - bearer: []
       parameters:
+        - $ref: '#/parameters/destroy'
         - name: id
           in: path
           required: true
@@ -437,8 +442,8 @@ paths:
       parameters:
         - name: type
           in: query
-          description: Filter by device type, case insensitive, partial match is used
-          required: true
+          description: Filter by device type, case sensitive, exact match is used
+          required: false
           type: string
 
       responses:
@@ -448,10 +453,35 @@ paths:
             type: array
             items:
               type: string
-        '400':
-          description: Bad request.  Request parameters were invalid.
+        '500':
+          description: Server error
           schema:
             $ref: '#/definitions/ErrorModel'
+  '/lookups/devices/models':
+    get:
+      tags:
+        - Device
+      description: |
+        List distinct device models.
+      parameters:
+        - name: type
+          in: query
+          description: Filter by device type, case sensitive, exact match is used
+          required: false
+          type: string
+        - name: manufacturer
+          in: query
+          description: Filter by manufacturer, case sensitive, exact match is used
+          required: false
+          type: string
+
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              type: string
         '500':
           description: Server error
           schema:
@@ -465,14 +495,15 @@ paths:
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: name
           in: query
-          description: Filter by name, case insensitive, partial match is used
+          description: Filter by name, case sensitive, exact match is used
           required: false
           type: string
         - name: countryCode
           in: query
-          description: Filter by countryCode, case insensitive, partial match is used
+          description: Filter by countryCode, case sensitive, exact match is used
           required: false
           type: string
       responses:
@@ -520,14 +551,15 @@ paths:
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: name
           in: query
-          description: Filter by name, case insensitive, partial match is used
+          description: Filter by name, case sensitive, exact match is used
           required: false
           type: string
         - name: countryCode
           in: query
-          description: Filter by countryCode, case insensitive, partial match is used
+          description: Filter by countryCode, case sensitive, exact match is used
           required: false
           type: string
       responses:
@@ -609,6 +641,7 @@ paths:
         - Country
       description: Retrieve the country by id
       parameters:
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: id
           in: path
           required: true
@@ -637,6 +670,7 @@ paths:
         - Country
       description: Retrieve the country head by id
       parameters:
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: id
           in: path
           required: true
@@ -764,6 +798,7 @@ paths:
       security:
         - bearer: []
       parameters:
+        - $ref: '#/parameters/destroy'
         - name: id
           in: path
           required: true
@@ -803,9 +838,10 @@ paths:
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: name
           in: query
-          description: Filter by name, case insensitive, partial match is used
+          description: Filter by name, case sensitive, exact match is used
           required: false
           type: string
       responses:
@@ -853,9 +889,10 @@ paths:
       parameters:
         - $ref: '#/parameters/page'
         - $ref: '#/parameters/perPage'
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: name
           in: query
-          description: Filter by name, case insensitive, partial match is used
+          description: Filter by name, case sensitive, exact match is used
           required: false
           type: string
       responses:
@@ -937,6 +974,7 @@ paths:
         - Educational Institution
       description: Retrieve the educational institution by id
       parameters:
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: id
           in: path
           required: true
@@ -965,6 +1003,7 @@ paths:
         - Educational Institution
       description: Retrieve the educational institution head by id
       parameters:
+        - $ref: '#/parameters/includeSoftDeleted'
         - name: id
           in: path
           required: true
@@ -1092,6 +1131,7 @@ paths:
       security:
         - bearer: []
       parameters:
+        - $ref: '#/parameters/destroy'
         - name: id
           in: path
           required: true
@@ -1158,6 +1198,18 @@ parameters:
     type: integer
     default: 20
     maximum: 100
+  includeSoftDeleted:
+    name: includeSoftDeleted
+    in: query
+    description: Include items that have been soft deleted (Only allowed for admin)
+    type: boolean
+    default: false
+  destroy:
+    name: destroy
+    in: query
+    description: Hard delete the item (Only allowed for admin)
+    type: boolean
+    default: false
 definitions:
   Country:
     type: object

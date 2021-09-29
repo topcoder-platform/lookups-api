@@ -8,8 +8,13 @@ const uuid = require('uuid/v4')
 const helper = require('../common/helper')
 const logger = require('../common/logger')
 const { Resources } = require('../../app-constants')
+const error = require('../common/errors')
+const HttpStatus = require('http-status-codes')
 
-var esClient
+// ES index and type
+const index = helper.index
+const type = helper.type
+let esClient
 (async function () {
   esClient = await helper.getESClient()
 })()
@@ -17,9 +22,10 @@ var esClient
 /**
  * List devices in Elasticsearch.
  * @param {Object} criteria the search criteria
+ * @param {Boolean} isAdmin Is the user an admin
  * @returns {Object} the search result
  */
-async function listES (criteria) {
+async function listES (criteria, isAdmin) {
   // construct ES query
   const esQuery = {
     index: config.ES.DEVICE_INDEX,
@@ -33,7 +39,8 @@ async function listES (criteria) {
           must: []
         }
       }
-    }
+    },
+    _source_excludes: (isAdmin && !_.isNil(criteria.includeSoftDeleted)) ? [] : ['isDeleted']
   }
 
   // filtering for type
@@ -81,6 +88,23 @@ async function listES (criteria) {
     })
   }
 
+  // If user is not an admin or user has not specified
+  // whether they need soft deleted records, do not return
+  // soft deleted records
+  if (
+    !isAdmin ||
+    _.isNil(criteria.includeSoftDeleted) ||
+    (isAdmin && !criteria.includeSoftDeleted)) {
+    esQuery.body.query.bool.must.push({
+      bool: {
+        must_not: [{
+          term: {
+            isDeleted: true
+          }
+        }]
+      }
+    })
+  }
   // Search with constructed query
   const docs = await esClient.search(esQuery)
   // Extract data from hits
@@ -95,19 +119,40 @@ async function listES (criteria) {
 /**
  * List devices.
  * @param {Object} criteria the search criteria
+ * @param {Object} authUser the user making the request
  * @returns {Object} the search result
  */
-async function list (criteria) {
+async function list (criteria, authUser) {
   // first try to get from ES
   let result
+
+  const isAdmin = helper.isAdmin(authUser)
+
+  if (!_.isNil(criteria.includeSoftDeleted) && criteria.includeSoftDeleted) {
+    // Only admin can request for deleted records
+    if (!isAdmin) {
+      throw new error.ForbiddenError('You are not allowed to perform that action')
+    }
+  }
+
   try {
-    result = await listES(criteria)
+    result = await listES(criteria, isAdmin)
   } catch (e) {
     // log and ignore
     logger.logFullError(e)
   }
   if (result && result.result.length > 0) {
     return result
+  } else if (criteria.page) {
+    // Elastic search limits the number of records that can be fetched to 10,000
+    // More than that and we have to use scroll instead. At the time of writing this
+    // less than 10,000 records seems reasonable
+    if (criteria.page * criteria.perPage >= 10000) {
+      throw new error.BadRequestError('You cannot fetch more than 10,000 records at a time')
+    } else if (criteria.page * criteria.perPage > result.total) {
+      // There are no more records. Pagination exceeded
+      return result
+    }
   }
 
   // then try to get from DB
@@ -127,8 +172,15 @@ async function list (criteria) {
   if (criteria.operatingSystemVersion) {
     options.operatingSystemVersion = { eq: criteria.operatingSystemVersion }
   }
+  if (!criteria.includeSoftDeleted) {
+    options.isDeleted = { ne: true }
+  }
   // ignore pagination, scan all matched records
   result = await helper.scan(config.AMAZON.DYNAMODB_DEVICE_TABLE, options)
+
+  if (!criteria.includeSoftDeleted) {
+    result = helper.sanitizeResult(result, true)
+  }
   // return fromDB:true to indicate it is got from db,
   // and response headers ('X-Total', 'X-Page', etc.) are not set in this case
   return { fromDB: true, result }
@@ -142,34 +194,29 @@ list.schema = {
     manufacturer: Joi.string(),
     model: Joi.string(),
     operatingSystem: Joi.string(),
-    operatingSystemVersion: Joi.string()
-  })
+    operatingSystemVersion: Joi.string(),
+    includeSoftDeleted: Joi.boolean()
+  }),
+  authUser: Joi.object()
 }
 
 /**
  * Get device entity by id.
  * @param {String} id the device id
+ * @param {Object} query The query params
+ * @param {Object} authUser The user making the request
  * @returns {Object} the device of given id
  */
-async function getEntity (id) {
-  // first try to get from ES
-  try {
-    return await esClient.getSource({
-      index: config.ES.DEVICE_INDEX,
-      type: config.ES.DEVICE_TYPE,
-      id
-    })
-  } catch (e) {
-    // log and ignore
-    logger.logFullError(e)
-  }
-
-  // then try to get from DB
-  return helper.getById(config.AMAZON.DYNAMODB_DEVICE_TABLE, id)
+async function getEntity (id, query, authUser) {
+  return helper.getEntity(config.AMAZON.DYNAMODB_DEVICE_TABLE, id, query, authUser)
 }
 
 getEntity.schema = {
-  id: Joi.id()
+  id: Joi.id(),
+  query: Joi.object().keys({
+    includeSoftDeleted: Joi.boolean()
+  }),
+  authUser: Joi.object()
 }
 
 /**
@@ -183,13 +230,46 @@ async function create (data) {
     [data.type, data.manufacturer, data.model, data.operatingSystem, data.operatingSystemVersion])
 
   data.id = uuid()
-  // create record in db
-  const res = await helper.create(config.AMAZON.DYNAMODB_DEVICE_TABLE, data)
+  data.isDeleted = false
+  let res
+  try {
+    await esClient.create({
+      index: index[Resources.Device],
+      type: type[Resources.Device],
+      id: data.id,
+      body: data,
+      refresh: 'true'
+    })
+  } catch (e) {
+    logger.info(`Elasticsearch operation failed:  ${e.message}`)
+    // publish error
+    helper.publishError(config.LOOKUP_ERROR_TOPIC, { ...data }, 'device.create')
+    throw new error.TransactionFailureError(`Elasticsearch operation failed, ${e.message}`)
+  }
+  try {
+    // create record in db
+    res = await helper.create(config.AMAZON.DYNAMODB_DEVICE_TABLE, data)
+  } catch (e) {
+    try {
+      await esClient.delete({
+        index: index[Resources.Device],
+        type: type[Resources.Device],
+        id: data.id,
+        refresh: 'true'
+      })
+    } catch (ee) {
+      logger.info(`ES Rollback operation failed:  ${ee.message}`)
+      throw new error.TransactionFailureError(` ES Rollback operation failed, ${e.message}`)
+    }
+    logger.info(`DynamoDB operation failed:  ${e.message}`)
+    helper.publishError(config.LOOKUP_ERROR_TOPIC, { ...data }, 'device.create')
+    throw new error.TransactionFailureError(`DynamoDB operation failed, ${e.message}`)
+  }
 
   // Send Kafka message using bus api
   await helper.postEvent(config.LOOKUP_CREATE_TOPIC, _.assign({ resource: Resources.Device }, res))
 
-  return res
+  return helper.sanitizeResult(res)
 }
 
 create.schema = {
@@ -211,6 +291,7 @@ create.schema = {
 async function partiallyUpdate (id, data) {
   // get data in DB
   const device = await helper.getById(config.AMAZON.DYNAMODB_DEVICE_TABLE, id)
+  data.id = id
   if ((data.type && device.type !== data.type) ||
      (data.manufacturer && device.manufacturer !== data.manufacturer) ||
      (data.model && device.model !== data.model) ||
@@ -225,16 +306,68 @@ async function partiallyUpdate (id, data) {
         data.model || device.model,
         data.operatingSystem || device.operatingSystem,
         data.operatingSystemVersion || device.operatingSystemVersion])
-    // then update data in DB
-    const res = await helper.update(device, data)
+
+    let res
+    let originalRecord = _.cloneDeep(device)
+    try {
+      await esClient.update({
+        index: index[Resources.Device],
+        type: type[Resources.Device],
+        id: id,
+        body: { doc: { ...data, id } },
+        refresh: 'true'
+      })
+    } catch (e) {
+      if (e.statusCode === HttpStatus.NOT_FOUND) {
+        // not found in ES, then create data in ES
+        try {
+          await esClient.create({
+            index: index[Resources.Device],
+            type: type[Resources.Device],
+            id: id,
+            body: { doc: { ...data, id } },
+            refresh: 'true'
+          })
+        } catch (ee) {
+          logger.info(`ES operation failed:  ${ee.message}`)
+          helper.publishError(config.LOOKUP_ERROR_TOPIC, { ...data, id }, 'device.update')
+          throw new error.TransactionFailureError(`ES operation failed, ${e.message}`)
+        }
+      } else {
+        logger.info(`Elasticsearch operation failed:  ${e.message}`)
+        helper.publishError(config.LOOKUP_ERROR_TOPIC, { ...data, id }, 'device.update')
+        throw new error.TransactionFailureError(`Elasticsearch operation failed, ${e.message}`)
+      }
+    }
+    try {
+      // then update data in DB
+      res = await helper.update(device, data)
+    } catch (e) {
+      // ES Rollback
+      try {
+        await esClient.update({
+          index: index[Resources.Device],
+          type: type[Resources.Device],
+          id: id,
+          body: { doc: { ...originalRecord } },
+          refresh: 'true'
+        })
+      } catch (ee) {
+        logger.info(`ES Rollback operation failed:  ${ee.message}`)
+        throw new error.TransactionFailureError(`DynamoDB & ES Rollback operation failed, ${e.message}`)
+      }
+      logger.info(`DynamoDB operation failed:  ${e.message}`)
+      helper.publishError(config.LOOKUP_ERROR_TOPIC, { ...data, id }, 'device.update')
+      throw new error.TransactionFailureError(`DynamoDB operation failed, ${e.message}`)
+    }
 
     // Send Kafka message using bus api
     await helper.postEvent(config.LOOKUP_UPDATE_TOPIC, _.assign({ resource: Resources.Device, id }, data))
 
-    return res
+    return helper.sanitizeResult(res)
   } else {
     // data are not changed
-    return device
+    return helper.sanitizeResult(device)
   }
 }
 
@@ -273,18 +406,77 @@ update.schema = {
 /**
  * Remove device.
  * @param {String} id the device id to remove
+ * @param {Object} query the query param
  */
-async function remove (id) {
+async function remove (id, query) {
   // remove data in DB
   const device = await helper.getById(config.AMAZON.DYNAMODB_DEVICE_TABLE, id)
-  await helper.remove(device)
+  let originalObj = _.cloneDeep(device)
+  try {
+    if (query.destroy) {
+      await esClient.delete({
+        index: index[Resources.Device],
+        type: type[Resources.Device],
+        id: id,
+        refresh: 'true'
+      })
+    } else {
+      originalObj.isDeleted = true
+      await esClient.update({
+        index: index[Resources.Device],
+        type: type[Resources.Device],
+        id: id,
+        body: { doc: originalObj },
+        refresh: 'true'
+      })
+    }
+  } catch (e) {
+    logger.info(`Elasticsearch operation failed:  ${e.message}`)
+    helper.publishError(config.LOOKUP_ERROR_TOPIC, { id }, 'device.delete')
+    throw new error.TransactionFailureError(`Elasticsearch operation failed, ${e.message}`)
+  }
+
+  try {
+    await helper.remove(device, query.destroy)
+  } catch (e) {
+    try {
+      if (!query.destroy) {
+        originalObj.isDeleted = false
+        await esClient.update({
+          index: index[Resources.Device],
+          type: type[Resources.Device],
+          id: originalObj.id,
+          body: { doc: originalObj },
+          refresh: 'true'
+        })
+      } else {
+      // re-create record in ES
+        await esClient.create({
+          index: index[Resources.Device],
+          type: type[Resources.Device],
+          id: originalObj.id,
+          body: originalObj,
+          refresh: 'true'
+        })
+      }
+    } catch (ee) {
+      logger.info(`ES Rollback operation failed:  ${ee.message}`)
+      throw new error.TransactionFailureError(`DynamoDB & ES Rollback operation failed, ${e.message}`)
+    }
+    logger.info(`DynamoDB operation failed:  ${e.message}`)
+    helper.publishError(config.LOOKUP_ERROR_TOPIC, { id }, 'device.delete')
+    throw new error.TransactionFailureError(`DynamoDB operation failed, ${e.message}`)
+  }
 
   // Send Kafka message using bus api
-  await helper.postEvent(config.LOOKUP_DELETE_TOPIC, { resource: Resources.Device, id })
+  await helper.postEvent(config.LOOKUP_DELETE_TOPIC, { resource: Resources.Device, id, isSoftDelete: !query.destroy })
 }
 
 remove.schema = {
-  id: Joi.id()
+  id: Joi.id(),
+  query: Joi.object().keys({
+    destroy: Joi.boolean()
+  })
 }
 
 /**
@@ -322,7 +514,7 @@ async function iterateDevices (criteria, deviceHandler) {
  */
 async function getTypes () {
   const result = []
-  await iterateDevices({}, (device) => {
+  await iterateDevices({ includeSoftDeleted: false }, (device) => {
     if (!_.includes(result, device.type)) {
       result.push(device.type)
     }
@@ -337,7 +529,7 @@ async function getTypes () {
  */
 async function getManufacturers (criteria) {
   const result = []
-  await iterateDevices(criteria, (device) => {
+  await iterateDevices(_.assignIn({ includeSoftDeleted: false }, criteria), (device) => {
     if (!_.includes(result, device.manufacturer)) {
       result.push(device.manufacturer)
     }
@@ -347,8 +539,30 @@ async function getManufacturers (criteria) {
 
 getManufacturers.schema = {
   criteria: Joi.object().keys({
-    type: Joi.string().required()
-  }).required()
+    type: Joi.string()
+  })
+}
+
+/**
+ * Get distinct device models.
+ * @param {Object} criteria the search criteria
+ * @returns {Array} the distinct device models
+ */
+async function getDeviceModels (criteria) {
+  const result = []
+  await iterateDevices(_.assignIn({ includeSoftDeleted: false }, criteria), (device) => {
+    if (!_.includes(result, device.model)) {
+      result.push(device.model)
+    }
+  })
+  return result
+}
+
+getDeviceModels.schema = {
+  criteria: Joi.object().keys({
+    type: Joi.string(),
+    manufacturer: Joi.string()
+  })
 }
 
 module.exports = {
@@ -359,7 +573,8 @@ module.exports = {
   update,
   remove,
   getTypes,
-  getManufacturers
+  getManufacturers,
+  getDeviceModels
 }
 
 logger.buildService(module.exports)

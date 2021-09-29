@@ -66,7 +66,6 @@ module.exports = (app) => {
         actions.push((req, res, next) => {
           authenticator(_.pick(config, ['AUTH_SECRET', 'VALID_ISSUERS']))(req, res, next)
         })
-
         actions.push((req, res, next) => {
           if (!req.authUser) {
             return next(new errors.UnauthorizedError('Action is not allowed for invalid token'))
@@ -91,6 +90,16 @@ module.exports = (app) => {
           } else if ((_.isArray(def.access) && def.access.length > 0) ||
             (_.isArray(def.scopes) && def.scopes.length > 0)) {
             next(new errors.UnauthorizedError('You are not authorized to perform this action'))
+          } else {
+            next()
+          }
+        })
+      } else {
+        // Allow public access, but process the jwt token, if one is passed
+        // This is for GET requests where admin users can access soft deleted records
+        actions.push((req, res, next) => {
+          if (req.headers.authorization) {
+            authenticator(_.pick(config, ['AUTH_SECRET', 'VALID_ISSUERS']))(req, res, next)
           } else {
             next()
           }
