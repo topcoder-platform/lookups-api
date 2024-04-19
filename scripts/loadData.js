@@ -6,7 +6,7 @@ require('../app-bootstrap')
 const logger = require('../src/common/logger')
 
 const fs = require('fs')
-const uuid = require('uuid/v4')
+const { v4: uuidv4 } = require('uuid')
 const scriptHelper = require('./helpers')
 const helper = require('../src/common/helper')
 
@@ -33,7 +33,7 @@ const loadData = async (lookupName, lookupFilePath) => {
     try {
       // create record in db
       if (!entity.hasOwnProperty('id')) {
-        entity.id = uuid()
+        entity.id = uuidv4()
       }
       if (getTableName === 'devices') {
         if (!entity.operatingSystemVersion) {
