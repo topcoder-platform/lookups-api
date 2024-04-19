@@ -1,5 +1,5 @@
 # Use the base image with Node.js
-FROM node:14.14.0
+FROM node:21.6.0
 
 # Copy the current directory into the Docker image
 COPY . /lookups-api
