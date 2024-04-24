@@ -4,7 +4,7 @@
 const _ = require('lodash')
 const Joi = require('joi')
 const config = require('config')
-const uuid = require('uuid/v4')
+const { v4: uuidv4 }  = require('uuid')
 const helper = require('../common/helper')
 const logger = require('../common/logger')
 const { Resources } = require('../../app-constants')
@@ -229,7 +229,7 @@ async function create (data) {
     ['type', 'manufacturer', 'model', 'operatingSystem', 'operatingSystemVersion'],
     [data.type, data.manufacturer, data.model, data.operatingSystem, data.operatingSystemVersion])
 
-  data.id = uuid()
+  data.id = uuidv4()
   data.isDeleted = false
   let res
   try {

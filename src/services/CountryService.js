@@ -4,7 +4,7 @@
 const _ = require('lodash')
 const Joi = require('joi')
 const config = require('config')
-const uuid = require('uuid/v4')
+const { v4: uuidv4 }  = require('uuid')
 const helper = require('../common/helper')
 const logger = require('../common/logger')
 const { Resources } = require('../../app-constants')
@@ -187,7 +187,7 @@ getEntity.schema = {
  */
 async function create (data) {
   await helper.validateDuplicate(config.AMAZON.DYNAMODB_COUNTRY_TABLE, 'name', data.name)
-  data.id = uuid()
+  data.id = uuidv4()
   data.isDeleted = false
   let res
   try {
