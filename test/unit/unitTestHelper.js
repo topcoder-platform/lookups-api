@@ -26,7 +26,7 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
     let esClient
 
     before(async () => {
-      for (const field of fields) {
+      for (let field of fields) {
         validationTestsEntity[field] = 'ValidationTest'
       }
       await testHelper.clearDBData(modelName)
@@ -71,7 +71,7 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
         should.equal(result.result.length, 5)
         for (let i = 1; i <= 5; i += 1) {
           let value, found
-          for (const field of fields) {
+          for (let field of fields) {
             value = `a test${i} b`
             found = _.find(result.result, (item) => item[field] === value)
             should.exist(found)
@@ -87,14 +87,14 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
         should.equal(result.result.length, 2)
       })
 
-      for (const fieldParam of searchByFields) {
+      for (let fieldParam of searchByFields) {
         it(`Call list from ES successfully 3 - by ${fieldParam}`, async () => {
           const result = await service.list({ [fieldParam]: 'TEst3' })
           should.equal(result.total, 1)
           should.equal(result.page, 1)
           should.equal(result.perPage, 20)
           should.equal(result.result.length, 1)
-          for (const field of fields) {
+          for (let field of fields) {
             should.equal(result.result[0][field], 'a test3 b')
           }
         })
@@ -121,12 +121,12 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
         })
 
         it('Call list from DB successfully 1', async () => {
-          const result = await service.list({})
+          let result = await service.list({})
           should.equal(result.fromDB, true)
           should.equal(result.result.length, 5)
           for (let i = 1; i <= 5; i += 1) {
             let value, found
-            for (const field of fields) {
+            for (let field of fields) {
               value = `a test${i} b`
               found = _.find(result.result, (item) => item[field] === value)
               should.exist(found)
@@ -135,12 +135,12 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
         })
 
         it('Call list from DB successfully 2', async () => {
-          const result = await service.list({ page: 2, perPage: 2 })
+          let result = await service.list({ page: 2, perPage: 2 })
           should.equal(result.fromDB, true)
           should.equal(result.result.length, 5)
           for (let i = 3; i <= 4; i += 1) {
             let value, found
-            for (const field of fields) {
+            for (let field of fields) {
               value = `a test${i} b`
               found = _.find(result.result, (item) => item[field] === value)
               should.exist(found)
@@ -148,18 +148,18 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
           }
         })
 
-        for (const fieldParam of searchByFields) {
+        for (let fieldParam of searchByFields) {
           it(`Call list from DB successfully 3 - by ${fieldParam}`, async () => {
             const result = await service.list({ [fieldParam]: 'test3' })
             should.equal(result.fromDB, true)
             should.equal(result.result.length, 1)
-            for (const field of fields) {
+            for (let field of fields) {
               should.equal(result.result[0][field], 'a test3 b')
             }
           })
 
           it(`Call list from DB successfully 4 - by ${fieldParam}`, async () => {
-            const result = await service.list({ [fieldParam]: 'a b' })
+            let result = await service.list({ [fieldParam]: 'a b' })
             should.equal(result.fromDB, true)
             should.equal(result.result.length, 0)
           })
@@ -175,12 +175,12 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
           })
         }
 
-        it('Call list from DB successfully 4 - by all', async () => {
-          const entity = {}
-          for (const fieldParam in searchByFields) {
+        it(`Call list from DB successfully 4 - by all`, async () => {
+          let entity = {}
+          for (let fieldParam in searchByFields) {
             entity[searchByFields[fieldParam]] = validationTestsEntity[searchByFields[fieldParam]]
           }
-          const result = await service.list(entity)
+          let result = await service.list(entity)
           should.equal(result.fromDB, true)
           should.equal(result.result.length, 0)
         })
@@ -224,12 +224,12 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
 
       it('Call create successfully', async () => {
         const entity = {}
-        for (const field of fields) {
+        for (let field of fields) {
           entity[field] = 'testing'
         }
 
         const result = await service.create(entity)
-        for (const field of fields) {
+        for (let field of fields) {
           should.equal(result[field], 'testing')
         }
         should.equal(postEventBusStub.callCount, 1)
@@ -238,12 +238,12 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
 
       it('create - element already exists', async () => {
         const entity = {}
-        for (const field of fields) {
+        for (let field of fields) {
           entity[field] = 'testing'
         }
 
         await service.create(entity).should.be.rejectedWith(
-          'already exists')
+          `already exists`)
         should.equal(postEventBusStub.callCount, 0)
       })
 
@@ -258,7 +258,7 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
         throw new Error('should not reach here')
       })
 
-      for (const fieldParam of fields) {
+      for (let fieldParam of fields) {
         it(`create - invalid ${fieldParam}`, async () => {
           const entity = _.cloneDeep(validationTestsEntity)
           entity[fieldParam] = ['xx']
@@ -276,7 +276,7 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
 
       it('create - unexpected field', async () => {
         const entity = _.cloneDeep(validationTestsEntity)
-        entity.other = 123
+        entity['other'] = 123
 
         try {
           await service.create(entity)
@@ -289,7 +289,7 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
       })
 
       it('create - validateDuplicate - Bad Request', async () => {
-        const values = []
+        let values = []
         values.push('testing')
         try {
           helper.validateDuplicate(modelName, fields)
@@ -303,7 +303,7 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
       it('Call getEntity successfully', async () => {
         const result = await service.getEntity(id)
         should.equal(result.id, id)
-        for (const field of fields) {
+        for (let field of fields) {
           should.equal(result[field], 'testing')
         }
       })
@@ -331,7 +331,7 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
 
       it('Call update successfully', async () => {
         const entity = {}
-        for (const field of fields) {
+        for (let field of fields) {
           entity[field] = 'testing2'
         }
 
@@ -339,19 +339,19 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
         should.equal(result.id, id)
         should.equal(postEventBusStub.callCount, 1)
 
-        for (const field of fields) {
+        for (let field of fields) {
           should.equal(result[field], 'testing2')
         }
       })
 
-      it('update - already exists', async () => {
+      it(`update - already exists`, async () => {
         const entity = _.cloneDeep(validationTestsEntity)
         for (const field of indexedFields) {
           entity[field] = 'a test1 b'
         }
 
         await service.update(id, entity).should.be.rejectedWith(
-          'already exists')
+          `already exists`)
         should.equal(postEventBusStub.callCount, 0)
       })
 
@@ -372,7 +372,7 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
         throw new Error('should not reach here')
       })
 
-      for (const fieldParam of fields) {
+      for (let fieldParam of fields) {
         it(`update - invalid ${fieldParam}`, async () => {
           try {
             await service.update(id, _.set(_.cloneDeep(validationTestsEntity), fieldParam, { invalid: 'x' }))
@@ -391,7 +391,7 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
         postEventBusStub = sinon.stub(helper, 'postEvent').resolves([])
       })
 
-      for (const fieldParam of fields) {
+      for (let fieldParam of fields) {
         it(`Call partiallyUpdate successfully ${fieldParam}`, async () => {
           const result = await service.partiallyUpdate(id, { [fieldParam]: 'testing3' })
           should.equal(result.id, id)
@@ -418,7 +418,7 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
         }
 
         await service.partiallyUpdate(id, entity).should.be.rejectedWith(
-          'already exists')
+          `already exists`)
         should.equal(postEventBusStub.callCount, 0)
       })
 
@@ -441,7 +441,7 @@ function generateLookupUnitTests (service, modelName, fields, searchByFields, in
 
       it('partiallyUpdate - unexpected field', async () => {
         const entity = _.cloneDeep(validationTestsEntity)
-        entity.other = 'xx'
+        entity['other'] = 'xx'
         try {
           await service.partiallyUpdate(id, entity)
         } catch (e) {

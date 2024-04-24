@@ -8,7 +8,7 @@ const logger = require('../src/common/logger')
 const scriptHelper = require('./helpers')
 const helper = require('../src/common/helper')
 
-let esClient
+var esClient
 (async function () {
   esClient = await helper.getESClient()
 })()
@@ -31,7 +31,7 @@ const cleanData = async (lookupName) => {
 }
 (async function () {
   if (process.env.NODE_ENV !== 'development') {
-    logger.error('Clean data should be executed in development env')
+    logger.error(`Clean data should be executed in development env`)
     process.exit()
   }
 

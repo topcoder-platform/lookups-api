@@ -4,7 +4,7 @@
 const _ = require('lodash')
 const Joi = require('joi')
 const config = require('config')
-const { v4: uuidv4 } = require('uuid')
+const { v4: uuidv4 }  = require('uuid')
 const helper = require('../common/helper')
 const logger = require('../common/logger')
 const { Resources } = require('../../app-constants')
@@ -262,12 +262,12 @@ async function partiallyUpdate (id, data) {
         await helper.validateDuplicate(config.AMAZON.DYNAMODB_COUNTRY_TABLE, 'name', data.name)
       }
       let res
-      const originalEsRecord = _.cloneDeep(country)
+      let originalEsRecord = _.cloneDeep(country)
       try {
         await esClient.update({
           index: index[Resources.Country],
           type: type[Resources.Country],
-          id,
+          id: id,
           // body: { } for simulating update error, keep body blank
           body: { doc: { ...data, id } },
           refresh: 'true'
@@ -279,7 +279,7 @@ async function partiallyUpdate (id, data) {
             await esClient.create({
               index: index[Resources.Country],
               type: type[Resources.Country],
-              id,
+              id: id,
               body: data,
               refresh: 'true'
             })
@@ -308,7 +308,7 @@ async function partiallyUpdate (id, data) {
           await esClient.update({
             index: index[Resources.Country],
             type: type[Resources.Country],
-            id,
+            id: id,
             body: { doc: { ...originalEsRecord } },
             refresh: 'true'
           })
@@ -372,14 +372,14 @@ async function remove (id, query) {
   try {
   // remove data in DB
     const country = await helper.getById(config.AMAZON.DYNAMODB_COUNTRY_TABLE, id)
-    const originalObj = _.cloneDeep(country)
+    let originalObj = _.cloneDeep(country)
 
     try {
       if (query.destroy) {
         await esClient.delete({
           index: index[Resources.Country],
           type: type[Resources.Country],
-          id,
+          id: id,
           refresh: 'true'
         })
       } else {

@@ -30,7 +30,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
     let esClient
 
     before(async () => {
-      for (const field of fields) {
+      for (let field of fields) {
         validationTestsEntity[field] = 'ValidationTest'
       }
       await testHelper.clearDBData(modelName)
@@ -76,12 +76,12 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
         should.equal(response.headers['x-per-page'], '20')
         should.equal(response.headers['x-total'], '5')
         should.equal(response.headers['x-total-pages'], '1')
-        should.exist(response.headers.link)
+        should.exist(response.headers['link'])
 
         should.equal(response.body.length, 5)
         for (let i = 1; i <= 5; i += 1) {
           let value, found
-          for (const field of fields) {
+          for (let field of fields) {
             value = `a test${i} b`
             found = _.find(response.body, (item) => item[field] === value)
             should.exist(found)
@@ -98,13 +98,13 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
         should.equal(response.headers['x-per-page'], '2')
         should.equal(response.headers['x-total'], '5')
         should.equal(response.headers['x-total-pages'], '3')
-        should.exist(response.headers.link)
+        should.exist(response.headers['link'])
         should.equal(response.headers['x-prev-page'], '1')
         should.equal(response.headers['x-next-page'], '3')
         should.equal(response.body.length, 2)
       })
 
-      for (const fieldParam of searchByFields) {
+      for (let fieldParam of searchByFields) {
         it(`Call list from ES successfully 3 - by ${fieldParam}`, async () => {
           const response = await chai.request(app)
             .get(basePath)
@@ -114,9 +114,9 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
           should.equal(response.headers['x-per-page'], '20')
           should.equal(response.headers['x-total'], '1')
           should.equal(response.headers['x-total-pages'], '1')
-          should.exist(response.headers.link)
+          should.exist(response.headers['link'])
           should.equal(response.body.length, 1)
-          for (const field of fields) {
+          for (let field of fields) {
             should.equal(response.body[0][field], 'a test3 b')
           }
         })
@@ -130,7 +130,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
         })
       }
 
-      it('Call list from ES successfully by all fields', async () => {
+      it(`Call list from ES successfully by all fields`, async () => {
         const response = await chai.request(app)
           .get(basePath)
           .query(validationTestsEntity)
@@ -150,7 +150,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
           should.equal(response.body.length, 5)
           for (let i = 1; i <= 5; i += 1) {
             let value, found
-            for (const field of fields) {
+            for (let field of fields) {
               value = `a test${i} b`
               found = _.find(response.body, (item) => item[field] === value)
               should.exist(found)
@@ -167,7 +167,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
           should.equal(response.body.length, 5)
           for (let i = 3; i <= 4; i += 1) {
             let value, found
-            for (const field of fields) {
+            for (let field of fields) {
               value = `a test${i} b`
               found = _.find(response.body, (item) => item[field] === value)
               should.exist(found)
@@ -175,7 +175,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
           }
         })
 
-        for (const fieldParam of searchByFields) {
+        for (let fieldParam of searchByFields) {
           it(`Call list from DB successfully 3 - by ${fieldParam}`, async () => {
             const response = await chai.request(app)
               .get(basePath)
@@ -183,7 +183,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
             should.equal(response.status, 200)
 
             should.equal(response.body.length, 1)
-            for (const field of fields) {
+            for (let field of fields) {
               should.equal(response.body[0][field], 'a test3 b')
             }
           })
@@ -238,7 +238,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
         should.equal(response.headers['x-per-page'], '20')
         should.equal(response.headers['x-total'], '5')
         should.equal(response.headers['x-total-pages'], '1')
-        should.exist(response.headers.link)
+        should.exist(response.headers['link'])
         should.equal(_.isEmpty(response.body), true)
       })
 
@@ -251,13 +251,13 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
         should.equal(response.headers['x-per-page'], '2')
         should.equal(response.headers['x-total'], '5')
         should.equal(response.headers['x-total-pages'], '3')
-        should.exist(response.headers.link)
+        should.exist(response.headers['link'])
         should.equal(response.headers['x-prev-page'], '1')
         should.equal(response.headers['x-next-page'], '3')
         should.equal(_.isEmpty(response.body), true)
       })
 
-      for (const fieldParam of searchByFields) {
+      for (let fieldParam of searchByFields) {
         it('Call list head API successfully 3', async () => {
           const response = await chai.request(app)
             .head(basePath)
@@ -267,12 +267,12 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
           should.equal(response.headers['x-per-page'], '20')
           should.equal(response.headers['x-total'], '1')
           should.equal(response.headers['x-total-pages'], '1')
-          should.exist(response.headers.link)
+          should.exist(response.headers['link'])
           should.equal(_.isEmpty(response.body), true)
         })
       }
 
-      for (const fieldParam of searchByFields) {
+      for (let fieldParam of searchByFields) {
         it('Call list head API successfully 4', async () => {
           const response = await chai.request(app)
             .head(basePath)
@@ -313,7 +313,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
 
       it('Call create API successfully', async () => {
         const entity = {}
-        for (const field of fields) {
+        for (let field of fields) {
           entity[field] = 'testing'
         }
 
@@ -323,7 +323,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
           .send(entity)
         should.equal(response.status, 201)
 
-        for (const field of fields) {
+        for (let field of fields) {
           should.equal(response.body[field], 'testing')
         }
         should.equal(postEventBusStub.callCount, 1)
@@ -332,7 +332,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
 
       it('create API - already used', async () => {
         const entity = {}
-        for (const field of fields) {
+        for (let field of fields) {
           entity[field] = 'testing'
         }
 
@@ -355,7 +355,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
         should.equal(postEventBusStub.callCount, 0)
       })
 
-      it('create API - missing required fields', async () => {
+      it(`create API - missing required fields`, async () => {
         const response = await chai.request(app)
           .post(basePath)
           .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
@@ -365,7 +365,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
         should.equal(postEventBusStub.callCount, 0)
       })
 
-      for (const fieldParam of fields) {
+      for (let fieldParam of fields) {
         it(`create API - invalid ${fieldParam}`, async () => {
           const entity = _.cloneDeep(validationTestsEntity)
           entity[fieldParam] = ['xx']
@@ -382,7 +382,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
 
       it('create API - unexpected field', async () => {
         const entity = _.cloneDeep(validationTestsEntity)
-        entity.other = 123
+        entity['other'] = 123
 
         const response = await chai.request(app)
           .post(basePath)
@@ -400,7 +400,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
           .get(`${basePath}/${id}`)
         should.equal(response.status, 200)
         should.equal(response.body.id, id)
-        for (const field of fields) {
+        for (let field of fields) {
           should.equal(response.body[field], 'testing')
         }
       })
@@ -450,7 +450,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
 
       it('Call update API successfully', async () => {
         const entity = {}
-        for (const field of fields) {
+        for (let field of fields) {
           entity[field] = 'testing2'
         }
 
@@ -462,7 +462,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
         should.equal(response.body.id, id)
         should.equal(postEventBusStub.callCount, 1)
 
-        for (const field of fields) {
+        for (let field of fields) {
           should.equal(response.body[field], 'testing2')
         }
       })
@@ -478,7 +478,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
           .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
           .send(entity)
         should.equal(response.status, 409)
-        expect(response.body.message).to.have.string('already exists')
+        expect(response.body.message).to.have.string(`already exists`)
         should.equal(postEventBusStub.callCount, 0)
       })
 
@@ -512,7 +512,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
         should.equal(postEventBusStub.callCount, 0)
       })
 
-      for (const fieldParam of fields) {
+      for (let fieldParam of fields) {
         it(`update API - invalid ${fieldParam}`, async () => {
           const response = await chai.request(app)
             .put(`${basePath}/${id}`)
@@ -530,7 +530,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
         postEventBusStub = sinon.stub(helper, 'postEvent').resolves([])
       })
 
-      for (const fieldParam of fields) {
+      for (let fieldParam of fields) {
         it(`Call partially update ${fieldParam} API successfully`, async () => {
           const response = await chai.request(app)
             .patch(`${basePath}/${id}`)
@@ -564,7 +564,7 @@ function generateLookupE2ETests (basePath, modelName, fields, searchByFields, in
           .set('Authorization', `Bearer ${config.M2M_UPDATE_ACCESS_TOKEN}`)
           .send(entity)
         should.equal(response.status, 409)
-        expect(response.body.message).to.have.string('already exists')
+        expect(response.body.message).to.have.string(`already exists`)
         should.equal(postEventBusStub.callCount, 0)
       })
 

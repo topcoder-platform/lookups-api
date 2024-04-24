@@ -8,7 +8,7 @@ const deviceService = require('../src/services/DeviceService')
 const educationalInstitutionService = require('../src/services/EducationalInstitutionService')
 const sinon = require('sinon')
 
-let esClient
+var esClient
 (async function () {
   esClient = await helper.getESClient()
 })()

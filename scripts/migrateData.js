@@ -21,7 +21,7 @@ if (config.MIGRATE_DB.IS_LOCAL_DB) {
 }
 const dbInstance = new AWS.DynamoDB(migrateConfig)
 
-let esClient
+var esClient
 (async function () {
   esClient = await helper.getESClient()
 })()
@@ -43,7 +43,7 @@ const migrateData = async (lookupName) => {
   }
   while (true) {
     // query record from source db
-    const data = await dbInstance.scan(scanParam).promise()
+    let data = await dbInstance.scan(scanParam).promise()
     for (const item of data.Items) {
       const entity = _.mapValues(item, v => v.S)
       try {
@@ -82,7 +82,7 @@ const migrateData = async (lookupName) => {
 
 (async function () {
   if (!config.MIGRATE_DB) {
-    logger.error('Migrate data should be executed after config the MIGRATE_DB')
+    logger.error(`Migrate data should be executed after config the MIGRATE_DB`)
     process.exit()
   }
   Object.keys(require('../src/models')).forEach(function (key) {
