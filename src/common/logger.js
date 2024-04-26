@@ -120,7 +120,7 @@ logger.decorateWithValidators = function (service) {
       const args = Array.prototype.slice.call(arguments)
       const value = _combineObject(params, args)
       // const normalized = Joi.attempt(value, method.schema)
-      const normalized = Joi.attempt(value, Joi.Object(method.schema))
+      const normalized = Joi.attempt(value, Joi.object(method.schema))
 
       const newArgs = []
       // Joi will normalize values
