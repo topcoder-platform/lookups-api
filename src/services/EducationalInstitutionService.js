@@ -4,7 +4,7 @@
 const _ = require('lodash')
 const Joi = require('joi')
 const config = require('config')
-const uuid = require('uuid/v4')
+const { v4: uuidv4 } = require('uuid')
 const helper = require('../common/helper')
 const logger = require('../common/logger')
 const { Resources } = require('../../app-constants')
@@ -175,7 +175,7 @@ getEntity.schema = {
  */
 async function create (data) {
   await helper.validateDuplicate(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, 'name', data.name)
-  data.id = uuid()
+  data.id = uuidv4()
   data.isDeleted = false
   let res
   try {
@@ -239,12 +239,12 @@ async function partiallyUpdate (id, data) {
     await helper.validateDuplicate(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, 'name', data.name)
 
     let res
-    let originalRecord = _.cloneDeep(ei)
+    const originalRecord = _.cloneDeep(ei)
     try {
       await esClient.update({
         index: index[Resources.EducationalInstitution],
         type: type[Resources.EducationalInstitution],
-        id: id,
+        id,
         body: { doc: { ...data, id } },
         refresh: 'true'
       })
@@ -255,7 +255,7 @@ async function partiallyUpdate (id, data) {
           await esClient.create({
             index: index[Resources.EducationalInstitution],
             type: type[Resources.EducationalInstitution],
-            id: id,
+            id,
             body: { doc: { ...data, id } },
             refresh: 'true'
           })
@@ -279,7 +279,7 @@ async function partiallyUpdate (id, data) {
         await esClient.update({
           index: index[Resources.EducationalInstitution],
           type: type[Resources.EducationalInstitution],
-          id: id,
+          id,
           body: { doc: { ...originalRecord } },
           refresh: 'true'
         })
@@ -334,13 +334,13 @@ update.schema = {
 async function remove (id, query) {
   // remove data in DB
   const ei = await helper.getById(config.AMAZON.DYNAMODB_EDUCATIONAL_INSTITUTION_TABLE, id)
-  let originalObj = _.cloneDeep(ei)
+  const originalObj = _.cloneDeep(ei)
   try {
     if (query.destroy) {
       await esClient.delete({
         index: index[Resources.EducationalInstitution],
         type: type[Resources.EducationalInstitution],
-        id: id,
+        id,
         refresh: 'true'
       })
     } else {
@@ -348,7 +348,7 @@ async function remove (id, query) {
       await esClient.update({
         index: index[Resources.EducationalInstitution],
         type: type[Resources.EducationalInstitution],
-        id: id,
+        id,
         body: { doc: originalObj },
         refresh: 'true'
       })
@@ -368,7 +368,7 @@ async function remove (id, query) {
         await esClient.update({
           index: index[Resources.EducationalInstitution],
           type: type[Resources.EducationalInstitution],
-          id: id,
+          id,
           body: { doc: originalObj },
           refresh: 'true'
         })
@@ -377,7 +377,7 @@ async function remove (id, query) {
         await esClient.create({
           index: index[Resources.EducationalInstitution],
           type: type[Resources.EducationalInstitution],
-          id: id,
+          id,
           body: originalObj,
           refresh: 'true'
         })

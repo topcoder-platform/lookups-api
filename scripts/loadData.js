@@ -6,11 +6,11 @@ require('../app-bootstrap')
 const logger = require('../src/common/logger')
 
 const fs = require('fs')
-const uuid = require('uuid/v4')
+const { v4: uuidv4 } = require('uuid')
 const scriptHelper = require('./helpers')
 const helper = require('../src/common/helper')
 
-var esClient
+let esClient
 (async function () {
   esClient = await helper.getESClient()
 })()
@@ -25,15 +25,15 @@ const loadData = async (lookupName, lookupFilePath) => {
   let duplicatesCount = 0
   let successfulsCount = 0
   let errorsCount = 0
-  let rawdata = fs.readFileSync(lookupFilePath)
-  let entities = JSON.parse(rawdata)
+  const rawdata = fs.readFileSync(lookupFilePath)
+  const entities = JSON.parse(rawdata)
 
   const [getTableName, esIndex, esType] = await scriptHelper.getLookupKey(lookupName)
   for (const entity of entities) {
     try {
       // create record in db
-      if (!entity.hasOwnProperty('id')) {
-        entity.id = uuid()
+      if (!Object.prototype.hasOwnProperty.call(entity, 'id')) {
+        entity.id = uuidv4()
       }
       if (getTableName === 'devices') {
         if (!entity.operatingSystemVersion) {
@@ -66,7 +66,7 @@ const loadData = async (lookupName, lookupFilePath) => {
 }
 (async function () {
   if (process.env.NODE_ENV !== 'development') {
-    logger.error(`Load data should be executed in development env`)
+    logger.error('Load data should be executed in development env')
     process.exit()
   }
 

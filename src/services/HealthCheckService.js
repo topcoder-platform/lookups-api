@@ -6,7 +6,7 @@ const helper = require('../common/helper')
 const logger = require('../common/logger')
 const errors = require('../common/errors')
 
-var esClient
+let esClient
 (async function () {
   esClient = await helper.getESClient()
 })()

@@ -4,7 +4,7 @@
 const _ = require('lodash')
 const Joi = require('joi')
 const config = require('config')
-const uuid = require('uuid/v4')
+const { v4: uuidv4 } = require('uuid')
 const helper = require('../common/helper')
 const logger = require('../common/logger')
 const { Resources } = require('../../app-constants')
@@ -229,7 +229,7 @@ async function create (data) {
     ['type', 'manufacturer', 'model', 'operatingSystem', 'operatingSystemVersion'],
     [data.type, data.manufacturer, data.model, data.operatingSystem, data.operatingSystemVersion])
 
-  data.id = uuid()
+  data.id = uuidv4()
   data.isDeleted = false
   let res
   try {
@@ -308,12 +308,12 @@ async function partiallyUpdate (id, data) {
         data.operatingSystemVersion || device.operatingSystemVersion])
 
     let res
-    let originalRecord = _.cloneDeep(device)
+    const originalRecord = _.cloneDeep(device)
     try {
       await esClient.update({
         index: index[Resources.Device],
         type: type[Resources.Device],
-        id: id,
+        id,
         body: { doc: { ...data, id } },
         refresh: 'true'
       })
@@ -324,7 +324,7 @@ async function partiallyUpdate (id, data) {
           await esClient.create({
             index: index[Resources.Device],
             type: type[Resources.Device],
-            id: id,
+            id,
             body: { doc: { ...data, id } },
             refresh: 'true'
           })
@@ -348,7 +348,7 @@ async function partiallyUpdate (id, data) {
         await esClient.update({
           index: index[Resources.Device],
           type: type[Resources.Device],
-          id: id,
+          id,
           body: { doc: { ...originalRecord } },
           refresh: 'true'
         })
@@ -411,13 +411,13 @@ update.schema = {
 async function remove (id, query) {
   // remove data in DB
   const device = await helper.getById(config.AMAZON.DYNAMODB_DEVICE_TABLE, id)
-  let originalObj = _.cloneDeep(device)
+  const originalObj = _.cloneDeep(device)
   try {
     if (query.destroy) {
       await esClient.delete({
         index: index[Resources.Device],
         type: type[Resources.Device],
-        id: id,
+        id,
         refresh: 'true'
       })
     } else {
@@ -425,7 +425,7 @@ async function remove (id, query) {
       await esClient.update({
         index: index[Resources.Device],
         type: type[Resources.Device],
-        id: id,
+        id,
         body: { doc: originalObj },
         refresh: 'true'
       })
