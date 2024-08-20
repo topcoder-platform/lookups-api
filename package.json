@@ -37,7 +37,7 @@
     "config": "^3.3.11",
     "cors": "^2.8.5",
     "dynamoose": "^1.8.0",
-    "elasticsearch": "^16.1.1",
+    "elasticsearch": "^7.17.12",
     "express": "^4.19.2",
     "express-interceptor": "^1.2.0",
     "get-parameter-names": "^0.3.0",
