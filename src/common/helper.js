@@ -5,7 +5,7 @@ const _ = require('lodash')
 const querystring = require('querystring')
 const config = require('config')
 const AWS = require('aws-sdk')
-const elasticsearch = require('@opensearch-project/opensearch')
+const opensearch = require('@opensearch-project/opensearch')
 const models = require('../models')
 const errors = require('./errors')
 const logger = require('./logger')
@@ -282,14 +282,14 @@ async function validateDuplicate (modelName, keys, values) {
 
 /**
  * Get ES Client
- * @return {Object} Elasticsearch Client Instance
+ * @return {Object} Opensearch Client Instance
  */
 function getESClient () {
   if (esClient) {
     return esClient
   }
   const host = config.ES.HOST
-  esClient = new elasticsearch.Client({
+  esClient = new opensearch.Client({
     node: host
   })
   return esClient
@@ -315,7 +315,7 @@ async function getEntity (modelName, id, query, authUser) {
       id
     }
 
-    result = await client.getSource(sourceParams)
+    result = await client.get(sourceParams)
 
     if (
       !isAdminUser ||
