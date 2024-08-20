@@ -290,7 +290,7 @@ function getESClient () {
   }
   const host = config.ES.HOST
   esClient = new elasticsearch.Client({
-    node:host
+    node: host
   })
   return esClient
 }

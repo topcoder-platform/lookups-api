@@ -26,7 +26,6 @@ let esClient
  * @returns {Object} the search result
  */
 async function listES (criteria, isAdmin) {
-
   const esQuery = {
     size: criteria.perPage,
     from: (criteria.page - 1) * criteria.perPage, // Es Index starts from 0
@@ -36,7 +35,7 @@ async function listES (criteria, isAdmin) {
         must: []
       }
     },
-    _source:{
+    _source: {
       excludes: (isAdmin && !_.isNil(criteria.includeSoftDeleted)) ? [] : ['isDeleted']
     }
   }

@@ -38,7 +38,7 @@ async function listES (criteria, isAdmin) {
         must: []
       }
     },
-    _source:{
+    _source: {
       excludes: (isAdmin && !_.isNil(criteria.includeSoftDeleted)) ? [] : ['isDeleted']
     }
   }
