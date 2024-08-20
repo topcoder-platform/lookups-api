@@ -5,7 +5,7 @@ const _ = require('lodash')
 const querystring = require('querystring')
 const config = require('config')
 const AWS = require('aws-sdk')
-const elasticsearch = require('@elastic/elasticsearch')
+const elasticsearch = require('@opensearch-project/opensearch')
 const models = require('../models')
 const errors = require('./errors')
 const logger = require('./logger')
@@ -288,11 +288,9 @@ function getESClient () {
   if (esClient) {
     return esClient
   }
-  const hosts = config.ES.HOST
-  const apiVersion = config.ES.API_VERSION
+  const host = config.ES.HOST
   esClient = new elasticsearch.Client({
-    apiVersion,
-    hosts
+    node:host
   })
   return esClient
 }
