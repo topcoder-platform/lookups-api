@@ -316,7 +316,7 @@ async function getEntity (modelName, id, query, authUser) {
     }
 
     result = await client.get(sourceParams)
-
+    result = result.body._source
     if (
       !isAdminUser ||
       _.isNil(query.includeSoftDeleted) ||
