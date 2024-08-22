@@ -18,7 +18,7 @@ let esClient
 async function check () {
   // check ES connection
   try {
-    await esClient.ping({ requestTimeout: 10000 })
+    await esClient.ping()
   } catch (e) {
     throw new errors.ServiceUnavailableError(`Elasticsearch is unavailable, ${e.message}`)
   }
