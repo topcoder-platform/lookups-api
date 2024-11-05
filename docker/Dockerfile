@@ -13,4 +13,5 @@ RUN npm run lint
 #RUN npm run build
 #RUN npm run test
 
-CMD npm start
+# CMD npm start
+CMD ["node", "app.js"]
