@@ -26,25 +26,22 @@ let esClient
  * @returns {Object} the search result
  */
 async function listES (criteria, isAdmin) {
-  // construct ES query
   const esQuery = {
-    index: config.ES.COUNTRY_INDEX,
-    type: config.ES.COUNTRY_TYPE,
     size: criteria.perPage,
     from: (criteria.page - 1) * criteria.perPage, // Es Index starts from 0
-    body: {
-      sort: [{ name: { order: 'asc' } }],
-      query: {
-        bool: {
-          must: []
-        }
+    sort: [{ name: { order: 'asc' } }],
+    query: {
+      bool: {
+        must: []
       }
     },
-    _source_excludes: (isAdmin && !_.isNil(criteria.includeSoftDeleted)) ? [] : ['isDeleted']
+    _source: {
+      excludes: (isAdmin && !_.isNil(criteria.includeSoftDeleted)) ? [] : ['isDeleted']
+    }
   }
   // filtering for name
   if (criteria.name) {
-    esQuery.body.query.bool.must.push({
+    esQuery.query.bool.must.push({
       term: {
         name: criteria.name
       }
@@ -52,7 +49,7 @@ async function listES (criteria, isAdmin) {
   }
   // filtering for countryCode
   if (criteria.countryCode) {
-    esQuery.body.query.bool.must.push({
+    esQuery.query.bool.must.push({
       term: {
         countryCode: criteria.countryCode
       }
@@ -66,7 +63,7 @@ async function listES (criteria, isAdmin) {
     !isAdmin ||
     _.isNil(criteria.includeSoftDeleted) ||
     (isAdmin && !criteria.includeSoftDeleted)) {
-    esQuery.body.query.bool.must.push({
+    esQuery.query.bool.must.push({
       bool: {
         must_not: [{
           term: {
@@ -78,13 +75,17 @@ async function listES (criteria, isAdmin) {
   }
 
   // Search with constructed query
-  const docs = await esClient.search(esQuery)
+  const docs = await esClient.search({
+    index: config.ES.COUNTRY_INDEX,
+    body: esQuery
+  })
+
   // Extract data from hits
-  let total = docs.hits.total
+  let total = docs.body.hits.total
   if (_.isObject(total)) {
     total = total.value || 0
   }
-  const result = _.map(docs.hits.hits, (item) => item._source)
+  const result = _.map(docs.body.hits.hits, (item) => item._source)
   return { total, page: criteria.page, perPage: criteria.perPage, result }
 }
 
@@ -191,7 +192,7 @@ async function create (data) {
   data.isDeleted = false
   let res
   try {
-    await esClient.create({
+    await esClient.index({
       index: index[Resources.Country],
       type: type[Resources.Country],
       id: data.id,

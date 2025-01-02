@@ -9,6 +9,8 @@ install_dependency: &install_dependency
     sudo apt install jq
     sudo apt install python3-pip
     sudo pip3 install awscli --upgrade
+    sudo pip3 install docker==6.1.3
+    sudo pip3 install docker-compose   
 install_deploysuite: &install_deploysuite
   name: Installation of install_deploysuite.
   command: |
@@ -29,7 +31,6 @@ builddeploy_steps: &builddeploy_steps
       - setup_remote_docker
       - run: *install_dependency
       - run: *install_deploysuite
-      - restore_cache: *restore_cache_settings_for_build
       - run: ./build.sh ${APPNAME}
       - save_cache: *save_cache_settings
       - deploy:
