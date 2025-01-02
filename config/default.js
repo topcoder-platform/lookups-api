@@ -39,11 +39,11 @@ module.exports = {
     // above AWS_REGION is used if we use AWS ES
     HOST: process.env.ES_HOST || 'localhost:9200',
     API_VERSION: process.env.ES_API_VERSION || '6.8',
-    COUNTRY_INDEX: process.env.COUNTRY_INDEX || 'countries',
+    COUNTRY_INDEX: process.env.COUNTRY_INDEX || 'lookups-api.countries',
     COUNTRY_TYPE: process.env.COUNTRY_TYPE || '_doc',
-    EDUCATIONAL_INSTITUTION_INDEX: process.env.EDUCATIONAL_INSTITUTION_INDEX || 'educational_institutions',
+    EDUCATIONAL_INSTITUTION_INDEX: process.env.EDUCATIONAL_INSTITUTION_INDEX || 'lookups-api.educational_institutions',
     EDUCATIONAL_INSTITUTION_TYPE: process.env.EDUCATIONAL_INSTITUTION_TYPE || '_doc',
-    DEVICE_INDEX: process.env.DEVICE_INDEX || 'devices',
+    DEVICE_INDEX: process.env.DEVICE_INDEX || 'lookups-api.devices',
     DEVICE_TYPE: process.env.DEVICE_TYPE || '_doc'
   },
 
